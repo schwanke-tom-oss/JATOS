@@ -7581,10 +7581,39 @@ function kursStandZeile() {
   return `<div class="dp-kstand${UI.kursLaeuft ? ' laeuft' : ''}"><i></i>${txt}${s.kursFehler && !UI.kursLaeuft ? ` · <span class="neg">${esc(s.kursFehler)}</span>` : ''}</div>`;
 }
 /* Abschnitt für die Einstellungen */
+/* ---------- App-Updates nur auf Knopfdruck ---------- */
+const APP_V = 103;
+function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
+ACT.appUpdate = async (d, el) => {
+  const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
+  if (!reg) { toast('Updates gibt es nur in der installierten App (vom Home-Bildschirm).'); return; }
+  if (!navigator.onLine) { toast('Kein Internet. Für das Update kurz WLAN oder mobile Daten einschalten.'); return; }
+  const knopf = t => { if (el) { el.disabled = !!t; el.textContent = t || 'Nach Update suchen'; } };
+  /* 1. Nur nachsehen: ohne Freigabe meldet die neue Version sich und bricht dann ab */
+  await updFreigabe(null); knopf('Suche …');
+  const gefunden = new Promise(res => { const h = e => { if (e.data && e.data.neu) { navigator.serviceWorker.removeEventListener('message', h); res(e.data.neu); } }; navigator.serviceWorker.addEventListener('message', h); setTimeout(() => res(0), 8000); });
+  try { await reg.update(); } catch (e) { knopf(); toast('Keine Verbindung zur App-Seite. Bitte später noch einmal.'); return; }
+  const v = (reg.installing || reg.waiting) ? await gefunden : 0; knopf();
+  if (!v || v <= APP_V) { toast(`Kein Update da. Du hast die neueste Version (${APP_V}).`); return; }
+  /* 2. Fragen */
+  if (!await ask(`Update gefunden: Version ${v} (du hast ${APP_V}).\n\nMöchtest du es jetzt installieren? Deine Daten bleiben erhalten.`, 'Installieren')) return;
+  /* 3. Mit Freigabe laden und installieren */
+  knopf('Wird geladen …'); await updFreigabe(Date.now());
+  try { await reg.update(); } catch (e) { await updFreigabe(null); knopf(); toast('Laden hat nicht geklappt. Bitte noch einmal versuchen.'); return; }
+  const neu = reg.installing || reg.waiting;
+  if (neu) await new Promise(res => { const chk = () => { if (neu.state === 'activated' || neu.state === 'redundant') res(); }; neu.addEventListener('statechange', chk); chk(); setTimeout(res, 60000); });
+  await updFreigabe(null); knopf();
+  if (!neu || neu.state !== 'activated') { toast('Das Update hat nicht geklappt. Bitte noch einmal versuchen.'); return; }
+  toast('Update installiert, die App startet neu …'); setTimeout(() => location.reload(), 1200);
+};
+function updEinstHtml() {
+  return `<h3>⬇️ App-Updates</h3><div class="row sb" style="gap:10px;align-items:center;margin-bottom:6px"><span>Version ${APP_V}</span><button type="button" class="btn sm sec" data-act="appUpdate">Nach Update suchen</button></div>
+    <div class="sub" style="margin-bottom:12px">Tippe hier, um nachzusehen. Gibt es ein Update, fragt die App dich, ob du es willst. Ohne dein Ja lädt sie nichts herunter und ändert sich nicht. Dafür kurz Internet einschalten.</div>`;
+}
 function kursEinstHtml() {
   const s = S.settings, on = kursOnline(), z = kursZaehler(), iv = kursAvIntervall();
   const keyF = a => { const k = kursSchl(a); return `${fIn('key_' + a, KURS_ANB[a].n + ' Schlüssel', '', 'password', `autocomplete="off" placeholder="${k ? '•••••• gespeichert' : 'eintragen'}"`)}<div class="sub" style="margin:-6px 0 8px">${KURS_ANB[a].hint}${k ? ` · heute ${z[a] || 0} von ${KURS_ANB[a].tag} genutzt` : ''}</div>${k ? fChk('del_' + a, 'Schlüssel löschen', false) : ''}`; };
-  return `<h3>🔒 Internet</h3>
+  return `${updEinstHtml()}<h3>🔒 Internet</h3>
     <div class="typesw">${[['offline', '100 % offline'], ['kurse', 'Nur Finanzkurse']].map(([v, l]) => `<label><input type="radio" name="netz" value="${v}" ${(on ? 'kurse' : 'offline') === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>
     <div data-k="netz">
       <div class="sub" style="margin:2px 0 10px">Gesendet werden nur Kürzel oder ISIN, nie Stückzahlen, Werte oder andere Daten. Alles andere bleibt gesperrt. Schlüssel bleiben nur auf diesem Gerät und kommen nicht in die Sicherung.</div>
