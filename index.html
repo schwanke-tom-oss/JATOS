@@ -478,8 +478,8 @@ nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;padding-blo
 .g-f span{display:flex;align-items:center;gap:5px}
 .g-f .dot{width:6px;height:6px}
 .g-f b{color:var(--tx);font-weight:600}
-.konto-kacheln{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
-.konto{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 11px;cursor:pointer;transition:transform .15s,background .15s}
+.konto-kacheln{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-bottom:12px}
+.konto{min-width:0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 11px;cursor:pointer;transition:transform .15s,background .15s}
 .konto:active{transform:scale(.97);background:var(--card2)}
 .k-l{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--tx2)}
 .k-l .dot{width:6px;height:6px;flex:none}
@@ -2684,12 +2684,15 @@ VIEWS.finanzen = () => {
   return h;
 };
 const FIN = {};
+const accStand = id => { const a = acc(id); return a && a.kind === 'depot' && S.depot.length && S.accounts.find(x => x.kind === 'depot') === a ? sum(S.depot, p => p.value || 0) : a && a.kind === 'depot' && S.depot.length ? 0 : accBalance(id); };
 const catOpts = type => { const tops = S.cats.filter(c => c.type === type && !c.parent); const o = []; tops.forEach(c => { o.push([c.id, c.name]); S.cats.filter(x => x.parent === c.id).forEach(x => o.push([x.id, '   › ' + x.name])); }); return o; };
 const accOpts = () => S.accounts.map(a => [a.id, a.name]);
 const needAcc = () => { if (!S.accounts.length) { toast('Bitte zuerst unter „Konten“ ein Konto anlegen.'); UI.sub.finanzen = 'konten'; render(); return true; } };
 
 /* Kontostand je Tag für eine Kontenauswahl: Startsaldo plus alle Buchungen, Einnahmen und Ausgaben im Zeitraum */
 function balSeries(accs, from, to, step) {
+  // Depot-Konten: statt der Ein-/Auszahlungen zählt der Wert der Positionen (sonst doppelt)
+  const mitDepot = accs.some(a => a.kind === 'depot') && S.depot.length; if (mitDepot) accs = accs.filter(a => a.kind !== 'depot');
   const ids = new Set(accs.map(a => a.id)), delta = {}; let startBal = sum(accs, a => a.start || 0), ein = 0, aus = 0, inn = 0, out = 0;
   for (const x of S.tx) {
     if (x.date > to) continue;
@@ -2700,7 +2703,7 @@ function balSeries(accs, from, to, step) {
     if (dv > 0) inn += dv; else out -= dv;
   }
   const pts = []; let b = startBal; step = step || (dayDiff(from, to) > 400 ? 7 : 1);
-  const dep = accs.some(a => a.kind === 'depot') ? depotWert : () => 0;
+  const dep = mitDepot || accs.some(a => a.kind === 'depot') ? depotWert : () => 0;
   for (let d = from, i = 0; d <= to; d = addD(d, 1), i++) { b += delta[d] || 0; if (i % step === 0 || d === to) pts.push({ x: d, y: b + dep(d, to) }); }
   return { pts, startBal: startBal + dep(addD(from, -1), to), end: b + dep(to, to), ein, aus, inn, out };
 }
@@ -3157,7 +3160,7 @@ FIN.konten = () => {
   let h = `<button class="g-mehr" style="padding:0 0 10px" data-act="sub" data-t="finanzen" data-v="uebersicht">‹ Zurück zur Übersicht</button>`;
   h += `<div class="row sb" style="margin-bottom:10px"><span class="sub">Gesamtvermögen <b class="num" style="color:var(--tx)">${eur(sum(S.accounts, a => accBalance(a.id)) + sum(S.depot, p => p.value || 0) - sum(S.accounts.filter(a => a.kind === 'depot'), a => accBalance(a.id)))}</b></span><button class="btn sm" data-act="accNew">+ Konto</button></div>`;
   if (!S.accounts.length) h += `<div class="card">${empty('Lege deine Konten an, z.B. Girokonto privat, Gemeinschaftskonto, Tagesgeld und Depot. Den aktuellen Kontostand trägst du als Startsaldo ein.')}<div class="row" style="justify-content:center"><button class="btn sm" data-act="accPreset">Vorschlag übernehmen</button></div></div>`;
-  h += `<div class="card tight list">${S.accounts.map(a => `<div class="it click" data-act="accEdit" data-id="${a.id}"><i class="dot" style="background:${a.color || '#4f8cff'}"></i><div class="grow"><div class="t">${esc(a.name)}</div><div class="s">${{ giro: 'Girokonto', gem: 'Gemeinschaftskonto', tg: 'Tagesgeld', depot: 'Depot', bar: 'Bargeld', kk: 'Kreditkarte', sonst: 'Sonstiges' }[a.kind] || ''}${S.settings.mainAcc === a.id ? ' · Hauptkonto' : ''}</div></div><span class="num ${accBalance(a.id) < 0 ? 'neg' : ''}">${eur(accBalance(a.id))}</span></div>`).join('')}</div>`;
+  h += `<div class="card tight list">${S.accounts.map(a => `<div class="it click" data-act="accEdit" data-id="${a.id}"><i class="dot" style="background:${a.color || '#4f8cff'}"></i><div class="grow"><div class="t">${esc(a.name)}</div><div class="s">${{ giro: 'Girokonto', gem: 'Gemeinschaftskonto', tg: 'Tagesgeld', depot: 'Depot', bar: 'Bargeld', kk: 'Kreditkarte', sonst: 'Sonstiges' }[a.kind] || ''}${S.settings.mainAcc === a.id ? ' · Hauptkonto' : ''}</div></div><span class="num ${accStand(a.id) < 0 ? 'neg' : ''}">${eur(accStand(a.id))}</span></div>`).join('')}</div>`;
   h += `<button class="btn sec full imp-btn" data-act="impStart">📄 Kontoauszug einlesen – Konten werden erkannt</button>`;
   if (S.accounts.length > 1) h += `<button class="btn sec full" data-act="txUmb">⇄ Geld zwischen Konten umbuchen</button>`;
   if (S.accounts.length) h += `<button class="btn sec full" data-act="accAufraeumen">🧹 Konten aufräumen${S.accounts.some(kontoVerdaechtig) ? ' – falsch angelegte gefunden' : ''}</button>`;
@@ -3172,7 +3175,7 @@ function accEdit(a) {
   modal(isNew ? 'Neues Konto' : 'Konto bearbeiten', `${fIn('name', 'Name', a.name || '')}
     <div class="grid2">${fSel('kind', 'Art', [['giro', 'Girokonto'], ['gem', 'Gemeinschaftskonto'], ['tg', 'Tagesgeld'], ['depot', 'Depot'], ['bar', 'Bargeld'], ['kk', 'Kreditkarte'], ['sonst', 'Sonstiges']], a.kind)}${fIn('color', 'Farbe', a.color, 'color')}</div>
     ${fMoney('start', 'Startsaldo (€, Kontostand vor der ersten Buchung)', a.start)}
-    ${!isNew ? `<div class="sub">Aktueller Stand: <b>${eur(accBalance(a.id))}</b></div>` : ''}`,
+    ${!isNew ? `<div class="sub">Aktueller Stand: <b>${eur(accStand(a.id))}</b>${a.kind === 'depot' && S.depot.length ? ' (Wert der Depot-Positionen)' : ''}</div>` : ''}`,
     v => { if (!v.name.trim()) return false; const o = Object.assign(isNew ? { id: uid() } : a, { name: v.name.trim(), kind: v.kind, color: v.color, start: num(v.start) }); if (isNew) { S.accounts.push(o); if (!S.settings.mainAcc && v.kind === 'giro') S.settings.mainAcc = o.id; } },
     { del: isNew ? null : async () => { if (S.tx.some(t => t.acc === a.id || t.to === a.id) && !await ask('Zu diesem Konto gibt es Buchungen. Diese werden mitgelöscht. Fortfahren?')) throw 0; S.tx = S.tx.filter(t => t.acc !== a.id && t.to !== a.id); S.accounts = S.accounts.filter(x => x !== a); } });
 }
@@ -6661,9 +6664,20 @@ function trAusCsv(rows) {
   const konto = { art: 'konto', bank: 'Trade Republic', iban: '', kopf: 'Trade Republic', rows: [], kind: 'tg', tr: true, neuName: 'Trade Republic Cash' };
   const depot = { art: 'depot', bank: 'Trade Republic', items: [], stand: today(), tr: true };
   const sorted = body.slice().sort((a, b) => g(a, 'datetime') < g(b, 'datetime') ? -1 : 1);
-  let saldo = 0, letzt = null;
+  let saldo = 0, letzt = null; const pos = {};
   for (const r of sorted) {
     const kat = g(r, 'category'), typ = g(r, 'type'), d = datum(g(r, 'date') || g(r, 'datetime')); if (!d) continue;
+    { // Bestand je Wertpapier (Durchschnittskosten), inkl. Einbuchungen, Splits, Fusionen
+      const sym = g(r, 'symbol').toUpperCase(), sh = n(r, 'shares');
+      if (sym && (kat === 'TRADING' || kat === 'DELIVERY' || kat === 'CORPORATE_ACTION' || /^PRIVATE_MARKET_(BUY|SELL)$/.test(typ))) {
+        const P = pos[sym] = pos[sym] || { isin: sym, name: g(r, 'name') || sym, q: 0, kosten: 0, buys: [], kurs: 0 }; if (g(r, 'name')) P.name = g(r, 'name');
+        const geld = Math.round(-(n(r, 'amount') + n(r, 'fee')) * 100) / 100;
+        if (/BUY$/.test(typ)) { P.q += Math.abs(sh); P.kosten += geld; P.buys.push({ date: d, amount: geld, qty: Math.abs(sh) }); }
+        else if (/SELL$/.test(typ)) { const a = Math.abs(sh); if (P.q > 0) P.kosten -= P.kosten * Math.min(1, a / P.q); P.q -= a; P.buys.push({ date: d, amount: geld, qty: -a }); }
+        else { if (sh < 0 && P.q > 0) P.kosten -= P.kosten * Math.min(1, -sh / P.q); P.q += sh; }
+        if (n(r, 'price')) P.kurs = n(r, 'price');
+      }
+    }
     if (kat === 'DELIVERY' || kat === 'CORPORATE_ACTION') continue; // Einbuchungen ohne Geldfluss
     const v = Math.round((n(r, 'amount') + n(r, 'fee') + n(r, 'tax')) * 100) / 100; if (!v) continue;
     saldo += v; letzt = d;
@@ -6673,7 +6687,6 @@ function trAusCsv(rows) {
     if (/^(BUY|SELL|PRIVATE_MARKET_BUY|PRIVATE_MARKET_SELL)$/.test(typ)) {
       const verk = /SELL/.test(typ), qty = Math.abs(n(r, 'shares'));
       z.name = `${verk ? 'Verkauf' : 'Kauf'} ${wp || isin}`.slice(0, 48); z.vz = z.name + (qty ? ` · ${dec(qty, 4)} Stk.` : ''); z.trDepot = true;
-      depot.items.push({ art: verk ? 'verkauf' : 'kauf', isin, name: wp || isin, date: d, amount: Math.abs(v), qty });
     } else if (/^(DIVIDEND|DISTRIBUTION)$/.test(typ)) { z.name = ('Dividende ' + (wp || isin)).slice(0, 48); z.vz = z.name; z.isin = isin; z.trTyp = 'div'; }
     else if (/^(CUSTOMER_|TRANSFER_)/.test(typ)) {
       const wer = cp || (desc.match(/(?:from|for)\s+(.+?)(?:\s*\(|$)/i) || [])[1] || '';
@@ -6682,6 +6695,8 @@ function trAusCsv(rows) {
     } else { z.name = TR_NAME[typ] || (wp ? wp : typ.toLowerCase().replace(/_/g, ' ')); if (wp && TR_NAME[typ]) z.name += ' ' + wp; z.name = z.name.slice(0, 48); z.vz = desc || z.name; if (typ === 'INTEREST_PAYMENT') z.trTyp = 'zins'; }
     konto.rows.push(z);
   }
+  for (const P of Object.values(pos)) { const offen = P.q > 1e-4; depot.items.push({ art: 'trpos', isin: P.isin, name: P.name, qty: offen ? Math.round(P.q * 1e6) / 1e6 : 0, offen, value: offen ? Math.round(Math.max(0, P.kosten) * 100) / 100 : 0, buys: P.buys, date: letzt || today() }); }
+  depot.items.sort((a, b) => b.offen - a.offen || b.value - a.value);
   konto.ende = Math.round(saldo * 100) / 100; konto.endeD = letzt || today();
   return depot.items.length ? [konto, depot] : [konto];
 }
@@ -6738,6 +6753,12 @@ const eigeneNamen = () => [S.settings.name && S.settings.nachname ? S.settings.n
 const nameIstIch = n => { const k = impKey(n); return k && eigeneNamen().some(e => { const ek = impKey(e); const w = ek.split(' '); return ek && (k.includes(ek) || w.length > 1 && w.every(x => k.includes(x))); }); };
 
 function impVorschau(quellen, fehler) {
+  // Mehrere Auszüge desselben Kontos (gleiche IBAN) zu einem zusammenfassen; der neueste Kontostand zählt
+  quellen = quellen.reduce((out, s) => { const v = s.art === 'konto' && s.iban && out.find(x => x.art === 'konto' && x.iban === s.iban);
+    if (!v) { out.push(s); return out; }
+    v.rows = v.rows.concat(s.rows); v.datei = v.datei === s.datei ? v.datei : v.datei + ', ' + s.datei;
+    if (s.ende != null && (v.ende == null || (s.endeD || '') >= (v.endeD || ''))) { v.ende = s.ende; v.endeD = s.endeD; }
+    if (!v.typ && s.typ) v.typ = s.typ; return out; }, []);
   IMP = { q: quellen, fehler, filter: 'alle', vertr: [] };
   quellen.forEach((s, i) => {
     s.i = i;
@@ -6751,7 +6772,7 @@ function impVorschau(quellen, fehler) {
       s.abgl = s.ende != null;
     } else {
       const d = s.bank && S.accounts.find(a => a.kind === 'depot' && (a.bank === s.bank || a.name.toLowerCase().includes(s.bank.toLowerCase().split(' ')[0]))) || S.accounts.find(a => a.kind === 'depot'); s.acc = d ? d.id : 'neu'; s.neuName = `${s.bank ? s.bank + ' ' : ''}Depot`; s.neuKind = 'depot';
-      s.items.forEach(it => { it.on = true; it.pos = (S.depot.find(p => (p.isin || '').toUpperCase() === it.isin) || {}).id || ''; });
+      s.items.forEach(it => { it.on = it.art !== 'trpos' || it.offen || !!S.depot.find(p => (p.isin || '').toUpperCase() === it.isin); it.pos = (S.depot.find(p => (p.isin || '').toUpperCase() === it.isin) || {}).id || ''; });
     }
   });
   impKlassifizieren();
@@ -6849,7 +6870,7 @@ function impMalen() {
     if (IMP.vertr.length) h += `<h3>📌 Erkannte Verträge → Fixkosten</h3><div class="card tight list">${IMP.vertr.map((v, k) => `<label class="it"><input type="checkbox" data-k="vertr" data-v="${k}" ${v.on ? 'checked' : ''}><div class="grow"><div class="t">${esc(v.name)}</div><div class="s">${{ 1: 'monatlich', 3: 'vierteljährlich', 6: 'halbjährlich', 12: 'jährlich' }[v.every]} am ${v.day}. · ${esc((cat(v.cat) || {}).name || '')}${v.sicher ? '' : ' · Lastschrift, einmal gesehen'}</div></div><span class="num">${eur(v.amount)}</span></label>`).join('')}</div><div class="sub" style="margin:-4px 0 10px">Angehakte Verträge erscheinen unter Fixkosten und werden künftig automatisch geplant. Liest du später einen Auszug ein, ersetzt die echte Buchung die geplante.</div>`;
   }
   for (const s of dep) {
-    h += `<h3>📈 ${s.items[0] && s.items[0].art === 'bestand' ? `Depotbestand vom ${fmtDs(s.stand)}` : 'Wertpapier-Abrechnung'}</h3><div class="card tight list">${s.items.map((it, k) => `<label class="it"><input type="checkbox" data-k="dep" data-q="${s.i}" data-v="${k}" ${it.on ? 'checked' : ''}><div class="grow" style="min-width:0"><div class="t ell">${esc(it.name)}</div><div class="s">${esc(it.isin)} · ${it.art === 'bestand' ? `${it.qty ? dec(it.qty, 3) + ' Stk. · ' : ''}${it.pos ? 'aktualisiert Position' : 'neue Position'}` : it.art === 'div' ? 'Dividende → Einnahme' : (it.art === 'kauf' ? 'Kauf' : 'Verkauf') + (it.qty ? ' · ' + dec(it.qty, 3) + ' Stk.' : '')} · ${fmtDs(it.date)}</div></div><span class="num">${eur(it.art === 'bestand' ? it.value : it.amount)}</span></label>`).join('')}</div>`;
+    h += `<h3>📈 ${s.items[0] && s.items[0].art === 'trpos' ? 'Trade Republic Depot' : s.items[0] && s.items[0].art === 'bestand' ? `Depotbestand vom ${fmtDs(s.stand)}` : 'Wertpapier-Abrechnung'}</h3><div class="card tight list">${s.items.map((it, k) => `<label class="it"><input type="checkbox" data-k="dep" data-q="${s.i}" data-v="${k}" ${it.on ? 'checked' : ''}><div class="grow" style="min-width:0"><div class="t ell">${esc(it.name)}</div><div class="s">${esc(it.isin)} · ${it.art === 'bestand' ? `${it.qty ? dec(it.qty, 3) + ' Stk. · ' : ''}${it.pos ? 'aktualisiert Position' : 'neue Position'}` : it.art === 'trpos' ? (it.offen ? `${dec(it.qty, 4)} Stk. · ${it.buys.length} Käufe/Verkäufe · Einstand` : 'verkauft · wird nicht übernommen') : it.art === 'div' ? 'Dividende → Einnahme' : (it.art === 'kauf' ? 'Kauf' : 'Verkauf') + (it.qty ? ' · ' + dec(it.qty, 3) + ' Stk.' : '')} · ${fmtDs(it.date)}</div></div><span class="num">${it.art === 'trpos' && !it.offen ? '' : eur(it.art === 'bestand' || it.art === 'trpos' ? it.value : it.amount)}</span></label>`).join('')}</div>`;
   }
   const nT = kto.reduce((a, s) => a + s.rows.filter(z => z.on).length, 0), nV = IMP.vertr.filter(v => v.on).length, nD = dep.reduce((a, s) => a + s.items.filter(i => i.on).length, 0);
   h += `<div class="sub" style="margin-top:6px">Übernommen werden: <b>${[nT && nT + ' Buchungen', nV && nV + ' Verträge', nD && nD + ' Depot-Einträge'].filter(Boolean).join(', ') || 'nichts'}</b>. Die Datei selbst wird nicht gespeichert.</div>`;
@@ -6890,11 +6911,22 @@ function impUebernehmen() {
       S.tx.push(o); nT++;
     }
   }
-  for (const s of IMP.q.filter(s => s.art === 'konto' && s.abgl && s.ende != null)) { const a = acc(R(accKey(s))); if (a) a.start = Math.round(((a.start || 0) + s.ende - accBalance(a.id, s.endeD)) * 100) / 100; }
+  // Kontostand: der neueste Auszug je Konto gilt als aktueller Stand (genau dieser Betrag wird angezeigt)
+  const neuester = {}; for (const s of IMP.q.filter(s => s.art === 'konto' && s.abgl && s.ende != null)) { const id = R(accKey(s)); if (!neuester[id] || (s.endeD || '') >= (neuester[id].endeD || '')) neuester[id] = s; }
+  for (const [id, s] of Object.entries(neuester)) { const a = acc(id); if (a && (s.endeD || '') >= (a.standD || '')) { a.stand = s.ende; a.standD = s.endeD || today(); } }
+  for (const a of S.accounts) if (a.stand != null && a.standD) a.start = Math.round(((a.start || 0) + a.stand - accBalance(a.id, a.standD)) * 100) / 100;
   for (const v of IMP.vertr.filter(v => v.on)) { S.rec.push({ id: uid(), type: 'aus', name: v.name, amount: v.amount, every: v.every, day: Math.min(28, v.day), start: v.last, booked: v.last, acc: R(v.acc), cat: v.cat, auto: true }); nV++; }
   for (const s of IMP.q.filter(s => s.art === 'depot')) for (const it of s.items) {
     if (!it.on) continue; nD++;
     let p = S.depot.find(p => (p.isin || '').toUpperCase() === it.isin);
+    if (it.art === 'trpos') { // Trade Republic: Datei ist die komplette Historie -> Position ersetzen
+      if (!it.offen) { if (p) { S.depot = S.depot.filter(x => x !== p); S.tx.forEach(t => { if (t.pos === p.id) delete t.pos; }); } continue; }
+      if (!p) { p = { id: uid(), name: it.name, isin: it.isin, buys: [], value: 0 }; S.depot.push(p); }
+      const altKurs = p.value && dpQty(p) && p.valueDate && dayDiff(p.valueDate, today()) <= 7 ? p.value / dpQty(p) : 0;
+      p.buys = it.buys.map(b => Object.assign({}, b)); p.qty = it.qty;
+      if (altKurs) p.value = Math.round(altKurs * it.qty * 100) / 100; else { p.value = it.value; p.valueDate = it.date; }
+      continue;
+    }
     if (it.art === 'div') { const c = katName('Dividenden'); S.tx.push({ id: uid(), date: it.date, type: 'ein', amount: it.amount, acc: R(accKey(s)), cat: c && c.id, note: 'Dividende ' + it.name, pos: p ? p.id : undefined, imp: 'div|' + it.isin + '|' + it.date + '|' + it.amount }); continue; }
     if (!p) { p = { id: uid(), name: it.name, isin: it.isin, buys: [], value: 0, valueDate: it.date }; S.depot.push(p); }
     if (it.art === 'bestand') { p.value = it.value; p.valueDate = it.date; if (it.qty) p.qty = it.qty; if (!p.buys.length) p.buys.push({ date: it.date, amount: it.einstand || it.value, qty: it.qty || 0, note: 'Bestand übernommen' }); }
@@ -6916,7 +6948,7 @@ function kontoLoeschen(ids) {
 const kontoVerdaechtig = a => !a.impV && ((a.bank && a.iban && a.name === `${a.bank} ${ACC_KIND[a.kind] || 'Konto'} ${ibanKurz(a.iban)}`) || (!a.bank && !a.iban && a.name === 'Girokonto' && S.tx.some(t => t.acc === a.id) && S.tx.filter(t => t.acc === a.id || t.to === a.id).every(t => t.imp)));
 ACT.accAufraeumen = () => {
   const n = id => S.tx.filter(t => t.acc === id || t.to === id).length;
-  const liste = S.accounts.map(a => `<label class="it" style="gap:10px;cursor:pointer"><input type="checkbox" name="weg" value="${a.id}" ${kontoVerdaechtig(a) ? 'checked' : ''} style="width:20px;height:20px;flex:none"><i class="dot" style="background:${a.color || '#4f8cff'}"></i><div class="grow"><div class="t">${esc(a.name)}</div><div class="s">${ACC_KIND[a.kind] || ''} · ${n(a.id)} Buchungen</div></div><span class="num ${accBalance(a.id) < 0 ? 'neg' : ''}">${eur(accBalance(a.id))}</span></label>`).join('');
+  const liste = S.accounts.map(a => `<label class="it" style="gap:10px;cursor:pointer"><input type="checkbox" name="weg" value="${a.id}" ${kontoVerdaechtig(a) ? 'checked' : ''} style="width:20px;height:20px;flex:none"><i class="dot" style="background:${a.color || '#4f8cff'}"></i><div class="grow"><div class="t">${esc(a.name)}</div><div class="s">${ACC_KIND[a.kind] || ''} · ${n(a.id)} Buchungen</div></div><span class="num ${accStand(a.id) < 0 ? 'neg' : ''}">${eur(accStand(a.id))}</span></label>`).join('');
   const vor = S.accounts.filter(kontoVerdaechtig).length;
   modal('🧹 Konten aufräumen', `<p class="sub" style="margin:0 0 10px">Angehakte Konten werden <b>mit allen ihren Buchungen</b> gelöscht.${vor ? ` ${vor} Konten sehen nach dem fehlerhaften Import aus und sind schon angehakt.` : ''} Danach kannst du deine Auszüge einfach neu einlesen.</p><div class="card tight list">${liste}</div>`, async (v, f) => {
     const ids = [...f.querySelectorAll('input[name=weg]:checked')].map(i => i.value);
@@ -7688,7 +7720,7 @@ function kursStandZeile() {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 104;
+const APP_V = 105;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
