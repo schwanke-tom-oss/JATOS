@@ -2084,6 +2084,12 @@ body.fk-offen{overflow:hidden}
 .lf-avg em{position:absolute;right:0;top:-13px;font-style:normal;font-size:9px;color:var(--tx3)}
 .sp-ziel{all:unset;cursor:pointer;font-size:11px;font-weight:600;color:var(--tx3);padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05)}
 
+/* iPhone: Abstand zur Statusleiste, wenn die Reiter unten sind; Schloss nicht nach oben schieben */
+body.bar-unten #app{padding-top:calc(6px + var(--safe-t))}
+body.bar-unten .szene,body.bar-unten .pxszene{margin-top:calc(-6px - var(--safe-t))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:var(--safe-t);background:linear-gradient(var(--bg) 75%,rgba(11,11,12,0));z-index:40;pointer-events:none;opacity:0;transition:opacity .2s}
+body.gescrollt::before{opacity:1}
+
 </style>
 </head>
 <body>
@@ -3154,6 +3160,7 @@ FIN.konten = () => {
   h += `<div class="card tight list">${S.accounts.map(a => `<div class="it click" data-act="accEdit" data-id="${a.id}"><i class="dot" style="background:${a.color || '#4f8cff'}"></i><div class="grow"><div class="t">${esc(a.name)}</div><div class="s">${{ giro: 'Girokonto', gem: 'Gemeinschaftskonto', tg: 'Tagesgeld', depot: 'Depot', bar: 'Bargeld', kk: 'Kreditkarte', sonst: 'Sonstiges' }[a.kind] || ''}${S.settings.mainAcc === a.id ? ' · Hauptkonto' : ''}</div></div><span class="num ${accBalance(a.id) < 0 ? 'neg' : ''}">${eur(accBalance(a.id))}</span></div>`).join('')}</div>`;
   h += `<button class="btn sec full imp-btn" data-act="impStart">📄 Kontoauszug einlesen – Konten werden erkannt</button>`;
   if (S.accounts.length > 1) h += `<button class="btn sec full" data-act="txUmb">⇄ Geld zwischen Konten umbuchen</button>`;
+  if (S.accounts.length) h += `<button class="btn sec full" data-act="accAufraeumen">🧹 Konten aufräumen${S.accounts.some(kontoVerdaechtig) ? ' – falsch angelegte gefunden' : ''}</button>`;
   return h;
 };
 ACT.accPreset = () => { [['Girokonto privat', 'giro', '#4f8cff'], ['Gemeinschaftskonto', 'gem', '#ffd166'], ['Tagesgeld', 'tg', '#2ecc8f'], ['Depot', 'depot', '#b07cff']].forEach(([name, kind, color]) => S.accounts.push({ id: uid(), name, kind, color, start: 0 })); S.settings.mainAcc = S.accounts[0].id; save(); render(); toast('Konten angelegt – Startsalden eintragen'); };
@@ -6478,48 +6485,84 @@ async function impPdfZeilen(buf) {
 
 /* ---------- Kontoauszug aus PDF-Zeilen ---------- */
 const STOP_RE = /^(alter|neuer|anfangs|end|vorläufiger)?\s*(kontostand|saldo)|^(übertrag|seite \d|blatt \d|summe|gesamtumsätze|kontoauszug\b|iban\b|bic\b|kontonummer|konto-?nr)|^bitte beachten|^rechnungsabschluss|^dieser auszug|^sehr geehrte/i;
-const ART_RE = /^(sepa[- ]?)?(basis-?)?(lastschrift(einzug)?|überweisung|ueberweisung|gutschrift|dauerauftrag|kartenzahlung|kartenumsatz|debitkarte|girocard|visa|mastercard|echtzeit-?überweisung|einzahlung|auszahlung|bargeldauszahlung|geldautomat|zahlung|abschluss|entgelt|zinsen|lohn\/gehalt|gehalt\/rente|retoure|rücklastschrift|umbuchung)\b[^A-Za-zÄÖÜäöü]*/i;
+const ART_RE = /^(sepa[- ]?)?(basis-?)?(nfc kartenzahlung|karteneinsatz im internet( -)?|echtzeitgutschrift|echtzeitüberweisung inland tbol|echtzeitüberweisung|überweisung inland|inland tbol|bargeldausz\.? geldautomat( -)?|lohn ?\/ ?gehalt ?\/ ?rente|online-kartenzahlung|lastschrift(einzug)?|überweisung|ueberweisung|gutschrift|dauerauftrag|kartenzahlung|kartenumsatz|debitkarte|girocard|visa|mastercard|echtzeit-?überweisung|einzahlung|auszahlung|bargeldauszahlung|geldautomat|zahlung|abschluss|entgelt|zinsen|lohn\/gehalt|gehalt\/rente|retoure|rücklastschrift|umbuchung)\b[^A-Za-zÄÖÜäöü]*/i;
 const EIN_RE = /gutschrift|zahlungseingang|eingang|lohn|gehalt|bezüge|besoldung|rente|zinsgutschrift|erstattung|rückzahlung|dividende|ausschüttung|einzahlung|retoure/i;
 
-function auszugAusZeilen(lines, fname) {
-  const all = lines.map(l => l.t).join('\n'), bank = impBank(all + ' ' + fname);
+function auszugAusZeilen(lines0, fname) {
+  const lines = lines0.map(L => Object.assign({}, L, { t: (L.it.length > 1 && L.it[0].x < 40 && L.it[0].s.trim().length <= 2 && L.it[1].x > 60 ? L.t.slice(L.it[0].s.trim().length) : L.t).trim().replace(/^_{3,}\s*/, '').replace(/^[A-Z0-9]\s+(?=\d{1,2}\.\d{1,2}\.)/, '').trim() }));
+  const rechts = (L, roh) => { const r = roh.replace(/^[-+−]\s?/, '').replace(/\s?(EUR|€)$/, '').trim(); const it = L.it.find(q => q.s.includes(r)); return it ? it.x + it.w : null; };
+  const all = lines.map(l => l.t).join('\n');
+  // Bank aus dem Kopf der ersten Seite (im Text weiter unten stehen oft andere Banken, z.B. Trade Republic als Empfänger)
+  const kopfTxt = lines.filter(l => l.p === lines[0].p).slice(0, 18).map(l => l.t).join('\n');
+  const bank = impBank(kopfTxt + ' ' + fname) || impBank(all + ' ' + fname);
   // Jahr aus vollständigen Datumsangaben
   const jahre = {}; for (const m of all.matchAll(/\b\d{1,2}\.\d{1,2}\.(20\d{2})\b/g)) jahre[m[1]] = (jahre[m[1]] || 0) + 1;
-  const jahrH = +(Object.entries(jahre).sort((a, b) => b[1] - a[1])[0] || [today().slice(0, 4)])[0];
   const vollD = [...all.matchAll(/\b(\d{1,2}\.\d{1,2}\.20\d{2})\b/g)].map(m => datum(m[1])).filter(Boolean).sort();
   const bisD = vollD.length ? vollD[vollD.length - 1] : today();
   const ohneJahr = d => { let x = datum(d, +bisD.slice(0, 4)); if (x && dayDiff(bisD, x) > 20) x = datum(d, +bisD.slice(0, 4) - 1); return x; };
   // Spalten Soll/Haben merken (für Beträge ohne Vorzeichen)
   let colS = null, colH = null;
-  const sekt = []; let cur = null, kopf = [];
-  const neueSektion = iban => { cur = { iban, kopf: kopf.slice(-8).join(' '), rows: [], start: null, ende: null, endeD: null }; sekt.push(cur); };
+  const sekt = []; let cur = null, kopf = [], inTx = false, letzte = null, seite = null;
+  const ueb = {}; // Finanzstatus-Übersicht: Kontonummer -> {typ, saldo}
+  const neueSektion = iban => { cur = { iban, kopf: kopf.slice(-8).join(' '), kopfL: kopf.slice(-16).join(' '), rows: [], start: null, ende: null, endeD: null, lauf: null }; sekt.push(cur); };
   for (let i = 0; i < lines.length; i++) {
     const L = lines[i], t = L.t;
-    for (const it of L.it) { if (/^(soll|belastung|lastschriften|ausgang|abgang)$/i.test(it.s.trim())) colS = it.x + it.w / 2; if (/^(haben|gutschrift(en)?|eingang|zugang)$/i.test(it.s.trim())) colH = it.x + it.w / 2; }
+    if (L.p !== seite) { seite = L.p; inTx = false; }
+    for (const it of L.it) { if (/^(soll|belastung(en)?|lastschriften|ausgang|abgang)$/i.test(it.s.trim())) colS = it.x + it.w / 2; if (/^(haben|gutschrift(en)?|eingang|zugang)$/i.test(it.s.trim())) colH = it.x + it.w / 2; }
+    if (/^(datum|buchung|valuta|transaktion|monatsübersicht|kontotyp|seite \d|summe)/i.test(t)) inTx = false;
+    const um = !sekt.length && t.match(/^([A-ZÄÖÜ][A-ZÄÖÜa-zäöü .&-]{3,40}?)\s+(\d{8,10})\s+EUR\s+(-?\d{1,3}(?:\.\d{3})*,\d{2})$/);
+    if (um) { ueb[um[2].padStart(10, '0')] = { typ: um[1].trim(), saldo: zahl(um[3]) }; continue; }
     const ib = /\b(iban|konto(nummer|-nr\.?)?)\b/i.test(t) && !/^\d{1,2}\.\d{1,2}\./.test(t) ? ibansIn(t) : [];
-    if (ib.length && (!cur || cur.iban !== ib[0])) { kopf.push(t); const vorh = sekt.find(s => s.iban === ib[0]); if (vorh) cur = vorh; else neueSektion(ib[0]); continue; }
-    const sal = t.match(/^(alter|neuer|anfangs|end|vorläufiger)?\s*(kontostand|saldo)\b/i);
-    if (sal) { const b = betraege(t); if (b.length) { const x = b[b.length - 1], v = x.v * (x.sg || 1); if (!cur) neueSektion(''); if (/alter|anfang/i.test(sal[1] || '')) cur.start = v; else { cur.ende = v; const d = t.match(/\d{1,2}\.\d{1,2}\.\d{2,4}/); cur.endeD = d ? datum(d[0]) : bisD; } } continue; }
+    if (ib.length) {
+      // IBAN eines Empfängers/Absenders innerhalb einer Buchung -> gehört zur Buchung, ist KEIN eigenes Konto
+      const fremd = inTx || (cur && cur.rows.length && /\/\s*BIC\b/i.test(t) && !/BIC CODE/i.test(t));
+      if (fremd) { if (letzte && !letzte.ciban) letzte.ciban = ib[0]; continue; }
+      if (!cur || cur.iban !== ib[0]) { kopf.push(t); const vorh = sekt.find(s => s.iban === ib[0]); if (vorh) cur = vorh; else if (cur && !cur.iban && !cur.rows.length) cur.iban = ib[0]; else neueSektion(ib[0]); continue; }
+      continue;
+    }
     const dm = t.match(/^(\d{1,2}\.\d{1,2}\.(?:\d{2,4})?)\s*(\d{1,2}\.\d{1,2}\.(?:\d{2,4})?)?\s*(.*)$/);
+    const salD = dm && (dm[3] || '').match(/^(?:[A-Z]{2}\s+)?(anfangssaldo|endsaldo|alter kontostand|neuer kontostand|kontostand|saldo)\b/i);
+    const sal = salD ? [null, /anfang|alter/i.test(salD[1]) ? 'alter' : 'neuer'] : t.match(/^(alter|neuer|anfangs|end|vorläufiger)?\s*(kontostand|saldo)\b/i);
+    if (sal) { inTx = false; const b = betraege(t); if (b.length) { const x = b[b.length - 1], v = x.v * (x.sg || 1); if (!cur) neueSektion(''); if (/alter|anfang/i.test(sal[1] || '')) { cur.start = v; cur.lauf = v; } else { cur.ende = v; const d = salD ? ohneJahr(dm[1]) : (t.match(/\d{1,2}\.\d{1,2}\.\d{2,4}/) || [])[0]; cur.endeD = d ? (salD ? d : datum(d)) : bisD; } } continue; }
     const b = dm ? betraege(t) : [];
     if (!dm || !b.length) { if (!cur || !cur.rows.length) kopf.push(t); continue; }
+    // Vorgemerkte/reservierte Beträge sind noch nicht gebucht
+    if (/reserv\.?\s*betrag|vorgemerkt|vormerkung/i.test(t)) { inTx = true; letzte = null; continue; }
     if (!cur) neueSektion('');
     // Betrag: letzter Betrag; bei zwei Beträgen prüfen, ob der letzte ein laufender Saldo ist
-    let x = b[b.length - 1];
-    if (b.length >= 2) { const vor = cur.lauf, a1 = b[b.length - 2]; if (vor != null && [1, -1].some(s => Math.abs(vor + s * a1.v - x.v * (x.sg || 1)) < 0.011)) { cur.lauf = x.v * (x.sg || 1); x = a1; } }
-    let sg = x.sg, sicher = !!sg;
+    let x = b[b.length - 1], sgSaldo = 0;
+    if (b.length >= 2) {
+      const vor = cur.lauf, a1 = b[b.length - 2], neu = x.v * (x.sg || 1), rN = rechts(L, x.roh), rA = rechts(L, a1.roh);
+      const s = vor != null ? [1, -1].find(s => Math.abs(vor + s * a1.v - neu) < 0.011) : 0;
+      if (s) { cur.lauf = neu; x = a1; sgSaldo = s; if (rN != null) cur.balR = rN; if (rA != null) (cur.colR = cur.colR || {})[s] = rA; }
+      else if (cur.balR != null && rN != null && Math.abs(rN - cur.balR) < 6) { // Saldo-Spalte erkannt, aber eine Buchung fehlt dazwischen
+        const c = cur.colR || {}; let s2 = 0;
+        if (rA != null && c[1] != null && c[-1] != null) s2 = Math.abs(rA - c[1]) < Math.abs(rA - c[-1]) ? 1 : -1; else if (vor != null) s2 = neu >= vor ? 1 : -1;
+        cur.lauf = neu; x = a1; sgSaldo = s2;
+      }
+    }
+    let sg = sgSaldo || x.sg, sicher = !!sg;
     if (!sg && colS != null && colH != null) { const it = L.it.find(q => q.s.includes(x.roh.replace(/[-+−]|\s?[SH]$|\s?(EUR|€)/g, '').trim())); if (it) { const mx = it.x + it.w / 2; sg = Math.abs(mx - colH) < Math.abs(mx - colS) ? 1 : -1; sicher = true; } }
     let txt = (dm[3] || '').replace(x.roh, ' ');
-    for (const q of b) if (q !== x && b.length < 3) txt = txt.replace(q.roh, ' ');
+    for (const q of b) if (q !== x && b.length < 4) txt = txt.replace(q.roh, ' ');
+    txt = txt.replace(/^(MO|DI|MI|DO|FR|SA|SO)\s+/, '');
     const extra = [];
-    for (let j = i + 1; j < lines.length && extra.length < 6; j++) { const n = lines[j].t; if (/^\d{1,2}\.\d{1,2}\./.test(n) || STOP_RE.test(n) || lines[j].p !== L.p && /^(datum|buchung|valuta|wert)/i.test(n)) break; if (betraege(n).length && !/[a-z]{3}/i.test(n.replace(/EUR/g, ''))) break; extra.push(n); }
+    for (let j = i + 1; j < lines.length && extra.length < 6; j++) { const n = lines[j].t; if (lines[j].p !== L.p || Math.abs(lines[j - 1].y - lines[j].y) > 30 || /^\d{1,2}\.\d{1,2}\./.test(n) || STOP_RE.test(n) || /^(kundenref|gläubiger|mandat|autorisierungsnr|kartennummer)/i.test(n)) break; if (betraege(n).length && !/[a-z]{3}/i.test(n.replace(/EUR/g, ''))) break; extra.push(n); }
     const voll = (txt + ' ' + extra.join(' ')).replace(/\s+/g, ' ').trim();
     if (!sg) { sg = EIN_RE.test(voll) ? 1 : -1; sicher = false; }
-    cur.rows.push(zeileBauen(ohneJahr(dm[1]), x.v * sg, voll, sicher, txt.replace(/\s+/g, ' ').trim()));
+    letzte = zeileBauen(ohneJahr(dm[1]), x.v * sg, voll, sicher, txt.replace(/\s+/g, ' ').trim());
+    cur.rows.push(letzte); inTx = true;
   }
-  return sekt.filter(s => s.rows.length || s.ende != null).map(s => ({ art: 'konto', bank, iban: s.iban, kopf: s.kopf, rows: s.rows, ende: s.ende, endeD: s.endeD || bisD, start: s.start, kind: kontoArt(s.kopf + ' ' + fname) }));
+  // Kontoart/-name aus der Übersicht (Finanzstatus) oder dem Kopf
+  const blz = (sekt.find(s => /^DE\d{20}$/.test(s.iban)) || {}).iban;
+  for (const s of sekt) { const nr = /^DE\d{20}$/.test(s.iban) ? s.iban.slice(12) : ''; if (nr && ueb[nr]) { s.typ = ueb[nr].typ; if (s.ende == null) { s.ende = ueb[nr].saldo; s.endeD = bisD; } ueb[nr].da = true; } else { const m = s.kopf.match(/([A-ZÄÖÜ][A-ZÄÖÜa-zäöü-]*(?:konto|karte|sparbuch))\s+\d{8,10}/i); if (m) s.typ = m[1]; } }
+  // Konten, die nur in der Übersicht stehen (z.B. Sparkarte ohne Umsätze)
+  if (blz) for (const [nr, u] of Object.entries(ueb)) if (!u.da) { const bban = blz.slice(4, 12) + nr, r = (bban + '131400').replace(/./g, c => c); let m = 0; for (let k = 0; k < r.length; k += 7) m = Number(String(m) + r.slice(k, k + 7)) % 97; const ib = 'DE' + String(98 - m).padStart(2, '0') + bban; sekt.push({ iban: ibanOk(ib) ? ib : '', kopf: u.typ, typ: u.typ, rows: [], ende: u.saldo, endeD: bisD, start: null }); }
+  return sekt.filter(s => s.rows.length || s.ende != null).map(s => ({ art: 'konto', bank, iban: s.iban, kopf: s.kopf, typ: s.typ ? impTypName(s.typ) : '', rows: s.rows, ende: s.ende, endeD: s.endeD || bisD, start: s.start, kind: kontoArt((s.typ || '') + ' ' + (s.kopfL || s.kopf) + ' ' + fname) }));
 }
-function kontoArt(t) { return /tagesgeld|sparkonto|festgeld|sparbuch|extra-?konto/i.test(t) ? 'tg' : /gemeinschaft|\bund\b\s+(frau|herrn?)|oder-konto/i.test(t) ? 'gem' : /kreditkarte|visa|mastercard/i.test(t) ? 'kk' : /depot|verrechnungskonto/i.test(t) ? 'depot' : 'giro'; }
+const impTypName = t => t.replace(/^EUR\s+/i, '').toLowerCase().replace(/(^|[\s-])\S/g, c => c.toUpperCase());
+const zweiInhaber = t => { const n = [...t.matchAll(/\b(?:[Ff]rau|[Hh]errn?)\s+([A-ZÄÖÜ][\wäöüß-]+\s+[A-ZÄÖÜ][\wäöüß-]+)/g)].map(m => m[1]); if (!n.length || typeof eigeneNamen !== 'function') return false; const low = t.toLowerCase(), eig = eigeneNamen().map(e => e.toLowerCase()); return eig.some(e => low.includes(e)) && n.some(x => !eig.some(e => e.includes(x.toLowerCase()) || x.toLowerCase().includes(e))); };
+function kontoArt(t) { return /tagesgeld|sparkonto|festgeld|sparbuch|sparkarte|extra-?konto|kaution/i.test(t) ? 'tg' : /gemeinschaft|\bund\b\s+(frau|herrn?)|oder-konto|\boder\b\s+(frau|herrn?)/i.test(t) || zweiInhaber(t) ? 'gem' : /kreditkarte|visa|mastercard/i.test(t) ? 'kk' : /depot|verrechnungskonto/i.test(t) ? 'depot' : 'giro'; }
 
 /* Buchungstext zerlegen: Art, Name, Gegen-IBAN, Verwendungszweck */
 function zeileBauen(date, betrag, voll, sicher, erste) {
@@ -6529,6 +6572,7 @@ function zeileBauen(date, betrag, voll, sicher, erste) {
   const cut = rest.search(/\b(EREF|MREF|CRED|KREF|SVWZ|ABWA|ABWE|Verwendungszweck|End-to-End|Mandat|Gläubiger|Referenz|Kartenzahlung|Kartennr|Folgenr|Datum)\b|\d{2}\.\d{2}\.\d{2,4}|\/\//i);
   let name = (cut > 2 ? rest.slice(0, cut) : rest).replace(/[,;:/]+$/, '').replace(/\s+/g, ' ').trim();
   if (erste) { const e1 = erste.replace(ART_RE, '').replace(/\b[A-Z]{2}\d{2}(?: ?[A-Z0-9]{4}){3,7}(?: ?[A-Z0-9]{1,3})?\b/g, ' ').replace(/\s+/g, ' ').trim(); if (e1.length >= 3 && name.startsWith(e1)) name = e1; }
+  name = name.replace(/\s+AM$/, '');
   if (name.length > 48) name = name.slice(0, 48).replace(/\s\S*$/, '');
   if (!name) name = art || 'Buchung';
   return { date, amount: Math.abs(betrag), dir: betrag < 0 ? -1 : 1, name, vz: voll.slice(0, 300), art, ciban: ib[0] || '', sicher, lastschrift: /\bMREF\b|Mandat|\bCRED\b|Gläubiger/i.test(voll) };
@@ -6582,6 +6626,7 @@ function csvZeilen(txt) {
 }
 function auszugAusCsv(txt, fname) {
   const rows = csvZeilen(txt), bank = impBank(txt.slice(0, 3000) + ' ' + fname);
+  if (rows[0] && ['transaction_id', 'category', 'type', 'amount'].every(h => rows[0].includes(h))) return trAusCsv(rows);
   const H = { date: /^(buchungs?tag|buchungsdatum|datum|booking ?date|date|wertstellung|valuta(datum)?|transaktionsdatum)$/i, amount: /^(betrag|umsatz|amount|betrag \(eur\)|betrag \(€\)|betrag in eur|umsatz in eur|wert)$/i, soll: /^(soll|ausgang|belastung|debit)$/i, haben: /^(haben|eingang|gutschrift|credit)$/i, sh: /^(s\/h|soll\/haben|vorzeichen)$/i, name: /(empfänger|empfaenger|auftraggeber|zahlungspflichtig|begünstigt|beguenstigt|gegenpartei|zahlungsempfänger|payee|counterparty|^name$|partner)/i, zweck: /(verwendungszweck|zweck|beschreibung|buchungstext|details|reference|vorgang|umsatzart|text)/i, iban: /^(iban|kontonummer\/iban|kontonummer|gegenkonto|iban zahlungsbeteiligter|iban des? (empfängers|auftraggebers))$/i, own: /(auftragskonto|eigene iban|mein konto|kontonummer des kontos)/i, saldo: /^(saldo|kontostand|balance|saldo nach buchung)$/i, isin: /^isin$/i, stk: /^(stück|stk|anzahl|bestand|menge|nominale|quantity|shares)$/i, wert: /^(kurswert|marktwert|wert|wert in eur|bewertung|aktueller wert|value)$/i, kurs: /^(kurs|aktueller kurs|preis|price)$/i, wpname: /^(name|bezeichnung|wertpapier|wertpapiername|titel|instrument)$/i, einstand: /^(einstandswert|kaufwert|einstand|investiert)$/i };
   let hi = -1, col = {};
   for (let i = 0; i < Math.min(rows.length, 40); i++) { const c = {}; rows[i].forEach((h, k) => { const s = h.replace(/\s+/g, ' ').trim(); for (const key in H) if (c[key] == null && H[key].test(s)) { if (key === 'date' && c.date != null) continue; c[key] = k; } }); if ((c.date != null && (c.amount != null || c.soll != null)) || (c.isin != null && (c.wert != null || c.stk != null))) { hi = i; col = c; break; } }
@@ -6606,6 +6651,39 @@ function auszugAusCsv(txt, fname) {
     if (col.saldo != null) { const s = zahl(r[col.saldo]); if (s != null && (!own[k].saldoD || d >= own[k].saldoD)) { own[k].saldo = s; own[k].saldoD = d; } }
   }
   return Object.entries(own).map(([iban, o]) => ({ art: 'konto', bank, iban, kopf: pre, rows: o.rows, ende: o.saldo, endeD: o.saldoD, kind: kontoArt(pre + ' ' + fname) }));
+}
+
+/* ---------- Trade Republic: Transaktionsexport (CSV) ---------- */
+const TR_NAME = { INTEREST_PAYMENT: 'Zinsen', CARD_TRANSACTION: 'Kartenzahlung', TAX_OPTIMIZATION: 'Steuerausgleich', SEC_ACCOUNT: 'Steuerausgleich Depot', EARNINGS: 'Vorabpauschale', BONUS: 'Bonus', GIFT: 'Geschenk', STOCKPERK: 'Aktien-Prämie', BENEFITS_SAVEBACK: 'Saveback', CARD_ORDERING_FEE: 'Kartengebühr', EXCHANGE: 'Barausgleich', MANUAL_CASH_TRANSFER: 'Steuergutschrift' };
+function trAusCsv(rows) {
+  const h = rows[0], c = k => h.indexOf(k), body = rows.slice(1).filter(r => r.length >= h.length - 2);
+  const g = (r, k) => (c(k) >= 0 ? r[c(k)] || '' : '').trim(), n = (r, k) => { const v = parseFloat(g(r, k)); return isNaN(v) ? 0 : v; };
+  const konto = { art: 'konto', bank: 'Trade Republic', iban: '', kopf: 'Trade Republic', rows: [], kind: 'tg', tr: true, neuName: 'Trade Republic Cash' };
+  const depot = { art: 'depot', bank: 'Trade Republic', items: [], stand: today(), tr: true };
+  const sorted = body.slice().sort((a, b) => g(a, 'datetime') < g(b, 'datetime') ? -1 : 1);
+  let saldo = 0, letzt = null;
+  for (const r of sorted) {
+    const kat = g(r, 'category'), typ = g(r, 'type'), d = datum(g(r, 'date') || g(r, 'datetime')); if (!d) continue;
+    if (kat === 'DELIVERY' || kat === 'CORPORATE_ACTION') continue; // Einbuchungen ohne Geldfluss
+    const v = Math.round((n(r, 'amount') + n(r, 'fee') + n(r, 'tax')) * 100) / 100; if (!v) continue;
+    saldo += v; letzt = d;
+    const wp = g(r, 'name'), isin = g(r, 'symbol').toUpperCase(), cp = g(r, 'counterparty_name'), desc = g(r, 'description');
+    const voll = [cp, desc, g(r, 'payment_reference'), g(r, 'counterparty_iban')].filter(Boolean).join(' ');
+    const z = zeileBauen(d, v, voll, true); z.hid = g(r, 'transaction_id'); if (g(r, 'counterparty_iban')) z.ciban = g(r, 'counterparty_iban').replace(/\s/g, '').toUpperCase();
+    if (/^(BUY|SELL|PRIVATE_MARKET_BUY|PRIVATE_MARKET_SELL)$/.test(typ)) {
+      const verk = /SELL/.test(typ), qty = Math.abs(n(r, 'shares'));
+      z.name = `${verk ? 'Verkauf' : 'Kauf'} ${wp || isin}`.slice(0, 48); z.vz = z.name + (qty ? ` · ${dec(qty, 4)} Stk.` : ''); z.trDepot = true;
+      depot.items.push({ art: verk ? 'verkauf' : 'kauf', isin, name: wp || isin, date: d, amount: Math.abs(v), qty });
+    } else if (/^(DIVIDEND|DISTRIBUTION)$/.test(typ)) { z.name = ('Dividende ' + (wp || isin)).slice(0, 48); z.vz = z.name; z.isin = isin; z.trTyp = 'div'; }
+    else if (/^(CUSTOMER_|TRANSFER_)/.test(typ)) {
+      const wer = cp || (desc.match(/(?:from|for)\s+(.+?)(?:\s*\(|$)/i) || [])[1] || '';
+      z.name = (wer || (/top up|inpayed/i.test(desc) ? 'Einzahlung' : v > 0 ? 'Eingang' : 'Auszahlung')).slice(0, 48); z.vz = desc.slice(0, 300);
+      if (!wer || /top up|inpayed/i.test(desc)) z.eigen = true;
+    } else { z.name = TR_NAME[typ] || (wp ? wp : typ.toLowerCase().replace(/_/g, ' ')); if (wp && TR_NAME[typ]) z.name += ' ' + wp; z.name = z.name.slice(0, 48); z.vz = desc || z.name; if (typ === 'INTEREST_PAYMENT') z.trTyp = 'zins'; }
+    konto.rows.push(z);
+  }
+  konto.ende = Math.round(saldo * 100) / 100; konto.endeD = letzt || today();
+  return depot.items.length ? [konto, depot] : [konto];
 }
 
 /* ---------- Kategorien: gelernte Regeln, dann Stichworte ---------- */
@@ -6649,7 +6727,7 @@ async function impDateien(files) {
   for (const f of files) {
     try {
       const buf = await f.arrayBuffer(), isPdf = /\.pdf$/i.test(f.name) || f.type === 'application/pdf';
-      if (isPdf) { const lines = await impPdfZeilen(buf); if (!lines.length) throw new Error('kein Text gefunden (eingescannt?)'); const dep = depotAusZeilen(lines, f.name), kto = auszugAusZeilen(lines, f.name); const k = kto.filter(s => s.rows.length); if (k.length && (!dep || k.reduce((a, s) => a + s.rows.length, 0) > 2)) k.forEach(s => quellen.push(Object.assign(s, { datei: f.name }))); else if (dep) quellen.push(Object.assign(dep, { datei: f.name })); else if (kto.length) kto.forEach(s => quellen.push(Object.assign(s, { datei: f.name }))); else throw new Error('keine Buchungen erkannt'); }
+      if (isPdf) { const lines = await impPdfZeilen(buf); if (!lines.length) throw new Error('kein Text gefunden (eingescannt?)'); const dep = depotAusZeilen(lines, f.name), kto = auszugAusZeilen(lines, f.name); const k = kto.filter(s => s.rows.length || s.ende != null && kto.some(x => x.rows.length)); if (k.length && (!dep || k.reduce((a, s) => a + s.rows.length, 0) > 2)) k.forEach(s => quellen.push(Object.assign(s, { datei: f.name }))); else if (dep) quellen.push(Object.assign(dep, { datei: f.name })); else if (kto.length) kto.forEach(s => quellen.push(Object.assign(s, { datei: f.name }))); else throw new Error('keine Buchungen erkannt'); }
       else { let txt; try { txt = new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch (e) { txt = new TextDecoder('windows-1252').decode(buf); } auszugAusCsv(txt.replace(/^﻿/, ''), f.name).forEach(s => quellen.push(Object.assign(s, { datei: f.name }))); }
     } catch (e) { fehler.push(`${f.name}: ${e.message || e}`); }
   }
@@ -6664,14 +6742,15 @@ function impVorschau(quellen, fehler) {
   quellen.forEach((s, i) => {
     s.i = i;
     if (s.art === 'konto') {
-      const a = s.iban && S.accounts.find(a => a.iban === s.iban);
       const belegt = new Set(quellen.slice(0, i).filter(x => x.art === 'konto' && x.iban !== s.iban).map(x => x.acc));
-      const frei = !a && S.accounts.filter(a => !a.iban && a.kind === s.kind && !belegt.has(a.id));
-      s.acc = a ? a.id : frei && frei.length === 1 ? frei[0].id : 'neu';
-      s.neuName = `${s.bank ? s.bank + ' ' : ''}${ACC_KIND[s.kind] || 'Konto'}${s.iban ? ' ' + ibanKurz(s.iban) : ''}`; s.neuKind = s.kind;
+      const a = s.iban && S.accounts.find(a => a.iban === s.iban) || s.tr && S.accounts.find(a => a.kind !== 'depot' && (a.bank === 'Trade Republic' || /trade ?republi/i.test(a.name)) && !belegt.has(a.id));
+      const frei = !a && S.accounts.filter(a => !a.iban && a.kind === s.kind && !belegt.has(a.id) && (!s.bank || !a.bank || a.bank === s.bank));
+      const frei2 = frei && s.bank && frei.filter(a => a.bank === s.bank || a.name.toLowerCase().includes(s.bank.toLowerCase()));
+      s.acc = a ? a.id : frei2 && frei2.length === 1 ? frei2[0].id : frei && frei.length === 1 ? frei[0].id : 'neu';
+      s.neuName = s.neuName || `${s.bank ? s.bank + ' ' : ''}${s.typ || ACC_KIND[s.kind] || 'Konto'}${s.iban ? ' ' + ibanKurz(s.iban) : ''}`; s.neuKind = s.kind;
       s.abgl = s.ende != null;
     } else {
-      const d = S.accounts.find(a => a.kind === 'depot'); s.acc = d ? d.id : 'neu'; s.neuName = `${s.bank ? s.bank + ' ' : ''}Depot`; s.neuKind = 'depot';
+      const d = s.bank && S.accounts.find(a => a.kind === 'depot' && (a.bank === s.bank || a.name.toLowerCase().includes(s.bank.toLowerCase().split(' ')[0]))) || S.accounts.find(a => a.kind === 'depot'); s.acc = d ? d.id : 'neu'; s.neuName = `${s.bank ? s.bank + ' ' : ''}Depot`; s.neuKind = 'depot';
       s.items.forEach(it => { it.on = true; it.pos = (S.depot.find(p => (p.isin || '').toUpperCase() === it.isin) || {}).id || ''; });
     }
   });
@@ -6688,13 +6767,18 @@ const accNameK = k => { if (k && k.startsWith('neu:')) return IMP.q[+k.slice(4)]
 function impKlassifizieren() {
   const ibanAcc = {}; S.accounts.forEach(a => { if (a.iban) ibanAcc[a.iban] = a.id; }); IMP.q.forEach(s => { if (s.art === 'konto' && s.iban) ibanAcc[s.iban] = accKey(s); });
   const konten = IMP.q.filter(s => s.art === 'konto');
+  const trQ = konten.find(s => s.tr), trA = S.accounts.find(a => a.kind !== 'depot' && (a.bank === 'Trade Republic' || /trade ?republi/i.test(a.name))), trK = trQ ? accKey(trQ) : trA ? trA.id : '';
   for (const s of konten) {
     const self = accKey(s);
     for (const z of s.rows) {
       if (z.manuell) continue;
       z.self = self; z.flag = ''; z.on = true; z.ersetzt = null;
       const other = z.ciban && ibanAcc[z.ciban];
-      if (other && other !== self) { z.typ = 'umb'; z.other = other; }
+      if (z.trDepot) { const dq = IMP.q.find(x => x.art === 'depot' && x.tr); const dk = dq ? accKey(dq) : (S.accounts.find(a => a.kind === 'depot') || {}).id; if (dk && dk !== self) { z.typ = 'umb'; z.other = dk; } else { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); } }
+      else if (z.trTyp === 'div') { z.typ = z.dir < 0 ? 'aus' : 'ein'; const c = katName('Dividenden'); z.cat = c && c.type === z.typ ? c.id : impKat(z, z.typ); }
+      else if (other && other !== self) { z.typ = 'umb'; z.other = other; }
+      else if (trK && trK !== self && /trade republic/i.test(z.name + ' ' + z.vz)) { z.typ = 'umb'; z.other = trK; }
+      else if (z.eigen) { z.typ = 'umb'; const o = konten.find(k => accKey(k) !== self && k.kind === 'giro') || konten.find(k => accKey(k) !== self); z.other = o ? accKey(o) : (S.accounts.find(a => a.id !== self && a.kind === 'giro') || S.accounts.find(a => a.id !== self && a.kind !== 'depot') || {}).id || ''; z.flag = 'unsicher'; }
       else if (nameIstIch(z.name) || nameIstIch(z.vz.slice(0, 80))) { z.typ = 'umb'; z.other = konten.find(k => accKey(k) !== self) ? accKey(konten.find(k => accKey(k) !== self)) : (S.accounts.find(a => a.id !== self) || {}).id || ''; if (!z.ciban || !other) z.flag = 'unsicher'; }
       else { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); if (!z.sicher) z.flag = 'unsicher'; }
     }
@@ -6714,7 +6798,7 @@ function impKlassifizieren() {
   }
   impVertraege();
 }
-const impHash = (s, z) => [s.iban || s.datei, z.date, z.dir * z.amount, (z.vz || '').slice(0, 60)].join('|');
+const impHash = (s, z) => z.hid ? 'tr|' + z.hid : [s.iban || s.datei, z.date, z.dir * z.amount, (z.vz || '').slice(0, 60)].join('|');
 function impVertraege() {
   const alt = {}; (IMP.vertr || []).forEach(v => { alt[v.key] = v.on; });
   const gruppen = {};
@@ -6787,7 +6871,7 @@ function impAenderung(el) {
 function impUebernehmen() {
   const map = {}, farben = ['#4f8cff', '#ffd166', '#2ecc8f', '#b07cff', '#ff8a4c', '#38c7d6', '#ff6b9a'];
   for (const s of IMP.q) {
-    if (s.acc === 'neu') { const a = { id: uid(), name: (s.neuName || 'Konto').trim(), kind: s.neuKind || s.kind || 'giro', color: farben[S.accounts.length % farben.length], start: 0, iban: s.iban || undefined, bank: s.bank || undefined }; S.accounts.push(a); map['neu:' + s.i] = a.id; if (!S.settings.mainAcc && a.kind === 'giro') S.settings.mainAcc = a.id; }
+    if (s.acc === 'neu') { const a = { id: uid(), name: (s.neuName || 'Konto').trim(), kind: s.neuKind || s.kind || 'giro', color: farben[S.accounts.length % farben.length], start: 0, iban: s.iban || undefined, bank: s.bank || undefined, impV: 2 }; S.accounts.push(a); map['neu:' + s.i] = a.id; if (!S.settings.mainAcc && a.kind === 'giro') S.settings.mainAcc = a.id; }
     else { map[s.acc] = s.acc; const a = acc(s.acc); if (a && s.iban && !a.iban) a.iban = s.iban; if (a && s.bank && !a.bank) a.bank = s.bank; }
   }
   const R = k => map[k] || k; let nT = 0, nV = 0, nD = 0;
@@ -6801,6 +6885,7 @@ function impUebernehmen() {
       if (z.typ === 'umb') { const other = R(z.other); if (!other || other === self) { o.type = z.dir < 0 ? 'aus' : 'ein'; o.cat = impKat(z, o.type); } else if (z.dir < 0) o.to = other; else { o.acc = other; o.to = self; } }
       else o.cat = z.cat;
       if (z.recId) o.rec = z.recId;
+      if (z.isin) o.isin = z.isin;
       if (z.lern && z.typ !== 'umb') { const k = impKey(z.name); if (k) S.impRules[k] = z.cat; }
       S.tx.push(o); nT++;
     }
@@ -6815,9 +6900,30 @@ function impUebernehmen() {
     if (it.art === 'bestand') { p.value = it.value; p.valueDate = it.date; if (it.qty) p.qty = it.qty; if (!p.buys.length) p.buys.push({ date: it.date, amount: it.einstand || it.value, qty: it.qty || 0, note: 'Bestand übernommen' }); }
     else { if (p.buys.some(b => b.date === it.date && Math.abs(Math.abs(b.amount) - it.amount) < 0.01)) continue; p.buys.push({ date: it.date, amount: it.art === 'verkauf' ? -it.amount : it.amount, qty: it.qty ? (it.art === 'verkauf' ? -it.qty : it.qty) : 0 }); p.buys.sort((a, b) => a.date < b.date ? -1 : 1); if (!p.value) { p.value = sum(p.buys, b => b.amount); p.valueDate = it.date; } }
   }
+  S.tx.forEach(t => { if (t.isin) { const p = S.depot.find(p => (p.isin || '').toUpperCase() === t.isin); if (p) t.pos = p.id; delete t.isin; } });
   IMP = null;
   setTimeout(() => { toast(`✓ ${[nT && nT + ' Buchungen', nV && nV + ' Verträge', nD && nD + ' Depot-Einträge'].filter(Boolean).join(', ') || 'Nichts'} übernommen`); if (typeof jatosAktion === 'function') jatosAktion(`Auszug eingelesen: ${nT} Buchungen. Ich hab alles einsortiert! 📄✨`); }, 50);
 }
+
+/* ---------- Konten aufräumen (z.B. nach fehlerhaftem Import) ---------- */
+function kontoLoeschen(ids) {
+  const set = new Set(ids);
+  S.tx = S.tx.filter(t => !set.has(t.acc) && !set.has(t.to));
+  S.rec = S.rec.filter(r => !set.has(r.acc) && !set.has(r.to));
+  S.accounts = S.accounts.filter(a => !set.has(a.id));
+  if (set.has(S.settings.mainAcc)) S.settings.mainAcc = (S.accounts.find(a => a.kind === 'giro') || S.accounts[0] || {}).id || '';
+}
+const kontoVerdaechtig = a => !a.impV && ((a.bank && a.iban && a.name === `${a.bank} ${ACC_KIND[a.kind] || 'Konto'} ${ibanKurz(a.iban)}`) || (!a.bank && !a.iban && a.name === 'Girokonto' && S.tx.some(t => t.acc === a.id) && S.tx.filter(t => t.acc === a.id || t.to === a.id).every(t => t.imp)));
+ACT.accAufraeumen = () => {
+  const n = id => S.tx.filter(t => t.acc === id || t.to === id).length;
+  const liste = S.accounts.map(a => `<label class="it" style="gap:10px;cursor:pointer"><input type="checkbox" name="weg" value="${a.id}" ${kontoVerdaechtig(a) ? 'checked' : ''} style="width:20px;height:20px;flex:none"><i class="dot" style="background:${a.color || '#4f8cff'}"></i><div class="grow"><div class="t">${esc(a.name)}</div><div class="s">${ACC_KIND[a.kind] || ''} · ${n(a.id)} Buchungen</div></div><span class="num ${accBalance(a.id) < 0 ? 'neg' : ''}">${eur(accBalance(a.id))}</span></label>`).join('');
+  const vor = S.accounts.filter(kontoVerdaechtig).length;
+  modal('🧹 Konten aufräumen', `<p class="sub" style="margin:0 0 10px">Angehakte Konten werden <b>mit allen ihren Buchungen</b> gelöscht.${vor ? ` ${vor} Konten sehen nach dem fehlerhaften Import aus und sind schon angehakt.` : ''} Danach kannst du deine Auszüge einfach neu einlesen.</p><div class="card tight list">${liste}</div>`, async (v, f) => {
+    const ids = [...f.querySelectorAll('input[name=weg]:checked')].map(i => i.value);
+    if (!ids.length) return;
+    kontoLoeschen(ids); toast(`🧹 ${ids.length} ${ids.length === 1 ? 'Konto' : 'Konten'} gelöscht`);
+  }, { saveLabel: 'Angehakte löschen' });
+};
 
 /* ---------- Depot: Übersicht nach dem Vorbild des Depot-Dashboards, für jedes Depot und jedes Ziel ---------- */
 /* Alles wird aus den eigenen Daten berechnet: Positionen, Käufe, Wert-Stände, Dividenden-Buchungen und dem selbst gesetzten Depot-Ziel. Keine Kurse aus dem Internet. */
@@ -7582,7 +7688,7 @@ function kursStandZeile() {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 103;
+const APP_V = 104;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -9315,6 +9421,7 @@ load();
 autoBook();
 render();
 hlLaden();
+addEventListener('scroll', () => document.body.classList.toggle('gescrollt', scrollY > 8), { passive: true });
 setInterval(() => { if (UI.tab === 'heute' && !_modalStack.length && !document.hidden) render(); }, 300000);
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
