@@ -2093,6 +2093,24 @@ body.gescrollt::before{opacity:1}
 .dp-psoll .dash{width:14px;height:0;border-top:2px dashed var(--c)}
 .dp-psoll .dp-psd{margin-left:auto;font-size:14px}
 .dp-psoll small{flex-basis:100%;color:var(--muted,#8a8a90);font-size:11px;margin-top:-2px}
+/* Leiste oben: verdeckt nichts mehr */
+nav.tabs{transition:transform .28s cubic-bezier(.3,.7,.3,1),opacity .2s}
+body:not(.bar-unten).nav-weg nav.tabs{transform:translateY(calc(-100% - 8px));opacity:0}
+.pxszene{box-sizing:content-box;padding-top:calc(var(--navh,70px) + var(--safe-t) - 4px);transition:background-color .6s}
+body.bar-unten .pxszene{padding-top:var(--safe-t)}
+body:not(.bar-unten).gescrollt nav.tabs{background:linear-gradient(var(--bg) 0,var(--bg) 55%,rgba(11,11,12,0))}
+.dpi-info{font-size:13px;color:var(--tx2);margin-bottom:10px;line-height:1.45}
+.dpi-chips{display:flex;gap:6px;flex-wrap:wrap;margin:4px 0 10px}
+.dpi-chips button{border:1px solid var(--line);background:transparent;color:var(--tx2);padding:5px 11px;border-radius:999px;font-size:12.5px;cursor:pointer}
+.dpi-chips button.on{border-color:var(--tx);color:var(--tx);background:rgba(255,255,255,.06)}
+.dpi-vorschau{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin:6px 0 12px}
+.dpi-mon{font-size:11.5px;color:var(--tx2);min-width:0}
+.dpi-mon b{display:block;color:var(--tx);font-weight:600;margin-bottom:4px}
+.dpi-tage{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.dpi-tage i{font-style:normal;aspect-ratio:1;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:600;background:rgba(255,255,255,.04);color:var(--tx3);overflow:hidden;white-space:nowrap}
+.dpi-tage i.leer{background:transparent}
+.it.dpi-k{align-items:flex-start}
+.it.dpi-k select{width:100%;margin-top:4px}
 
 </style>
 </head>
@@ -2425,7 +2443,7 @@ function render() {
   document.body.classList.toggle('bar-unten', S.settings.bar === 'unten');
   document.body.classList.toggle('buehne', UI.tab === 'heute' && S.settings.jatos !== false);
   document.documentElement.style.setProperty('--navh', $('nav.tabs').offsetHeight + 'px');
-  window.scrollTo(0, keep ? y : 0);
+  window.scrollTo(0, keep ? y : 0); if (!keep) document.body.classList.remove('nav-weg');
   /* Umschalter-Leisten behalten ihre seitliche Position; der aktive Knopf bleibt sichtbar */
   $$('#app .seg').forEach((e, i) => { if (segX[i] != null) e.scrollLeft = segX[i]; const on = $('.on', e); if (on && e.scrollWidth > e.clientWidth) { const l = on.getBoundingClientRect().left - e.getBoundingClientRect().left + e.scrollLeft, r = l + on.offsetWidth; if (l < e.scrollLeft) e.scrollLeft = l - 12; else if (r > e.scrollLeft + e.clientWidth) e.scrollLeft = r - e.clientWidth + 12; } });
   if (window.AFTER && AFTER[UI.tab]) AFTER[UI.tab]();
@@ -3356,7 +3374,7 @@ function monthGrid(m, cell, small) {
 }
 ARB.dienstplan = () => {
   const m = UI.month;
-  let h = `<div class="row sb wrap" style="margin-bottom:10px">${mnav()}<button class="btn sm sec" data-act="schEdit">Schichtarten</button></div>`;
+  let h = `<div class="row sb wrap" style="margin-bottom:10px">${mnav()}<div class="row" style="gap:6px"><button class="btn sm sec" data-act="dpImport">📥 Einlesen</button><button class="btn sm sec" data-act="schEdit">Schichtarten</button></div></div>`;
   h += `<div class="sub" style="margin-bottom:6px">${UI.paint ? 'Tippe auf die Tage, um sie einzutragen. Nochmal auf die Schicht tippen zum Beenden.' : 'Schicht wählen und dann Tage antippen. Oder einen Tag antippen für Details (Zeiten, Überstunden).'}</div>`;
   if (!S.shiftTypes.length) h += `<div class="card" style="text-align:center;padding:18px"><div class="sub" style="margin-bottom:10px">Du hast noch keine Schichtarten. Lege deine Dienste mit Kürzel und Zeiten selbst an.</div><button class="btn sm" data-act="schOne">+ Erste Schichtart anlegen</button></div>`;
   h += `<div class="palette">${S.shiftTypes.map(t => `<button style="background:${t.color}" class="${UI.paint === t.id ? 'on' : ''}" data-act="paint" data-v="${t.id}">${esc(t.code)}</button>`).join('')}
@@ -6974,6 +6992,216 @@ ACT.accAufraeumen = () => {
   }, { saveLabel: 'Angehakte löschen' });
 };
 
+/* ---------- Dienstplan einlesen (Excel, PDF, CSV) ----------
+   Erkennt Raster aus Tageszahlen 1…31 und darunter Zeilen mit Kürzeln.
+   Zwei Formen: (A) eine Kopfzeile, jede Zeile ein Monat (eine Dienstgruppe)
+                (B) je Monat ein Block mit Kopfzeile und Zeilen je Dienstgruppe.
+   Danach fragt ein Assistent nach Dienstgruppe, Zeitraum und Bedeutung der Kürzel. */
+const DP_MON = [/^jan/i, /^feb/i, /^m(ä|ae|a)r/i, /^apr/i, /^mai|^may/i, /^jun/i, /^jul/i, /^aug/i, /^sep/i, /^o[ck]t/i, /^nov/i, /^de[zc]/i];
+const dpMonat = s => { s = String(s || '').trim(); if (!/^[A-Za-zÄÖÜäöü]{3,9}\.?$/.test(s)) return -1; return DP_MON.findIndex(r => r.test(s)); };
+const DP_WT = /^(mo|di|mi|do|fr|sa|so|mon|tue|wed|thu|fri|sat|sun)\.?$/i;
+const DP_ZEIT = /(\d{1,2})[:.](\d{2})\s*(?:uhr)?\s*[-–bis]+\s*(\d{1,2})[:.](\d{2})/i;
+const DP_NAMEN = { F: 'Frühdienst', S: 'Spätdienst', N: 'Nachtdienst', T: 'Tagdienst', LF: 'Langer Frühdienst', LN: 'Langer Nachtdienst', LS: 'Langer Spätdienst', LT: 'Langer Tagdienst', DU: 'Dienstunterricht', FL: 'Frühdienst lang', NL: 'Nachtdienst lang', SP: 'Spätdienst', TD: 'Tagdienst', ND: 'Nachtdienst', FD: 'Frühdienst', SD: 'Spätdienst', 'Ü': 'Überstundenausgleich', B: 'Bereitschaft', R: 'Rufbereitschaft' };
+const DP_FARBEN = ['#4f8cff', '#ffd166', '#b07cff', '#ff8a4c', '#38c7d6', '#ff6b9a', '#2ecc8f', '#e0a6ff', '#9ad35a', '#f08a5d'];
+const DP_FREI = /^(df|x|\*|-|–|frei|f\/|ft|ruhe|rt|aus|o)$/i, DP_URLAUB = /^(u|eu|url|urlaub)$/i, DP_KRANK = /^(k|kr|krank)$/i;
+
+/* Zeilen mit Wörtern und x-Position */
+function dpZeilenAusPdf(lines) {
+  return lines.map(L => { const toks = []; for (const it of L.it) { const s = it.s; let i = 0; for (const w of s.split(/(\s+)/)) { if (w.trim()) toks.push({ s: w.trim(), x: it.x + (it.w || 0) * (i + w.length / 2) / Math.max(1, s.length) }); i += w.length; } } return { toks: toks.sort((a, b) => a.x - b.x), t: L.t, p: L.p }; });
+}
+async function dpZeilenAusXlsx(file) {
+  const ein = await zipEintraege(file), hol = async n => { const e = ein.find(x => x.name === n); return e ? zipText(file, e) : ''; };
+  const xmlText = s => s.replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
+  const ss = [...(await hol('xl/sharedStrings.xml')).matchAll(/<si>([\s\S]*?)<\/si>/g)].map(m => xmlText(m[1].replace(/<rPh[\s\S]*?<\/rPh>/g, '')));
+  const blaetter = ein.filter(e => /^xl\/worksheets\/sheet\d+\.xml$/.test(e.name)).sort((a, b) => parseInt(a.name.match(/\d+/)) - parseInt(b.name.match(/\d+/)));
+  const out = []; let y = 0;
+  for (const bl of blaetter) {
+    const xml = await zipText(file, bl);
+    for (const rm of xml.matchAll(/<row[^>]*?(?:\/>|>([\s\S]*?)<\/row>)/g)) {
+      const toks = [];
+      for (const cm of (rm[1] || '').matchAll(/<c ([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) {
+        const a = cm[1], ref = (a.match(/r="([A-Z]+)\d+"/) || [])[1]; if (!ref) continue;
+        const col = [...ref].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1, typ = (a.match(/t="(\w+)"/) || [])[1], inner = cm[2] || '';
+        let v = (inner.match(/<v>([\s\S]*?)<\/v>/) || [])[1];
+        if (typ === 's') v = ss[+v]; else if (typ === 'inlineStr') v = xmlText((inner.match(/<is>([\s\S]*?)<\/is>/) || [])[1] || ''); else if (v != null) v = xmlText(v);
+        if (v == null || !String(v).trim()) continue;
+        v = String(v).trim(); if (/^\d+\.0+$/.test(v)) v = String(parseInt(v));
+        toks.push({ s: v, x: col });
+      }
+      out.push({ toks, t: toks.map(t => t.s).join(' '), p: bl.name, y: y++ });
+    }
+  }
+  return out;
+}
+function dpZeilenAusCsv(txt) { return csvZeilen(txt).map(r => { const toks = r.map((s, x) => ({ s: s.trim(), x })).filter(t => t.s); return { toks, t: toks.map(t => t.s).join(' ') }; }); }
+
+/* Kopfzeile mit Tagen 1…n finden (auch 1…31 gefolgt von 1…5 = nächster Monat) */
+function dpKopf(z) {
+  const zahlen = z.toks.filter(t => /^\d{1,2}\.?$/.test(t.s)).map(t => ({ x: t.x, d: parseInt(t.s) }));
+  let best = null;
+  for (let i = 0; i < zahlen.length; i++) {
+    if (zahlen[i].d !== 1) continue;
+    const run = [{ x: zahlen[i].x, d: 1, m: 0 }]; let m = 0;
+    for (let j = i + 1; j < zahlen.length; j++) { const p = run[run.length - 1], q = zahlen[j]; if (q.d === p.d + 1) run.push({ x: q.x, d: q.d, m }); else if (q.d === 1 && p.d >= 28) { m++; run.push({ x: q.x, d: 1, m }); } else break; }
+    if (run.length >= 28 && (!best || run.length > best.length)) best = run;
+  }
+  if (!best) return null;
+  const dx = best.slice(1).map((c, k) => c.x - best[k].x).sort((a, b) => a - b), cw = dx[Math.floor(dx.length / 2)] || 1;
+  return { cols: best, cw };
+}
+function dpSpalte(k, x) { let b = null, bd = 1e9; for (const c of k.cols) { const d = Math.abs(c.x - x); if (d < bd) { bd = d; b = c; } } return bd <= k.cw * .55 ? b : null; }
+const dpCode = s => { s = s.replace(/^[!.,;:()]+|[!.,;:()]+$/g, ''); if (!s || /^\d+$/.test(s) || s.length > 5 || DP_WT.test(s)) return ''; return /^[A-Za-zÄÖÜäöüß*\-–\/+]{1,5}\d?$/.test(s) ? s.toUpperCase() : ''; };
+
+function dpAnalyse(zeilen, fname) {
+  const alles = zeilen.map(z => z.t).join('\n');
+  const jahre = {}; for (const m of (alles + ' ' + fname).matchAll(/\b(20\d{2})\b/g)) jahre[m[1]] = (jahre[m[1]] || 0) + 1;
+  const jahr0 = +(Object.entries(jahre).sort((a, b) => b[1] - a[1])[0] || [today().slice(0, 4)])[0];
+  const titel = (zeilen.find(z => /dienstplan|schichtplan|rahmen/i.test(z.t)) || zeilen.find(z => z.t.length > 6) || { t: fname }).t.replace(/\s{2,}.*/, '').slice(0, 80);
+  // Legende: Kürzel + Uhrzeit
+  const legende = {};
+  for (const z of zeilen) {
+    for (let i = 0; i < z.toks.length; i++) { const m = z.toks[i].s.match(DP_ZEIT); if (!m) continue; const vor = z.toks.slice(Math.max(0, i - 3), i).map(t => t.s); const roh = z.toks[i].s.replace(DP_ZEIT, '').trim(); const c1 = dpCode(roh.split(/[\s=:]+/)[0] || ''), c = c1 || dpCode(vor[vor.length - 1] || ''); if (c && !legende[c]) legende[c] = { start: m[1].padStart(2, '0') + ':' + m[2], end: m[3].padStart(2, '0') + ':' + m[4], name: (c1 ? roh.replace(/^\S+\s*[=:\-]?\s*/, '') : '').trim().slice(0, 30) }; }
+    for (const m of z.t.matchAll(/\b([A-ZÄÖÜ]{1,3})\s*[=:]\s*([A-Za-zÄÖÜäöüß .\-]{3,30}?)\s*(\d{1,2}[:.]\d{2})\s*[-–]\s*(\d{1,2}[:.]\d{2})/g)) if (!legende[m[1]]) legende[m[1]] = { name: m[2].trim(), start: m[3].replace('.', ':').padStart(5, '0'), end: m[4].replace('.', ':').padStart(5, '0') };
+  }
+  const gTitel = (alles.match(/\b(DG|Dienstgruppe|Gruppe|Schicht)\s*(\d{1,2})\b/i) || [])[2];
+  const gruppen = {}, setz = (g, d, c) => { (gruppen[g] = gruppen[g] || {})[d] = c; };
+  const kopfIdx = []; zeilen.forEach((z, i) => { const k = dpKopf(z); if (k) kopfIdx.push([i, k]); });
+  let jahr = jahr0, letzterM = -1;
+  for (let b = 0; b < kopfIdx.length; b++) {
+    const [i, k] = kopfIdx[b], bis = b + 1 < kopfIdx.length ? kopfIdx[b + 1][0] : zeilen.length;
+    const x0 = k.cols[0].x - k.cw * .6, x1 = k.cols[k.cols.length - 1].x + k.cw * .6;
+    const daten = [];
+    for (let j = i + 1; j < bis; j++) { const z = zeilen[j]; const lab = z.toks.filter(t => t.x < x0), cod = z.toks.filter(t => t.x >= x0 && t.x <= x1); if (!cod.length && !lab.length) continue; if (cod.length && cod.every(t => DP_WT.test(t.s) || /^20\d\d$/.test(t.s))) continue; if (dpKopf(z)) break; daten.push({ z, lab, cod }); }
+    const monatsZeilen = daten.filter(r => r.lab.some(t => dpMonat(t.s) >= 0));
+    if (monatsZeilen.length >= 2) { // Form A: jede Zeile ein Monat
+      let jj = jahr0, lm = -1;
+      for (const r of monatsZeilen) { const m = dpMonat(r.lab.find(t => dpMonat(t.s) >= 0).s); if (m < lm) jj++; lm = m; for (const t of r.cod) { const c = dpCode(t.s), sp = dpSpalte(k, t.x); if (!c || !sp) continue; const dt = new Date(jj, m, sp.d); if (dt.getMonth() !== m) continue; setz(gTitel ? 'DG ' + gTitel : 'Plan', ds(dt), c); } }
+      continue;
+    }
+    // Form B: Monat steht über/neben der Kopfzeile
+    let m = -1; for (let j = Math.max(0, i - 4); j <= Math.min(zeilen.length - 1, i + 1) && m < 0; j++) for (const t of zeilen[j].toks) { const mm = dpMonat(t.s); if (mm >= 0 && t.x < x0 + k.cw * 2) { m = mm; break; } }
+    if (m < 0) m = (letterM => letterM + 1)(letzterM) % 12;
+    if (letzterM >= 0 && m < letzterM) jahr++; letzterM = m;
+    let lfd = 0;
+    for (const r of daten) {
+      const labTxt = r.lab.map(t => t.s).join(' '), nr = (labTxt.match(/(\d{1,2})\s*$/) || labTxt.match(/(\d{1,2})/) || [])[1];
+      const codes = r.cod.map(t => ({ c: dpCode(t.s), sp: dpSpalte(k, t.x) })).filter(o => o.c && o.sp);
+      if (!codes.length && !nr) continue;
+      lfd++; const g = 'DG ' + (nr ? parseInt(nr) : lfd);
+      for (const o of codes) { const dt = new Date(jahr, m + o.sp.m, o.sp.d); setz(g, ds(dt), o.c); }
+    }
+  }
+  // Ausreißer entfernen: Fließtext (lange Wörter, selten) und Gruppen mit kaum Einträgen
+  for (const g of Object.keys(gruppen)) { const cnt = {}; Object.values(gruppen[g]).forEach(c => cnt[c] = (cnt[c] || 0) + 1); for (const [d, c] of Object.entries(gruppen[g])) if (c.length >= 4 && cnt[c] < 5 && !legende[c]) delete gruppen[g][d]; }
+  const maxN = Math.max(0, ...Object.values(gruppen).map(g => Object.keys(g).length));
+  for (const g of Object.keys(gruppen)) if (Object.keys(gruppen[g]).length < Math.max(3, maxN * .2)) delete gruppen[g];
+  const gl = Object.keys(gruppen).sort((a, b) => (parseInt(a.replace(/\D/g, '')) || 0) - (parseInt(b.replace(/\D/g, '')) || 0));
+  return { titel, gruppen, gl, legende };
+}
+
+async function dpDateiLesen(f) {
+  const buf = await f.arrayBuffer();
+  if (/\.xlsx$/i.test(f.name) || new Uint8Array(buf.slice(0, 2))[0] === 0x50 && !/\.pdf$/i.test(f.name)) return dpAnalyse(await dpZeilenAusXlsx(f), f.name);
+  if (/\.xls$/i.test(f.name)) throw new Error('Alte .xls-Dateien kann ich nicht lesen. Bitte in Excel/Numbers als .xlsx oder PDF speichern.');
+  if (/\.pdf$/i.test(f.name) || f.type === 'application/pdf') return dpAnalyse(dpZeilenAusPdf(await impPdfZeilen(buf)), f.name);
+  let txt; try { txt = new TextDecoder('utf-8', { fatal: true }).decode(buf); } catch (e) { txt = new TextDecoder('windows-1252').decode(buf); }
+  return dpAnalyse(dpZeilenAusCsv(txt.replace(/^﻿/, '')), f.name);
+}
+
+/* ---------- Assistent ---------- */
+let DPI = null;
+ACT.dpImport = () => {
+  const i = document.createElement('input'); i.type = 'file'; i.accept = '.pdf,.xlsx,.csv,.txt,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv'; i.style.display = 'none';
+  i.onchange = async () => { const f = i.files[0]; i.remove(); if (!f) return; toast('📅 Lese ' + f.name + ' …');
+    try { const r = await dpDateiLesen(f); if (!r.gl.length) throw new Error('Ich habe keine Tage mit Kürzeln gefunden.'); dpAssistent(r, f.name); }
+    catch (e) { ask(`Den Dienstplan konnte ich nicht lesen.\n\n${e.message || e}\n\nSchick mir so eine Datei, dann bringe ich der App das Format bei.`, 'OK', 'Schließen'); } };
+  document.body.appendChild(i); i.click();
+};
+function dpKuerzelStandard(c, leg) {
+  const alt = (S.dpMap || {})[c]; if (alt && (alt.art !== 'typ' || stype(alt.id))) return Object.assign({}, alt);
+  const st = S.shiftTypes.find(t => t.code.toUpperCase() === c); if (st) return { art: 'typ', id: st.id };
+  if (DP_URLAUB.test(c)) return { art: 'abs', k: 'U' }; if (DP_KRANK.test(c)) return { art: 'abs', k: 'K' };
+  if (DP_FREI.test(c) && !leg[c]) return { art: 'frei' };
+  const l = leg[c] || {}; return { art: 'neu', name: l.name && !/^\d/.test(l.name) ? l.name : DP_NAMEN[c] || c, start: l.start || '', end: l.end || '' };
+}
+function dpAssistent(r, fname) {
+  const daten = Object.values(r.gruppen).flatMap(g => Object.keys(g)).sort();
+  const g0 = r.gl.includes(S.settings.dg) ? S.settings.dg : r.gl.length === 1 ? r.gl[0] : r.gl.find(g => g === 'DG ' + (String(S.settings.dg || '').replace(/\D/g, ''))) || r.gl[0];
+  const t = today(), von = daten[0] > t ? daten[0] : (daten[daten.length - 1] >= t ? t : daten[0]);
+  DPI = { r, fname, g: g0, von, bis: daten[daten.length - 1], modus: 'ersetzen', map: {}, zr: '' };
+  const m = modal('📅 Dienstplan einlesen', '<div id="dpiBody"></div>', () => dpUebernehmen(), { saveLabel: 'In den Kalender übernehmen', focus: false });
+  m.el.querySelector('.sheet').style.maxWidth = '640px';
+  const body = $('#dpiBody', m.el); DPI.body = body; dpiMalen();
+  body.addEventListener('change', e => { const el = e.target, k = el.dataset.k; if (!k) return;
+    if (k === 'g' || k === 'von' || k === 'bis' || k === 'modus') DPI[k] = el.value;
+    else if (k === 'art') { const c = el.dataset.c, v = el.value; DPI.map[c] = v.startsWith('typ:') ? { art: 'typ', id: v.slice(4) } : v.startsWith('abs:') ? { art: 'abs', k: v.slice(4) } : v === 'neu' ? Object.assign({ art: 'neu' }, dpKuerzelStandard(c, DPI.r.legende).art === 'neu' ? dpKuerzelStandard(c, DPI.r.legende) : { name: DP_NAMEN[c] || c, start: '', end: '' }, { art: 'neu' }) : { art: 'frei' }; }
+    else if (['name', 'start', 'end'].includes(k)) DPI.map[el.dataset.c][k] = el.value;
+    dpiMalen(); });
+  body.addEventListener('click', e => { const b = e.target.closest('[data-dpg]'); if (b) { e.preventDefault(); DPI.g = b.dataset.dpg; dpiMalen(); }
+    const z = e.target.closest('[data-dpz]'); if (z) { e.preventDefault(); dpiZeitraum(z.dataset.dpz); dpiMalen(); } });
+}
+function dpiAuswahl() { const g = DPI.r.gruppen[DPI.g] || {}; return Object.keys(g).filter(d => d >= DPI.von && d <= DPI.bis).sort().map(d => [d, g[d]]); }
+function dpiMalen() {
+  const r = DPI.r, sel = dpiAuswahl(), alle = Object.values(r.gruppen).flatMap(g => Object.keys(g)).sort(), cnt = {};
+  sel.forEach(([, c]) => cnt[c] = (cnt[c] || 0) + 1);
+  const codes = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
+  codes.forEach(c => { if (!DPI.map[c]) DPI.map[c] = dpKuerzelStandard(c, r.legende); });
+  let ni = 0; codes.forEach(c => { if (DPI.map[c].art === 'neu' && !DPI.map[c].farbe) DPI.map[c].farbe = DP_FARBEN[(S.shiftTypes.length + ni++) % DP_FARBEN.length]; });
+  const opt = c => { const m = DPI.map[c]; const o = [...S.shiftTypes.map(t => [`typ:${t.id}`, `${t.code} · ${t.name}${t.start ? ' ' + t.start + '–' + t.end : ''}`]), ['neu', '➕ Neue Schichtart anlegen'], ['frei', '🌙 Frei – nichts eintragen'], ...Object.entries(ABS).map(([k, a]) => ['abs:' + k, '🏷️ ' + a.n])];
+    const v = m.art === 'typ' ? 'typ:' + m.id : m.art === 'abs' ? 'abs:' + m.k : m.art; return `<select class="in" data-k="art" data-c="${esc(c)}">${o.map(([k, l]) => `<option value="${k}" ${k === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`; };
+  const nDienst = sel.filter(([, c]) => ['typ', 'neu'].includes(DPI.map[c].art)).length, nFrei = sel.length - nDienst;
+  let h = `<div class="dpi-info"><b>${esc(r.titel || DPI.fname)}</b><br><span class="sub">${esc(DPI.fname)} · ${r.gl.length > 1 ? r.gl.length + ' Dienstgruppen' : '1 Plan'} · ${fmtDs(alle[0])} bis ${fmtDs(alle[alle.length - 1])}</span></div>`;
+  if (r.gl.length > 1) h += `<h3>Welche Dienstgruppe bist du?</h3><div class="dpi-chips">${r.gl.map(g => `<button class="${g === DPI.g ? 'on' : ''}" data-dpg="${esc(g)}">${esc(g)}</button>`).join('')}</div>`;
+  const t = today(), monate = [...new Set(alle.map(d => d.slice(0, 7)))], mName = ym => MON[+ym.slice(5) - 1] + (ym.slice(0, 4) !== t.slice(0, 4) ? ' ' + ym.slice(2, 4) : '');
+  const zk = [['ganz', 'Ganzer Plan'], ...(t > alle[0] && t <= alle[alle.length - 1] ? [['ab', 'Ab heute']] : []), ...monate.map(ym => ['m:' + ym, mName(ym)]), ['eigen', 'Eigener Zeitraum']];
+  h += `<h3>Welchen Zeitraum soll ich übernehmen?</h3><div class="dpi-chips">${zk.map(([k, l]) => `<button class="${DPI.zr === k ? 'on' : ''}" data-dpz="${k}">${esc(l)}</button>`).join('')}</div>`;
+  if (!DPI.zr) { h += `<div class="sub" style="margin:4px 0 6px">Tipp oben auf den ganzen Plan, einen Monat oder „Eigener Zeitraum“.</div>`; const st0 = DPI.body.closest('.sheet'), y0 = st0 ? st0.scrollTop : 0; DPI.body.innerHTML = h; if (st0) st0.scrollTop = y0; dpiKnopf(false); return; }
+  if (DPI.zr === 'eigen') h += `<div class="grid2">${fIn('von', 'Von', DPI.von, 'date', `data-k="von" min="${alle[0]}" max="${alle[alle.length - 1]}"`)}${fIn('bis', 'Bis', DPI.bis, 'date', `data-k="bis" min="${alle[0]}" max="${alle[alle.length - 1]}"`)}</div>`;
+  else h += `<div class="sub" style="margin:2px 0 6px">${fmtDs(DPI.von)} bis ${fmtDs(DPI.bis)}</div>`;
+  h += `<div class="dpi-vorschau">${dpiMiniKal(sel)}</div>`;
+  h += `<h3>Was bedeuten die Kürzel?</h3><div class="sub" style="margin:-4px 0 8px">Ich merke mir deine Antworten für den nächsten Plan.</div><div class="card tight list">${codes.map(c => { const m = DPI.map[c], st = m.art === 'typ' ? stype(m.id) : null, col = st ? st.color : m.art === 'abs' ? ABS[m.k].c : m.art === 'frei' ? '#2c3242' : m.farbe || '#4fd1c5';
+    return `<div class="it dpi-k"><span class="chip" style="background:${col}">${esc(c)}</span><div class="grow" style="min-width:0"><div class="s">${cnt[c]}× im Zeitraum${r.legende[c] ? ` · laut Legende ${r.legende[c].start}–${r.legende[c].end}` : ''}</div>${opt(c)}
+      ${m.art === 'neu' ? `<div style="margin-top:6px">${fIn('name', 'Name', m.name || '', 'text', `data-k="name" data-c="${esc(c)}"`)}</div><div class="grid2">${fIn('start', 'Beginn', m.start || '', 'time', `data-k="start" data-c="${esc(c)}"`)}${fIn('end', 'Ende', m.end || '', 'time', `data-k="end" data-c="${esc(c)}"`)}</div>` : ''}</div></div>`; }).join('') || '<div class="it sub">Im gewählten Zeitraum stehen keine Kürzel.</div>'}</div>`;
+  const vorh = sel.filter(([d]) => S.shifts[d] || S.abs[d]).length;
+  if (vorh) h += `<h3>Schon eingetragene Tage (${vorh})</h3>${fSel('modus', '', [['ersetzen', 'Durch den neuen Plan ersetzen (Urlaub/Krank bleibt)'], ['leer', 'Nur leere Tage füllen']], DPI.modus, 'data-k="modus"')}`;
+  h += `<div class="sub" style="margin-top:10px">Übernommen werden <b>${nDienst} Dienste</b>${nFrei ? ` und ${nFrei} freie Tage` : ''} für ${esc(DPI.g)}.</div>`;
+  const st = DPI.body.closest('.sheet'), y = st ? st.scrollTop : 0; DPI.body.innerHTML = h; if (st) st.scrollTop = y; dpiKnopf(true);
+}
+function dpiKnopf(an) { const b = DPI.body.closest('form').querySelector('button.btn:not([type=button])'); if (b) { b.disabled = !an; b.style.opacity = an ? '' : '.4'; } }
+function dpiZeitraum(k) {
+  const alle = Object.values(DPI.r.gruppen).flatMap(g => Object.keys(g)).sort(), a = alle[0], e = alle[alle.length - 1];
+  DPI.zr = k;
+  if (k === 'ganz') { DPI.von = a; DPI.bis = e; }
+  else if (k === 'ab') { DPI.von = today(); DPI.bis = e; }
+  else if (k.startsWith('m:')) { const ym = k.slice(2), last = ds(new Date(+ym.slice(0, 4), +ym.slice(5), 0)); DPI.von = ym + '-01' < a ? a : ym + '-01'; DPI.bis = last > e ? e : last; }
+}
+function dpiMiniKal(sel) {
+  if (!sel.length) return '';
+  const m = {}; sel.forEach(([d, c]) => { (m[d.slice(0, 7)] = m[d.slice(0, 7)] || []).push([d, c]); });
+  const farbe = c => { const x = DPI.map[c] || {}; return x.art === 'typ' ? (stype(x.id) || {}).color : x.art === 'abs' ? ABS[x.k].c : x.art === 'neu' ? x.farbe || '#4fd1c5' : ''; };
+  return Object.entries(m).slice(0, 3).map(([ym, arr]) => { const tage = new Date(+ym.slice(0, 4), +ym.slice(5), 0).getDate(), map = Object.fromEntries(arr);
+    return `<div class="dpi-mon"><div class="sub">${MON[+ym.slice(5) - 1]} ${ym.slice(0, 4)}</div><div class="dpi-tage">${'<i class="leer"></i>'.repeat((new Date(+ym.slice(0, 4), +ym.slice(5) - 1, 1).getDay() + 6) % 7)}${Array.from({ length: tage }, (_, k) => { const d = ym + '-' + String(k + 1).padStart(2, '0'), c = map[d], f = c ? farbe(c) : ''; return `<i title="${d}" style="${f ? 'background:' + f : ''}">${c ? esc(c) : k + 1}</i>`; }).join('')}</div></div>`; }).join('') + (Object.keys(m).length > 3 ? `<div class="sub">… und ${Object.keys(m).length - 3} weitere Monate</div>` : '');
+}
+function dpUebernehmen() {
+  if (!DPI.zr) { toast('Wähle zuerst den Zeitraum.'); return false; }
+  const sel = dpiAuswahl(); if (!sel.length) { toast('Im Zeitraum gibt es nichts zu übernehmen.'); return false; }
+  S.dpMap = S.dpMap || {};
+  for (const [c, m] of Object.entries(DPI.map)) {
+    if (m.art === 'neu') { const t = { id: uid(), code: c.slice(0, 3), name: (m.name || c).trim(), start: m.start || '', end: m.end || '', pause: m.start ? 30 : 0, color: m.farbe || DP_FARBEN[S.shiftTypes.length % DP_FARBEN.length] }; S.shiftTypes.push(t); DPI.map[c] = { art: 'typ', id: t.id }; }
+    S.dpMap[c] = DPI.map[c];
+  }
+  let n = 0;
+  for (const [d, c] of sel) {
+    const m = DPI.map[c]; if (!m) continue;
+    if (DPI.modus === 'leer' && (S.shifts[d] || S.abs[d])) continue;
+    if (m.art === 'typ') { S.shifts[d] = Object.assign(S.shifts[d] || {}, { type: m.id }); n++; }
+    else if (m.art === 'abs') { S.abs[d] = { type: m.k }; n++; }
+    else if (m.art === 'frei' && S.shifts[d] && !S.shifts[d].aStart) delete S.shifts[d];
+  }
+  S.settings.dg = DPI.g; const g = DPI.g; DPI = null;
+  setTimeout(() => { toast(`✓ ${n} Tage aus ${g} in den Dienstplan übernommen`); if (typeof jatosAktion === 'function') jatosAktion(`Dienstplan eingelesen: ${n} Tage! Jetzt weiß ich, wann du Dienst hast. 🚓`); }, 50);
+}
+
 /* ---------- Depot: Übersicht nach dem Vorbild des Depot-Dashboards, für jedes Depot und jedes Ziel ---------- */
 /* Alles wird aus den eigenen Daten berechnet: Positionen, Käufe, Wert-Stände, Dividenden-Buchungen und dem selbst gesetzten Depot-Ziel. Keine Kurse aus dem Internet. */
 const DP_ART = [['etf', 'ETF / Fonds'], ['aktie', 'Aktie'], ['anleihe', 'Anleihe'], ['rohstoff', 'Rohstoff / Gold'], ['krypto', 'Krypto'], ['sonst', 'Sonstiges']];
@@ -7746,7 +7974,7 @@ function kursStandZeile() {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 107;
+const APP_V = 108;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -9197,7 +9425,7 @@ function tick(t){
   if(c0!==cv){cv=c0;cx=cv.getContext('2d');cx.imageSmoothingEnabled=false;cv.addEventListener('click',tippen);blase=document.getElementById('pxblase');if(blase){blase.textContent=blaseTxt;blase.hidden=!blaseVis}}
   if(!BA&&(S.settings.burgFliegt!==false)!==fliegt)setFlug((S.settings.burgFliegt!==false));
   if(document.hidden||t-last<24){requestAnimationFrame(tick);return}
-  if((tick._n=(tick._n||0)+1)%20===0){const rr=cv.getBoundingClientRect();tick._off=rr.bottom<0||rr.top>innerHeight}
+  if((tick._n=(tick._n||0)+1)%20===0){const rr=cv.getBoundingClientRect();tick._off=rr.bottom<0||rr.top>innerHeight;try{const d=cx.getImageData(100,21,1,1).data,col=`rgb(${d[0]},${d[1]},${d[2]})`;if(d[3]&&cv.parentNode&&cv.parentNode.style.backgroundColor!==col)cv.parentNode.style.backgroundColor=col}catch(e){}}
   if(tick._off){last=t;requestAnimationFrame(tick);return}
   const dt=Math.min(50,t-last);last=t;{const dpr=Math.min(3,window.devicePixelRatio||1),cw=Math.round((cv.clientWidth||390)*dpr);if(cw>=120&&Math.abs(cv.width-cw)>1){cv.width=cw;cv.height=Math.round(cw*H/W);K=cv.width/W;setScale();cx=cv.getContext('2d')}}cx.setTransform(K,0,0,K,0,0);cx.imageSmoothingEnabled=false;szene(t);if(!fliegt&&!BA)props(t,dt);ambient(t,dt);
   const el=t-J.t0;let r=0,c=0,flip=false,lift=0,fo=null,crp=null;
@@ -9479,7 +9707,11 @@ load();
 autoBook();
 render();
 hlLaden();
-addEventListener('scroll', () => document.body.classList.toggle('gescrollt', scrollY > 8), { passive: true });
+let _sy = 0;
+addEventListener('scroll', () => { const y = scrollY, b = document.body; b.classList.toggle('gescrollt', y > 8);
+  // Leiste oben beim Runterscrollen ausblenden, beim Hochscrollen wieder zeigen
+  if (y < 60 || y < _sy - 6) b.classList.remove('nav-weg'); else if (y > _sy + 6 && !document.querySelector('.ov,.modal')) b.classList.add('nav-weg');
+  if (Math.abs(y - _sy) > 6 || y < 60) _sy = y; }, { passive: true });
 setInterval(() => { if (UI.tab === 'heute' && !_modalStack.length && !document.hidden) render(); }, 300000);
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
