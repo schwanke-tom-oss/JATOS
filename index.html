@@ -2089,6 +2089,10 @@ body.bar-unten #app{padding-top:calc(6px + var(--safe-t))}
 body.bar-unten .szene,body.bar-unten .pxszene{margin-top:calc(-6px - var(--safe-t))}
 body::before{content:"";position:fixed;inset:0 0 auto;height:var(--safe-t);background:linear-gradient(var(--bg) 75%,rgba(11,11,12,0));z-index:40;pointer-events:none;opacity:0;transition:opacity .2s}
 body.gescrollt::before{opacity:1}
+.dp-psoll{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin:2px 0 6px;padding:6px 10px;border-radius:10px;background:color-mix(in srgb,#ff5d6c 8%,transparent);border:1px solid color-mix(in srgb,#ff5d6c 25%,transparent);font-size:13px}
+.dp-psoll .dash{width:14px;height:0;border-top:2px dashed var(--c)}
+.dp-psoll .dp-psd{margin-left:auto;font-size:14px}
+.dp-psoll small{flex-basis:100%;color:var(--muted,#8a8a90);font-size:11px;margin-top:-2px}
 
 </style>
 </head>
@@ -7215,9 +7219,18 @@ const DP_RG_POS = [['1t', '1T'], ['1w', '1W'], ['1m', '1M'], ['3m', '3M'], ['1j'
 function dpPosChart(p) {
   const rg = UI.dpPosR || 'kauf', { a, t, lbl } = dpFenster(rg, p), pf = dpPerf([p], a, t), i = dpInv(p), g = dpGV(p);
   return `<div class="dp-pc dpc-card"><div class="dp-pch">${dpRgBtns(rg, 'dpPosR', DP_RG_POS)}<div class="g-v num">${eur(p.value || 0)}</div><div class="g-d"><span class="${pf.g < 0 ? 'neg' : 'pos'}">${sgnEur(pf.g)} (${dpPct(pf.pct, 2)})</span> <span class="muted">${lbl}</span></div></div>
-    ${dpChart({ a, t, wert: d => dpWertAm(p, d), h: 112 })}
+    ${dpPosSoll(p)}${dpChart({ a, t, wert: d => dpWertAm(p, d), h: 112 })}
     <div class="dp-pst"><span>Investiert <b class="num">${eur0(i)}</b></span><span>G/V gesamt <b class="num ${g < 0 ? 'neg' : 'pos'}">${i ? dpPct(g / i * 100) : '–'}</b></span>${p.valueDate ? `<span>Stand <b>${fmtDs(p.valueDate)}</b></span>` : ''}</div>
     <div class="row" style="gap:6px;margin-top:8px"><button class="btn sm sec" data-act="posOpen" data-id="${p.id}">Details</button><button class="btn sm sec" data-act="posEdit" data-id="${p.id}">Bearbeiten · Wert</button></div></div>`;
+}
+/* Soll-Wert einer Position: Anteil am Depot-Soll (Ziel) bzw. am Depotwert nach Zielgewichtung */
+function dpPosSoll(p) {
+  const ps = S.depot.filter(x => (x.value || 0) > 0 || x.ziel > 0), V = sum(ps, x => x.value || 0), hatZ = ps.some(x => x.ziel > 0), Z = dpZiel();
+  if (!V || (!Z && !hatZ)) return '';
+  const anteil = hatZ ? (p.ziel || 0) / (sum(ps, x => x.ziel || 0) || 100) : (p.value || 0) / V;
+  const basis = Z ? Z.sollHeute : V, soll = basis * anteil, d = (p.value || 0) - soll;
+  const was = Z ? (hatZ ? `${dec(anteil * 100, 0)} % vom Depot-Soll` : 'Anteil am Depot-Soll') : `Zielanteil ${dec(anteil * 100, 0)} %`;
+  return `<div class="dp-psoll"><i class="dash" style="--c:#ff5d6c"></i><span>Soll heute <b class="num">${eur0(soll)}</b></span><b class="num dp-psd ${d < 0 ? 'neg' : 'pos'}">${d >= 0 ? '+' : '−'}${eur0(Math.abs(d))}</b><small>${was}</small></div>`;
 }
 ACT.dpPos = d => { UI.dpOpen = UI.dpOpen === d.id ? null : d.id; render(); };
 ACT.dpPosR = d => { UI.dpPosR = d.v; render(); };
@@ -7567,7 +7580,7 @@ ACT.dzEdit = () => {
   const z = S.dz || {}, fb = S.depot.flatMap(p => p.buys || []).map(b => b.date).sort()[0];
   modal('🎯 Depot-Ziel', `${fIn('name', 'Name (optional)', z.name || '', 'text', 'placeholder="z.B. Mission 10k"')}
     <div class="grid2">${fMoney('target', 'Zielbetrag (€)', z.target)}${fIn('until', 'Zieldatum', z.until || (new Date().getFullYear() + 1) + '-12-31', 'date')}</div>
-    <div class="grid2">${fMoney('rate', 'Geplante Sparrate / Monat (€)', z.rate || '')}${fIn('start', 'Start', z.start || fb || today(), 'date')}</div>
+    <div class="grid2">${fMoney('rate', 'Geplante Sparrate / Monat (€)', z.rate || '')}${fIn('start', 'Start (ab hier läuft der Soll-Pfad)', z.start || today(), 'date')}</div>
     <div class="grid2">${fIn('rend', 'Erwartete Rendite % pro Jahr', z.rend != null ? String(z.rend).replace('.', ',') : '7', 'text', 'inputmode="decimal"')}${fIn('vola', 'Schwankung % (für Prognose)', z.vola ? String(z.vola).replace('.', ',') : '15', 'text', 'inputmode="decimal"')}</div>
     ${fIn('marks', 'Zwischenziele (€, mit ; getrennt, optional)', (z.marks || []).join('; '), 'text', 'placeholder="sonst 25, 50 und 75 %"')}
     <div class="sub">Der Soll-Pfad startet beim Depotwert am Startdatum und endet am Zieldatum beim Zielbetrag. Für einen Weltportfolio-ETF sind 6 bis 7 % Rendite und 15 % Schwankung übliche Annahmen.</div>`,
@@ -7733,7 +7746,7 @@ function kursStandZeile() {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 106;
+const APP_V = 107;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
