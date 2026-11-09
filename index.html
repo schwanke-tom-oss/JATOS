@@ -2111,6 +2111,14 @@ body:not(.bar-unten).gescrollt nav.tabs{background:linear-gradient(var(--bg) 0,v
 .dpi-tage i.leer{background:transparent}
 .it.dpi-k{align-items:flex-start}
 .it.dpi-k select{width:100%;margin-top:4px}
+.dpt-liste{display:flex;flex-direction:column;gap:6px}
+.dpt-z{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}
+.dpt-z .dp-chip-l{min-width:0;flex:1}
+.dpt-z small{display:block;color:var(--tx3);font-size:11px}
+.dpt-in{display:flex;align-items:center;gap:4px;flex:none}
+.dpt-in input{width:74px;text-align:right;padding:8px 10px}
+.dpt-in i{font-style:normal;color:var(--tx3)}
+.dpt-summe{display:flex;justify-content:space-between;margin-top:10px;font-size:14px}
 
 </style>
 </head>
@@ -7266,10 +7274,27 @@ function dpDivPos(t) {
   return S.depot.find(p => p.isin && imp.includes(p.isin.toUpperCase())) || S.depot.find(p => p.name && n.includes(p.name.toLowerCase())) || (S.depot.length === 1 ? S.depot[0] : null);
 }
 /* erwartete Dividenden: Wert × Dividendenrendite, verteilt auf die Zahlmonate */
-const dpZM = p => (p.zm && p.zm.length ? p.zm : []);
+/* Ohne eigene Angaben: Rendite und Zahlmonate aus den echten Dividenden der letzten 12 Monate (z. B. aus dem Trade-Republic-Import) */
+let _dpDivC = null;
+function dpDivAuto(p) {
+  const key = S.tx.length + '|' + S.depot.length + '|' + today();
+  if (!_dpDivC || _dpDivC.key !== key) {
+    const ab = addM(today().slice(0, 7), -12) + '-01', m = {};
+    for (const t of dpDivTx()) { if (t.date < ab) continue; const q = dpDivPos(t); if (!q) continue; const o = m[q.id] || (m[q.id] = { sum: 0, zm: new Set(), mi: new Set() }); o.sum += t.amount; o.zm.add(+t.date.slice(5, 7)); o.mi.add(+t.date.slice(0, 4) * 12 + +t.date.slice(5, 7) - 1); }
+    // Junge Positionen: Rhythmus aus den Abständen schätzen (monatlich, vierteljährlich, halbjährlich) und aufs Jahr hochrechnen
+    for (const o of Object.values(m)) { const mi = [...o.mi].sort((a, b) => a - b); if (mi.length < 2) continue; const g = mi.slice(1).map((x, k) => x - mi[k]).sort((a, b) => a - b)[Math.floor((mi.length - 1) / 2)];
+      const f = g <= 1 ? 12 : g <= 4 ? 4 : g <= 7 ? 2 : 1; if (f <= mi.length) continue; const st = 12 / f, last = mi[mi.length - 1] % 12;
+      o.sum = o.sum / mi.length * f; o.zm = new Set(Array.from({ length: f }, (_, k) => (last + k * st) % 12 + 1)); }
+    _dpDivC = { key, m };
+  }
+  const o = _dpDivC.m[p.id], basis = p.value || dpInv(p);
+  return o && basis > 0 && dpQty(p) > 0 ? { divR: o.sum / basis * 100, zm: [...o.zm].sort((a, b) => a - b) } : null;
+}
+const dpDivR = p => p.divR > 0 ? p.divR : ((dpDivAuto(p) || {}).divR || 0);
+const dpZM = p => (p.zm && p.zm.length ? p.zm : p.divR > 0 ? [] : ((dpDivAuto(p) || {}).zm || []));
 function dpDivPlan(monate = 12) {
   const t0 = today().slice(0, 7), out = [];
-  for (let i = 0; i < monate; i++) { const m = addM(t0, i); out.push({ m, pos: S.depot.filter(p => p.divR > 0 && dpZM(p).includes(+m.slice(5))).map(p => ({ p, v: (p.value || dpInv(p)) * p.divR / 100 / dpZM(p).length })) }); }
+  for (let i = 0; i < monate; i++) { const m = addM(t0, i); out.push({ m, pos: S.depot.filter(p => dpDivR(p) > 0 && dpZM(p).includes(+m.slice(5))).map(p => ({ p, v: (p.value || dpInv(p)) * dpDivR(p) / 100 / dpZM(p).length })) }); }
   return out;
 }
 /* Länder und Branchen des ganzen Depots, gewichtet nach Wert */
@@ -7486,10 +7511,11 @@ function dpGewicht(V) {
   const ps = S.depot.filter(p => p.value > 0).sort((a, b) => b.value - a.value), hatZiel = S.depot.some(p => p.ziel > 0);
   if (!ps.length) return '';
   const ein = S.settings.dpEin != null ? S.settings.dpEin : (S.dz && S.dz.rate) || 0, auf = new Map(dpAufteilen(ein).map(x => [x.p.id, x.add]));
-  let h = `<div class="card"><div class="row sb" style="gap:10px"><h2 style="margin:0">Gewichtung</h2><label class="dp-ezf" title="Monatliche Einzahlung"><span>+</span><input class="num" type="text" inputmode="decimal" data-ezin value="${ein ? String(ein).replace('.', ',') : ''}" placeholder="Einzahlung"><i>€</i></label></div>`;
+  let h = `<div class="card"><div class="row sb" style="gap:10px"><h2 style="margin:0">Gewichtung</h2><button class="btn sm sec" data-act="dpTaktik">🎯 Taktik</button><label class="dp-ezf" title="Monatliche Einzahlung"><span>+</span><input class="num" type="text" inputmode="decimal" data-ezin value="${ein ? String(ein).replace('.', ',') : ''}" placeholder="Einzahlung"><i>€</i></label></div>`;
   h += ps.map(p => { const ist = p.value / V * 100, zi = p.ziel || 0, gap = zi ? zi / 100 * V - p.value : 0, am = !zi ? '' : Math.abs(ist - zi) < 2 ? '🟢' : Math.abs(ist - zi) < 5 ? '🟡' : '🔴', add = auf.get(p.id) || 0;
     return `<div class="dp-gw click" data-act="posOpen" data-id="${p.id}"><div class="row sb"><span class="ell dp-chip-l">${dpLogo(p, 20)} ${esc(p.name)}</span><span class="num">${dec(ist, 1)} %${zi ? ` <span class="sub">/ ${dec(zi, 0)} %</span>` : ''}</span></div>
       <div class="dp-gb"><i style="width:${Math.min(100, ist)}%;background:${dpCol(p)}"></i>${zi ? `<b style="left:${Math.min(100, zi)}%"></b>` : ''}</div><div class="sub dp-gws"><span>${zi ? `${am} ${Math.abs(gap) < 1 ? 'passt genau' : gap > 0 ? `es fehlen ${eur0(gap)}` : `${eur0(-gap)} zu viel`}` : ''}<b class="num" data-ezp="${p.id}">${add >= .5 ? '+ ' + eur0(add) : ''}</b></span></div></div>`; }).join('');
+  if (!hatZiel) h += `<div class="sub" style="margin-top:8px">Noch keine Taktik: Einzahlungen werden nach dem jetzigen Anteil verteilt. Mit <b>🎯 Taktik</b> legst du fest, wie viel Prozent jede Position haben soll, z.&nbsp;B. 80 % Nasdaq.</div>`;
   if (hatZiel) { const zs = sum(S.depot, p => p.ziel || 0); if (Math.abs(zs - 100) > .5) h += `<div class="sub wrn" style="margin-top:6px">Die Zielanteile ergeben zusammen ${dec(zs, 0)} %, nicht 100 %.</div>`; }
   return h + '</div>';
 }
@@ -7521,7 +7547,7 @@ function posDetail(p) {
   modal(esc(p.name), `<div class="grid3"><div class="stat"><div class="l">Wert</div><div class="v num">${eur0(p.value || 0)}</div></div><div class="stat"><div class="l">Investiert</div><div class="v num">${eur0(i)}</div></div><div class="stat"><div class="l">G/V</div><div class="v num ${g < 0 ? 'neg' : 'pos'}">${i ? dpPct(g / i * 100) : '–'}</div></div></div>
     <div class="sub" style="margin:8px 0">${esc(p.isin || '')}${p.isin ? ' · ' : ''}${esc(DP_ART.find(a => a[0] === dpArt(p))[1])}${qty ? ' · ' + dec(qty, 3) + ' Stk.' : ''}${V ? ' · ' + dec((p.value || 0) / V * 100, 1) + ' % vom Depot' : ''}${p.ziel ? ' · Ziel ' + dec(p.ziel, 0) + ' %' : ''}${p.valueDate ? ' · Stand ' + fmtD(p.valueDate) : ''}</div>
     ${pts.length > 2 ? lineChart(pts, { color: dpCol(p), fmt: kFmt, h: 140 }) : ''}${mix}
-    ${p.divR ? `<div class="sub" style="margin-top:8px">Dividendenrendite ${dec(p.divR, 2)} % · ${dpZM(p).length ? 'zahlt im ' + dpZM(p).map(m => MON[m - 1].slice(0, 3)).join(', ') : 'Zahlmonate fehlen'} · ca. ${eur0((p.value || i) * p.divR / 100)} im Jahr</div>` : ''}
+    ${dpDivR(p) ? `<div class="sub" style="margin-top:8px">Dividendenrendite ${p.divR > 0 ? '' : 'ca. '}${dec(dpDivR(p), 2)} %${p.divR > 0 ? '' : ' (aus deinen Zahlungen)'} · ${dpZM(p).length ? 'zahlt im ' + dpZM(p).map(m => MON[m - 1].slice(0, 3)).join(', ') : 'Zahlmonate fehlen'} · ca. ${eur0((p.value || i) * dpDivR(p) / 100)} im Jahr</div>` : ''}
     <h3>Käufe</h3>${(p.buys || []).length ? `<div class="card tight list" style="background:var(--card)">${p.buys.slice().reverse().map(b => `<div class="it"><span class="grow">${fmtD(b.date)}${b.qty ? ` · ${dec(b.qty, 3)} Stk.` : ''}${b.note ? ' · ' + esc(b.note) : ''}</span><span class="num ${b.amount < 0 ? 'neg' : ''}">${eur(b.amount)}</span></div>`).join('')}</div>` : '<div class="sub">Noch keine Käufe.</div>'}
     ${div.length ? `<h3>Dividenden erhalten · ${eur(sum(div, t => t.amount))}</h3><div class="card tight list" style="background:var(--card)">${div.slice().reverse().map(t => `<div class="it"><span class="grow">${fmtD(t.date)}</span><span class="num pos">${eur(t.amount)}</span></div>`).join('')}</div>` : ''}`,
     () => { setTimeout(() => posEdit(p), 50); }, { saveLabel: 'Bearbeiten', still: true });
@@ -7605,9 +7631,9 @@ function dpDivSeit() {
     <div class="hc-ax">${months.map((m, i) => i % step ? '' : `<span style="left:${X(i) / W * 100}%">${lbl(m)}</span>`).join('')}</div></div></div>
     <div class="sub" style="margin:6px 0 4px">Gestrichelt: was laut Kalender je Position kommt, aufaddiert. Die dicke Linie ist, was wirklich angekommen ist. Fahr über den Chart, um zu sehen, wer in welchem Monat wie viel zahlt.</div>`;
   /* Tabelle */
-  const rows = ps.filter(p => (got[p.id] || exp[p.id] || p.divR)).map(p => { const g = sum(Object.values(got[p.id] || {})), e = sum(dpDivPlan(12), m => sum(m.pos.filter(x => x.p === p), x => x.v)), z = dpZM(p).length; return { p, g, e, z, je: z ? e / z : 0 }; }).sort((a, b) => b.e - a.e || b.g - a.g);
+  const rows = ps.filter(p => (got[p.id] || exp[p.id] || dpDivR(p))).map(p => { const g = sum(Object.values(got[p.id] || {})), e = sum(dpDivPlan(12), m => sum(m.pos.filter(x => x.p === p), x => x.v)), z = dpZM(p).length; return { p, g, e, z, je: z ? e / z : 0 }; }).sort((a, b) => b.e - a.e || b.g - a.g);
   if (got._) rows.push({ p: null, g: sum(Object.values(got._)), e: 0, z: 0, je: 0 });
-  h += `<div class="dp-dvt"><div class="dp-dvt-h"><span>Position</span><span>Erhalten</span><span>Erwartet</span><span class="w">Ø je Zahlung</span><span class="w">Rendite</span></div>${rows.map(r => `<div class="dp-dvt-r${r.p ? ' click' : ''}" ${r.p ? `data-act="posOpen" data-id="${r.p.id}"` : ''}><span class="dp-chip-l ell">${r.p ? dpLogo(r.p, 24) : ''}<span class="ell">${r.p ? esc(r.p.name) : 'Ohne Zuordnung'}<small>${r.je ? `${eur(r.je)} / ${dpFreq(r.z)}` : ''}${r.p && r.p.divR ? ` · ${dec(r.p.divR, 1)} %` : ''}</small></span></span><span class="num">${eur(r.g)}</span><span class="num erw">${eur(r.e)}</span><span class="num w">${r.je ? `${eur(r.je)} / ${dpFreq(r.z)}` : '–'}</span><span class="num w">${r.p && r.p.divR ? dec(r.p.divR, 1) + ' %' : '–'}</span></div>`).join('')}</div>`;
+  h += `<div class="dp-dvt"><div class="dp-dvt-h"><span>Position</span><span>Erhalten</span><span>Erwartet</span><span class="w">Ø je Zahlung</span><span class="w">Rendite</span></div>${rows.map(r => `<div class="dp-dvt-r${r.p ? ' click' : ''}" ${r.p ? `data-act="posOpen" data-id="${r.p.id}"` : ''}><span class="dp-chip-l ell">${r.p ? dpLogo(r.p, 24) : ''}<span class="ell">${r.p ? esc(r.p.name) : 'Ohne Zuordnung'}<small>${r.je ? `${eur(r.je)} / ${dpFreq(r.z)}` : ''}${r.p && r.dpDivR(p) ? ` · ${dec(r.dpDivR(p), 1)} %` : ''}</small></span></span><span class="num">${eur(r.g)}</span><span class="num erw">${eur(r.e)}</span><span class="num w">${r.je ? `${eur(r.je)} / ${dpFreq(r.z)}` : '–'}</span><span class="num w">${r.p && r.dpDivR(p) ? dec(r.dpDivR(p), 1) + ' %' : '–'}</span></div>`).join('')}</div>`;
   /* Alle Zahlungen */
   const inP = div.filter(x => x.date >= von && x.date.slice(0, 7) <= bis);
   if (inP.length) h += `<details class="mehr"><summary>Alle ${inP.length} Zahlungen</summary><div class="list">${inP.slice().reverse().map(x => { const p = dpDivPos(x); return `<div class="it click" data-act="txEdit" data-id="${x.id}"><div class="grow"><div class="t">${p ? esc(p.name) : esc(x.note || 'Dividende')}</div><div class="s">${fmtD(x.date)}</div></div><span class="num pos">+${eur(x.amount)}</span></div>`; }).join('')}</div></details>`;
@@ -7823,7 +7849,7 @@ ACT.dzEdit = () => {
 ACT.posNew = () => posEdit({ buys: [] });
 ACT.posEdit = d => posEdit(byId(S.depot, d.id));
 function posEdit(p) {
-  const isNew = !p.id, art = dpArt(p), mk = p.mix || '', zm = dpZM(p);
+  const isNew = !p.id, art = dpArt(p), mk = p.mix || '', zm = p.zm || [];
   const mixOpts = [['', 'automatisch' + (dpMixAuto(p) ? ' (' + DP_MIX[dpMixAuto(p)].n + ')' : '')], ...Object.entries(DP_MIX).map(([k, x]) => [k, x.n]), ['-', 'keiner / eigenes Land']];
   const laender = Object.keys(GEO.c).map(a => [a, landName(a)]).sort((a, b) => a[1].localeCompare(b[1], 'de'));
   modal(isNew ? 'Neue Depot-Position' : esc(p.name), `${fIn('name', 'Name (z.B. MSCI World ETF)', p.name || '')}<div class="grid2">${fIn('isin', 'ISIN / WKN', p.isin || '')}${fSel('art', 'Art', DP_ART, art)}</div>
@@ -7854,6 +7880,33 @@ function posEdit(p) {
         $$('[data-bdel]', f).forEach(b => b.onclick = () => { (p._bdel || (p._bdel = [])).push(+b.dataset.bdel); b.closest('.it').style.opacity = .35; b.disabled = true; });
       } });
 }
+
+/* Taktik: Zielgewichtung aller Positionen an einer Stelle festlegen */
+ACT.dpTaktik = () => {
+  const ps = S.depot.filter(p => (p.value || 0) > 0 || p.ziel > 0 || dpQty(p) > 0).sort((a, b) => (b.ziel || 0) - (a.ziel || 0) || (b.value || 0) - (a.value || 0)), V = sum(ps, p => p.value || 0);
+  if (!ps.length) { toast('Noch keine Positionen im Depot'); return; }
+  const zahl = v => String(Math.round(v * 10) / 10).replace('.', ',');
+  const html = `<div class="sub" style="margin-bottom:10px">Wie soll dein Depot aufgeteilt sein? Trag je Position den Zielanteil in Prozent ein. Danach richten sich Einzahlungs-Vorschlag, Ampel und Soll-Werte. Leere Felder = 0 %.</div>
+    <div class="dpt-liste">${ps.map(p => `<label class="dpt-z"><span class="dp-chip-l ell">${dpLogo(p, 22)} <span class="ell">${esc(p.name)}<small>jetzt ${V ? dec((p.value || 0) / V * 100, 1) : 0} %</small></span></span><span class="dpt-in"><input class="in num" name="z_${p.id}" inputmode="decimal" value="${p.ziel ? zahl(p.ziel) : ''}" placeholder="0"><i>%</i></span></label>`).join('')}</div>
+    <div class="dpt-summe"><span>Zusammen</span><b class="num" id="dptSum"></b></div>
+    <div class="row wrap" style="gap:6px;margin-top:8px"><button type="button" class="btn sm sec" data-dpt="rest">Rest gleichmäßig verteilen</button><button type="button" class="btn sm sec" data-dpt="gleich">Alle gleich</button><button type="button" class="btn sm sec" data-dpt="jetzt">Wie jetzt</button><button type="button" class="btn sm sec" data-dpt="leer">Leeren</button></div>`;
+  modal('🎯 Taktik', html, v => {
+    const z = ps.map(p => numIn(v['z_' + p.id]) || 0), gs = sum(z);
+    if (gs > 0 && Math.abs(gs - 100) > .5) { toast(`Zusammen sind es ${dec(gs, 1)} %. Bitte auf 100 % bringen (z. B. „Rest gleichmäßig verteilen“).`); return false; }
+    ps.forEach((p, i) => { p.ziel = Math.round(z[i] * 10) / 10; });
+    setTimeout(() => toast(gs ? '🎯 Taktik gespeichert' : 'Taktik gelöscht, verteilt wird wieder nach jetzigem Anteil'), 50);
+  }, { saveLabel: 'Taktik speichern', focus: false, init: f => {
+    const ins = ps.map(p => f['z_' + p.id]), sumUp = () => { const gs = sum(ins, i => numIn(i.value) || 0), el = $('#dptSum', f); el.textContent = dec(gs, 1) + ' %'; el.className = 'num ' + (Math.abs(gs - 100) <= .5 ? 'pos' : gs ? 'neg' : ''); };
+    ins.forEach(i => i.oninput = sumUp); sumUp();
+    f.addEventListener('click', e => { const b = e.target.closest('[data-dpt]'); if (!b) return; e.preventDefault(); const k = b.dataset.dpt;
+      const setz = (feld, ges, w) => { let rest = Math.round(ges * 10); const ws = sum(w) || 1; feld.forEach((i, n) => { const v = n === feld.length - 1 ? rest : Math.round(ges * 10 * w[n] / ws); rest -= v; i.value = v ? zahl(v / 10) : ''; }); };
+      if (k === 'gleich') setz(ins, 100, ins.map(() => 1));
+      else if (k === 'jetzt') setz(ins, 100, ps.map(p => p.value || 0));
+      else if (k === 'leer') ins.forEach(i => i.value = '');
+      else { const leer = ins.filter(i => !(numIn(i.value) > 0)), rest = 100 - sum(ins, i => numIn(i.value) || 0); if (!leer.length || rest <= 0) { toast(rest <= 0 ? 'Es sind schon 100 % oder mehr vergeben' : 'Alle Felder sind schon ausgefüllt'); return; } setz(leer, rest, leer.map(() => 1)); }
+      sumUp(); });
+  } });
+};
 
 /* ---------- Online-Kurse (nur wenn in den Einstellungen erlaubt) ----------
    Standard ist 100 % offline. Nur im Modus „Nur Finanzkurse" fragt die App bei den Kursdiensten nach:
@@ -7974,7 +8027,7 @@ function kursStandZeile() {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 110;
+const APP_V = 111;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
