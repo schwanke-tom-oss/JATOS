@@ -6697,6 +6697,11 @@ function trAusCsv(rows) {
   }
   for (const P of Object.values(pos)) { const offen = P.q > 1e-4; depot.items.push({ art: 'trpos', isin: P.isin, name: P.name, qty: offen ? Math.round(P.q * 1e6) / 1e6 : 0, offen, value: offen ? Math.round(Math.max(0, P.kosten) * 100) / 100 : 0, buys: P.buys, date: letzt || today() }); }
   depot.items.sort((a, b) => b.offen - a.offen || b.value - a.value);
+  // Stornierte Dividenden: Storno und Original heben sich auf -> beide weglassen
+  const divs = konto.rows.filter(z => z.trTyp === 'div'), weg = new Set();
+  for (const m of divs.filter(z => z.dir < 0)) { const o = divs.find(z => z.dir > 0 && !weg.has(z) && z.isin === m.isin && Math.abs(z.amount - m.amount) < 0.005 && Math.abs(dayDiff(z.date, m.date)) <= 45); if (o) { weg.add(m); weg.add(o); } else { m.trTyp = 'steuer'; m.name = ('Korrektur ' + m.name).slice(0, 48); } }
+  konto.rows = konto.rows.filter(z => !weg.has(z));
+  konto.rows.forEach(z => { if (/^(Steuerausgleich|Vorabpauschale|Kartengebühr)/.test(z.name) && z.dir < 0) z.trTyp = 'steuer'; });
   konto.ende = Math.round(saldo * 100) / 100; konto.endeD = letzt || today();
   return depot.items.length ? [konto, depot] : [konto];
 }
@@ -6705,19 +6710,19 @@ function trAusCsv(rows) {
 const KAT_WORT = [
   ['Gehalt', 'ein', /bundestag|besoldung|bezüge|bezuege|gehalt|lohn|dienstbezüge|bundeskasse/i],
   ['Dividenden', 'ein', /dividende|ausschüttung|ertrag/i],
-  ['Lebensmittel', 'aus', /rewe|edeka|lidl|aldi|netto|penny|kaufland|real |globus|tegut|norma|bio company|denns|alnatura|dm-drogerie|rossmann|getränke|bäckerei|baeckerei/i],
+  ['Lebensmittel', 'aus', /rewe|edeka|lidl|aldi|netto|penny|kaufland|real |globus|tegut|norma|bio company|denns|alnatura|dm[- ]drogerie|rossmann|getränke|bäckerei|baeckerei|backerei|bäcker/i],
   ['Tanken', 'aus', /\baral\b|shell|esso|\bjet\b|totalenergies|\btotal\b|tankstelle|star tank|agip|\bomv\b|hem tank|ladestation|ionity|enbw mobility/i],
   ['Abos & Streaming', 'aus', /netflix|spotify|disney|dazn|sky deutschland|amazon prime|prime video|apple\.com|itunes|google play|youtube|audible|wow tv|paramount/i],
   ['Mobilfunk & Internet', 'aus', /vodafone|telekom|telefonica|\bo2\b|1&1|congstar|freenet|klarmobil|aldi talk|unitymedia|pyur|netcologne/i],
   ['Versicherungen', 'aus', /versicherung|huk|devk|allianz|signal iduna|debeka|ergo|axa|generali|cosmos|r\+v|provinzial|haftpflicht|wgv|lvm/i],
-  ['Wohnen', 'aus', /miete|hausverwaltung|wohnungsbau|stadtwerke|vattenfall|eon\b|e\.on|strom|gasag|rundfunk|beitragsservice|nebenkosten|wohnungsbaugenossenschaft/i],
-  ['Restaurant', 'aus', /restaurant|mcdonald|burger king|lieferando|wolt|uber eats|pizzeria|döner|doener|kfc|subway|vapiano|starbucks|cafe|café|imbiss/i],
+  ['Wohnen', 'aus', /miete|hausverwaltung|wohnungsbau|stadtwerke|vattenfall|eon\b|e\.on|strom|gasag|rundfunk|beitragsservice|nebenkosten|energie gmbh|abschlagszahlung|wohnungsbaugenossenschaft/i],
+  ['Restaurant', 'aus', /restaurant|mcdonald|burger king|lieferando|wolt|uber eats|pizzeria|döner|doener|kfc|subway|vapiano|starbucks|cafe|café|imbiss|sushi|systemgastronomie|bistro/i],
   ['Gesundheit', 'aus', /apotheke|arzt|zahnarzt|praxis|klinik|optiker|fielmann|physio/i],
   ['Kleidung', 'aus', /zalando|h&m|zara|primark|c&a|about you|snipes|nike|adidas|peek|tk maxx|deichmann/i],
   ['Elektronik & Games', 'aus', /media ?markt|saturn|cyberport|notebooksbilliger|playstation|steam|nintendo|xbox|apple store/i],
   ['Mobilität', 'aus', /deutsche bahn|db vertrieb|bvg|mvg|hvv|rmv|flixbus|uber\b|free now|bolt|sixt|share now|miles mobility|parkhaus|parken|deutschlandticket/i],
   ['Freizeit', 'aus', /fitx|mcfit|fitness|kino|cinemaxx|uci|eventim|ticketmaster|clever fit|urban sports/i],
-  ['Steuern & Gebühren', 'aus', /finanzamt|kfz-steuer|gebühr|entgelt|kontoführung|bußgeld|stadtkasse|bezirksamt/i],
+  ['Steuern & Gebühren', 'aus', /finanzamt|kfz-steuer|^steuern?\b|steuerabrechnung|gebühr|entgelt|kontoführung|bußgeld|stadtkasse|bezirksamt/i],
   ['Urlaub', 'aus', /booking\.com|airbnb|lufthansa|eurowings|ryanair|easyjet|condor|tui|expedia|hotel/i]
 ];
 const katName = n => { const l = n.toLowerCase(); return S.cats.find(c => c.name.toLowerCase() === l) || S.cats.find(c => c.name.toLowerCase().startsWith(l.split(' ')[0])); };
@@ -6785,6 +6790,13 @@ function impVorschau(quellen, fehler) {
 }
 const accKey = s => s.acc === 'neu' ? 'neu:' + s.i : s.acc;
 const accNameK = k => { if (k && k.startsWith('neu:')) return IMP.q[+k.slice(4)].neuName + ' (neu)'; const a = acc(k); return a ? a.name : '?'; };
+// Überweisung an/von mir selbst ohne bekannte IBAN: passendstes eigenes Konto raten (Gemeinschaftskonto bei "… oder …", sonst Girokonto)
+function eigenesGegenkonto(z, self, konten) {
+  const gem = /\boder\b|\bund\b|\+/i.test(z.name), wunsch = gem ? ['gem', 'giro'] : ['giro', 'gem'];
+  const kand = [...konten.filter(k => accKey(k) !== self).map(k => ({ id: accKey(k), kind: k.neuKind || k.kind, acc: k.acc })), ...S.accounts.filter(a => a.id !== self && !konten.some(k => k.acc === a.id)).map(a => ({ id: a.id, kind: a.kind }))].filter(k => k.kind !== 'depot');
+  for (const w of wunsch) { const k = kand.find(k => (k.acc && k.acc !== 'neu' ? (acc(k.acc) || {}).kind : k.kind) === w); if (k) return k.id; }
+  return (kand[0] || {}).id || '';
+}
 function impKlassifizieren() {
   const ibanAcc = {}; S.accounts.forEach(a => { if (a.iban) ibanAcc[a.iban] = a.id; }); IMP.q.forEach(s => { if (s.art === 'konto' && s.iban) ibanAcc[s.iban] = accKey(s); });
   const konten = IMP.q.filter(s => s.art === 'konto');
@@ -6796,11 +6808,12 @@ function impKlassifizieren() {
       z.self = self; z.flag = ''; z.on = true; z.ersetzt = null;
       const other = z.ciban && ibanAcc[z.ciban];
       if (z.trDepot) { const dq = IMP.q.find(x => x.art === 'depot' && x.tr); const dk = dq ? accKey(dq) : (S.accounts.find(a => a.kind === 'depot') || {}).id; if (dk && dk !== self) { z.typ = 'umb'; z.other = dk; } else { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); } }
+      else if (z.trTyp === 'steuer') { z.typ = z.dir < 0 ? 'aus' : 'ein'; const c = katName('Steuern & Gebühren'); z.cat = c && c.type === z.typ ? c.id : impKat(z, z.typ); }
       else if (z.trTyp === 'div') { z.typ = z.dir < 0 ? 'aus' : 'ein'; const c = katName('Dividenden'); z.cat = c && c.type === z.typ ? c.id : impKat(z, z.typ); }
       else if (other && other !== self) { z.typ = 'umb'; z.other = other; }
       else if (trK && trK !== self && /trade republic/i.test(z.name + ' ' + z.vz)) { z.typ = 'umb'; z.other = trK; }
       else if (z.eigen) { z.typ = 'umb'; const o = konten.find(k => accKey(k) !== self && k.kind === 'giro') || konten.find(k => accKey(k) !== self); z.other = o ? accKey(o) : (S.accounts.find(a => a.id !== self && a.kind === 'giro') || S.accounts.find(a => a.id !== self && a.kind !== 'depot') || {}).id || ''; z.flag = 'unsicher'; }
-      else if (nameIstIch(z.name) || nameIstIch(z.vz.slice(0, 80))) { z.typ = 'umb'; z.other = konten.find(k => accKey(k) !== self) ? accKey(konten.find(k => accKey(k) !== self)) : (S.accounts.find(a => a.id !== self) || {}).id || ''; if (!z.ciban || !other) z.flag = 'unsicher'; }
+      else if ((nameIstIch(z.name) || nameIstIch(z.vz.slice(0, 80))) && !(z.ciban && !ibanAcc[z.ciban])) { z.typ = 'umb'; z.other = eigenesGegenkonto(z, self, konten); z.flag = 'unsicher'; if (!z.other) { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); } }
       else { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); if (!z.sicher) z.flag = 'unsicher'; }
     }
   }
@@ -7720,7 +7733,7 @@ function kursStandZeile() {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 105;
+const APP_V = 106;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
