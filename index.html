@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src https://api.twelvedata.com https://www.alphavantage.co; manifest-src 'self'; worker-src 'self'; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src https://api.twelvedata.com https://www.alphavantage.co https://www.ls-tc.de; manifest-src 'self'; worker-src 'self'; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d0f14">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -7974,7 +7974,7 @@ function kursStandZeile() {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 108;
+const APP_V = 109;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -8010,6 +8010,9 @@ function kursEinstHtml() {
     <div data-k="netz">
       <div class="sub" style="margin:2px 0 10px">Gesendet werden nur Kürzel oder ISIN, nie Stückzahlen, Werte oder andere Daten. Alles andere bleibt gesperrt. Schlüssel bleiben nur auf diesem Gerät und kommen nicht in die Sicherung.</div>
       ${keyF('av')}${keyF('td')}
+      ${kursSchl() ? `<button type="button" class="btn sm sec" data-act="kursSchlTeilen" style="margin:0 0 6px">🔑 Schlüssel weitergeben</button><div class="sub" style="margin:0 0 10px">Schickt deine Schlüssel als Code (AirDrop, WhatsApp). Wer ihn einfügt, braucht kein eigenes Konto. Alle teilen sich dann das Tageslimit.</div>` : ''}
+      ${fIn('kursCode', 'Schlüssel-Code von jemand anderem einfügen', '', 'text', 'autocomplete="off" placeholder="JATOS-KURS:…"')}
+      <button type="button" class="btn sm sec" data-act="lsTest" style="margin:2px 0 6px">🧪 Lang & Schwarz testen</button><div class="sub" style="margin:0 0 10px">Prüft, ob die App Kurse direkt bei ls-tc.de abfragen darf (dann ginge es ganz ohne Schlüssel).</div>
       <div class="sub" style="margin:0 0 10px">Am besten beide (gratis): US-Aktien laufen über Twelve Data, Europa und ETFs über Alpha Vantage. Für Alpha Vantage braucht jede Position ein Kürzel (in der Position eintragen).</div>
       ${fChk('kursAuto', 'Beim Öffnen automatisch aktualisieren', s.kursAuto !== false)}
       <div class="sub" style="margin:-4px 0 10px">US-Werte bei jedem Öffnen (höchstens alle ${KURS_TD_MIN} Min.)${iv ? `, Europa/ETFs etwa alle ${iv >= 60 ? dec(iv / 60, iv % 60 ? 1 : 0) + ' Std.' : iv + ' Min.'}, damit das Tageslimit reicht` : ''}. Im Hintergrund kann eine Web-App nichts abrufen.</div>
@@ -8022,6 +8025,8 @@ function kursEinstInit(f) {
 }
 function kursEinstSave(v, s) {
   s.netz = v.netz === 'kurse' ? 'kurse' : 'offline'; s.kursTarn = !!v.kursTarn; s.kursAuto = !!v.kursAuto;
+  const code = (v.kursCode || '').trim();
+  if (code) { const k = kursCodeLesen(code); if (k) { for (const a of ['av', 'td']) if (k[a]) kursSchlSetzen(a, k[a]); s.netz = 'kurse'; setTimeout(() => toast('🔑 Schlüssel übernommen'), 300); } else setTimeout(() => toast('Der Code ist ungültig.'), 300); }
   for (const a of ['av', 'td']) { if (v['del_' + a]) kursSchlSetzen(a, ''); else if ((v['key_' + a] || '').trim()) kursSchlSetzen(a, v['key_' + a].trim()); }
   if (s.netz === 'kurse') setTimeout(kursAutoCheck, 800);
 }
@@ -8030,6 +8035,30 @@ function kursAutoCheck() {
   ACT.kurseHolen(null, true);
 }
 setInterval(kursAutoCheck, 5 * 60000); setTimeout(kursAutoCheck, 1500); document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(kursAutoCheck, 800); });
+
+/* Schlüssel weitergeben: als Text-Code, damit nicht jeder ein eigenes Konto braucht */
+function kursCodeLesen(c) {
+  const m = /JATOS-KURS:([A-Za-z0-9+/=_-]+)/.exec(c); if (!m) return null;
+  try { const o = JSON.parse(atob(m[1].replace(/-/g, '+').replace(/_/g, '/'))); const k = {}; for (const a of ['av', 'td']) if (typeof o[a] === 'string' && /^[A-Za-z0-9]{8,64}$/.test(o[a])) k[a] = o[a]; return Object.keys(k).length ? k : null; } catch (e) { return null; }
+}
+ACT.kursSchlTeilen = async () => {
+  const o = {}; for (const a of ['av', 'td']) { const k = kursSchl(a); if (k) o[a] = k; }
+  const code = 'JATOS-KURS:' + btoa(JSON.stringify(o)), txt = `Schlüssel für die Kurse in der JATOS-App. In der App unter Einstellungen › 🔒 Internet › „Schlüssel-Code einfügen“ einsetzen:\n\n${code}`;
+  if (!await ask('Deine Kurs-Schlüssel weitergeben?\n\nWer den Code hat, kann sie nutzen. Schick ihn nur an Leute, denen du vertraust. Alle teilen sich dann das Gratis-Tageslimit.', 'Weitergeben')) return;
+  try { if (navigator.share) { await navigator.share({ text: txt }); return; } } catch (e) { if (e && e.name === 'AbortError') return; }
+  try { await navigator.clipboard.writeText(code); toast('Code kopiert'); } catch (e) { ask('Kopiere diesen Code:\n\n' + code, 'OK', 'Schließen'); }
+};
+/* Test: darf die App direkt bei Lang & Schwarz abfragen? (Browser-Sperre CORS) */
+ACT.lsTest = async () => {
+  if (!kursOnline()) { toast('Erst „Nur Finanzkurse“ wählen und speichern'); return; }
+  const ziele = [['Seite', 'https://www.ls-tc.de/de/etf/A0YEDL'], ['Kursdaten', 'https://www.ls-tc.de/_rpc/json/instrument/chart/dataForInstrument?instrumentId=48380']], erg = [];
+  toast('🧪 Teste Lang & Schwarz …');
+  for (const [n, u] of ziele) {
+    try { const r = await fetch(u, { method: 'GET', credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store', mode: 'cors' }); const t = await r.text(); erg.push(`${n}: ✓ erreichbar (Status ${r.status}, ${t.length} Zeichen)`); }
+    catch (e) { erg.push(`${n}: ✗ gesperrt`); }
+  }
+  ask('Ergebnis Lang & Schwarz:\n\n' + erg.join('\n') + '\n\nSchick mir einen Screenshot davon.', 'OK', 'Schließen');
+};
 
 /* ---------- Weltmarkt: Heatmap großer Aktien und Weltkarte nach Ländern ----------
    Läuft nur im Modus „Nur Finanzkurse" mit Twelve-Data-Schlüssel. Alle Werte sind in den USA gehandelt
