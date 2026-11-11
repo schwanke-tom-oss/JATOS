@@ -2,7 +2,7 @@
 // Es werden keine Daten verschickt; der Speicher der Einträge liegt ausschließlich im Gerät.
 // Updates nur auf Wunsch: Ein neues Update wird nur installiert, wenn in den Einstellungen
 // „Nach Update suchen“ gedrückt wurde (Freigabe für 10 Minuten in IndexedDB).
-const V = 116, C = 'alltagsplaner-v' + V;
+const V = 117, C = 'alltagsplaner-v' + V;
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 function freigabe() {
   return new Promise(res => {
@@ -30,7 +30,9 @@ self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(k => Pro
 self.addEventListener('message', e => { if (e.data === 'version' && e.source) e.source.postMessage({ version: V }); });
 self.addEventListener('fetch', e => {
   const u = new URL(e.request.url);
-  // Einzige Ausnahme: Kursdienste, und nur wenn in den Einstellungen „Nur Finanzkurse“ gewählt ist (die App prüft das vor jeder Anfrage)
+  // Einzige Ausnahme: Kurse, und nur wenn in den Einstellungen „Nur Finanzkurse“ gewählt ist (die App prüft das vor jeder Anfrage):
+  // die öffentliche Kursdatei im eigenen GitHub-Projekt und, nur mit eigenem Schlüssel, die beiden Kursdienste
+  if (u.href.startsWith('https://raw.githubusercontent.com/schwanke-tom-oss/JATOS/kurse/')) return;
   if (u.origin === 'https://api.twelvedata.com' || u.origin === 'https://www.alphavantage.co') return;
   if (u.origin !== location.origin) { e.respondWith(new Response('', { status: 403 })); return; }
   // Alles kommt aus dem Speicher auf dem Gerät, nie aus dem Netz

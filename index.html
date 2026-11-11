@@ -2,7 +2,7 @@
 <html lang="de">
 <head>
 <meta charset="utf-8">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src https://api.twelvedata.com https://www.alphavantage.co; manifest-src 'self'; worker-src 'self'; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; connect-src https://raw.githubusercontent.com/schwanke-tom-oss/JATOS/kurse/ https://api.twelvedata.com https://www.alphavantage.co; manifest-src 'self'; worker-src 'self'; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#0d0f14">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -2135,6 +2135,26 @@ body:not(.bar-unten).gescrollt nav.tabs{background:linear-gradient(var(--bg) 0,v
   body.desk .modal{align-items:center}
   body.desk .sheet{border-radius:20px;max-height:86vh;padding-bottom:20px}
 }
+
+/* ---------- Kurse: sichtbar, ob gerade geholt wird ---------- */
+.dp-kstand{cursor:pointer;padding:5px 0;margin:-5px 0 5px}.dp-kstand>span{min-width:0}.dp-kstand>b{margin-left:auto;color:var(--tx3);font-weight:400;font-size:15px;line-height:1}
+.dp-kstand.err i{background:var(--bad,#ff5d6c)}.dp-kstand.alt i{background:var(--tx3)}
+.dp-kstand.laeuft{color:var(--tx)}
+.kdreh{display:inline-block;font-style:normal;line-height:1}
+.laeuft>.kdreh,#kurschip .kdreh{animation:kdreh .8s linear infinite}
+@keyframes kdreh{to{transform:rotate(360deg)}}
+.btn.kbtn.laeuft{opacity:.75}
+#kurschip{position:fixed;left:50%;bottom:calc(92px + var(--safe-b));transform:translateX(-50%);z-index:55;display:flex;align-items:center;gap:7px;padding:7px 13px;border-radius:18px;font-size:12.5px;font-weight:600;color:var(--tx);background:rgba(30,30,34,.86);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border:1px solid var(--line);white-space:nowrap;pointer-events:none}
+#kurschip.ok{color:var(--ok,#2ecc8f)}
+.ks-st{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--bg2,rgba(255,255,255,.05));margin-bottom:10px}
+.ks-st>i{width:9px;height:9px;border-radius:50%;background:var(--ok,#2ecc8f);flex:none}.ks-st.laeuft>i{background:var(--warn);animation:kpuls 1s ease-in-out infinite}.ks-st.err>i{background:var(--bad,#ff5d6c)}
+.ks-st>div{display:flex;flex-direction:column;gap:2px;min-width:0}.ks-st b{font-size:14px}.ks-st span{font-size:12px;color:var(--tx2)}
+.ks-l{display:flex;flex-direction:column}
+.ks-z{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}.ks-z:first-child{border-top:0}
+.ks-n{display:flex;align-items:center;gap:9px;min-width:0}.ks-n>div{display:flex;flex-direction:column;min-width:0}.ks-n b{font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ks-z small{font-size:11.5px;color:var(--tx2)}.ks-z small.neg{color:var(--bad,#ff5d6c)}.ks-z small.wrn{color:var(--warn)}
+.ks-k{display:flex;flex-direction:column;align-items:flex-end;flex:none}.ks-k b{font-size:13.5px}
+.kurs-schl{margin:4px 0 6px;border-top:1px solid var(--line);padding-top:8px}.kurs-schl>summary{cursor:pointer;font-size:13.5px;color:var(--tx2);padding:4px 0}
 
 </style>
 </head>
@@ -6751,13 +6771,16 @@ function trAusCsv(rows) {
       const sym = g(r, 'symbol').toUpperCase(), sh = n(r, 'shares');
       if (sym && (kat === 'TRADING' || kat === 'DELIVERY' || kat === 'CORPORATE_ACTION' || /^PRIVATE_MARKET_(BUY|SELL)$/.test(typ))) {
         const P = pos[sym] = pos[sym] || { isin: sym, name: g(r, 'name') || sym, q: 0, kosten: 0, buys: [], kurs: 0 }; if (g(r, 'name')) P.name = g(r, 'name');
-        const geld = Math.round(-(n(r, 'amount') + n(r, 'fee')) * 100) / 100;
-        if (/BUY$/.test(typ)) { P.q += Math.abs(sh); P.kosten += geld; P.buys.push({ date: d, amount: geld, qty: Math.abs(sh) }); }
+        const geld = Math.round(-(n(r, 'amount') + n(r, 'fee')) * 100) / 100, kauf = Math.round(-(n(r, 'amount') + n(r, 'fee') + n(r, 'tax')) * 100) / 100; // Kauf: Gebühr und Steuer (z. B. französische Finanztransaktionssteuer) gehören zum Einstand, wie bei Trade Republic
+        if (/BUY$/.test(typ)) { P.q += Math.abs(sh); P.kosten += kauf; P.buys.push({ date: d, amount: kauf, qty: Math.abs(sh) }); }
         else if (/SELL$/.test(typ)) { // Verkauf: Einstand anteilig ausbuchen (wie Trade Republic „seit Kauf“), Erlös nur merken
           const a = Math.abs(sh); let abg = P.q > 0 ? P.kosten * Math.min(1, a / P.q) : 0; P.kosten -= abg; P.q -= a;
           if (P.q < 1e-6) { abg += P.kosten; P.kosten = 0; P.q = 0; }
           P.buys.push({ date: d, amount: -Math.round(abg * 100) / 100, qty: -a, erloes: -geld }); }
-        else { if (sh < 0 && P.q > 0) P.kosten -= P.kosten * Math.min(1, -sh / P.q); P.q += sh; }
+        else if (sh) { // Einbuchung, Ausbuchung, Split, Fusion: Stückzahl ändert sich ohne Kauf oder Verkauf. Mitschreiben, damit die Stückzahl an jedem Tag stimmt
+          if (/SPLIT/.test(typ)) { P.q += sh; P.buys.push({ date: d, amount: 0, qty: sh, note: 'Split' }); }
+          else if (sh > 0) { const wert = Math.round(sh * n(r, 'price') * 100) / 100; P.q += sh; P.kosten += wert; P.buys.push({ date: d, amount: wert, qty: sh, note: 'Einbuchung' }); }
+          else { const a = -sh; let abg = P.q > 0 ? P.kosten * Math.min(1, a / P.q) : 0; P.kosten -= abg; P.q -= a; if (P.q < 1e-6) { abg += P.kosten; P.kosten = 0; P.q = 0; } P.buys.push({ date: d, amount: -Math.round(abg * 100) / 100, qty: sh, note: 'Ausbuchung' }); } }
         if (n(r, 'price')) P.kurs = n(r, 'price');
       }
     }
@@ -7289,6 +7312,17 @@ const dpCol = p => p.color || DP_COL[S.depot.indexOf(p) % DP_COL.length];
 const dpInv = (p, d) => sum((p.buys || []).filter(b => !d || b.date <= d), b => b.amount);
 const dpQty = p => p.qty || sum(p.buys || [], b => b.qty || 0);
 const dpGV = p => (p.value || 0) - dpInv(p);
+/* Stückzahl an einem Tag. Fehlen in den Käufen Einbuchungen (z. B. Krypto-Übertrag, ältere Importe), wird die Lücke dort ergänzt, wo der Bestand sonst negativ würde */
+const _dpQk = new WeakMap();
+function dpQtyKorr(p) {
+  const buys = p.buys || [], l = buys[buys.length - 1], sig = buys.length + '|' + (p.qty || 0) + '|' + (l ? l.date + l.qty : '');
+  let c = _dpQk.get(p); if (c && c.sig === sig) return c;
+  const so = buys.slice().sort((a, b) => a.date < b.date ? -1 : 1), tot = sum(so, b => b.qty || 0), fehlt = (p.qty || tot) - tot;
+  c = { sig, d: '', q: 0 };
+  if (Math.abs(fehlt) > 1e-7 && so.length && so.every(b => b.qty)) { let q = 0, d = so[0].date; for (const b of so) { q += b.qty; if (q < -1e-9) { d = b.date; break; } } c.d = d; c.q = fehlt; }
+  _dpQk.set(p, c); return c;
+}
+const dpQtyAm = (p, d) => { const k = dpQtyKorr(p); return sum((p.buys || []).filter(b => b.date <= d), b => b.qty || 0) + (k.q && d >= k.d ? k.q : 0); };
 const dpRendite = () => S.dz && S.dz.rend != null ? S.dz.rend : 7;
 const dpMon = (a, b) => (pd(b) - pd(a)) / 864e5 / 30.4375;
 /* Wert einer Position an einem Tag: investiert bis dahin + Kursgewinn, linear zwischen den gemerkten Wert-Ständen */
@@ -7299,8 +7333,8 @@ function dpWertAm(p, d) {
   if (d < buys[0].date) return 0;
   // Ganz verkauft und später neu gekauft: in der Lücke ist nichts da, an den Rändern ist der Gewinn 0
   const mitQ = buys.every(b => b.qty), anker = [{ d: buys[0].date, g: 0 }];
-  if (mitQ) { let q = 0; for (const b of buys) { const v = q; q += b.qty; if ((v <= 1e-9) !== (q <= 1e-9)) anker.push({ d: b.date, g: 0 }); }
-    if (sum(buys.filter(b => b.date <= d), b => b.qty) <= 1e-9) return 0; }
+  if (mitQ) { let v = 0; for (const b of buys) { const q = dpQtyAm(p, b.date); if ((v <= 1e-9) !== (q <= 1e-9)) anker.push({ d: b.date, g: 0 }); v = q; }
+    if (dpQtyAm(p, d) <= 1e-9) return 0; }
   const g = [...anker, ...hist.filter(x => x.d >= buys[0].date).map(x => ({ d: x.d, g: x.v - dpInv(p, x.d) }))];
   if (p.valueDate && !hist.some(x => x.d === p.valueDate) && !anker.some(x => x.d === p.valueDate)) g.push({ d: p.valueDate, g: (p.value || 0) - dpInv(p, p.valueDate) });
   g.sort((a, b) => a.d < b.d ? -1 : 1);
@@ -7406,7 +7440,7 @@ const dpPct = (v, d = 1) => (v >= 0 ? '+' : '−') + dec(Math.abs(v), d) + ' %';
 function depotView() {
   dpSnap();
   const ps = S.depot, V = sum(ps, p => p.value || 0), inv = sum(ps, p => dpInv(p)), gv = V - inv, Z = dpZiel(), sec = UI.dpSec || 'ueber';
-  let h = `<div class="row sb"><h3>Depot</h3><div class="row" style="gap:6px"><button class="btn sm sec" data-act="dzEdit">🎯 ${S.dz ? 'Ziel' : 'Ziel setzen'}</button>${kursOnline() ? '<button class="btn sm sec" data-act="kurseHolen">⟳ Kurse</button>' : ''}<button class="btn sm sec" data-act="impStart">📄 Auszug</button><button class="btn sm sec" data-act="posNew">+ Position</button></div></div>`; h += kursStandZeile();
+  let h = `<div class="row sb"><h3>Depot</h3><div class="row" style="gap:6px"><button class="btn sm sec" data-act="dzEdit">🎯 ${S.dz ? 'Ziel' : 'Ziel setzen'}</button>${kursOnline() ? `<button class="btn sm sec kbtn${UI.kursLaeuft ? ' laeuft' : ''}" data-act="kurseHolen"><i class="kdreh">⟳</i> Kurse</button>` : ''}<button class="btn sm sec" data-act="impStart">📄 Auszug</button><button class="btn sm sec" data-act="posNew">+ Position</button></div></div>`; h += kursStandZeile();
   if (!ps.length) return h + `<div class="card">${empty('Trag deine ETFs und Aktien ein oder lies einen Depotauszug ein. Danach siehst du hier Ziel, Positionen, Dividenden und Karte.')}</div>`;
   h += `<div class="dp-jump">${[['ueber', '🎯 Überblick'], ['div', '💰 Dividenden'], ['karte', '🌍 Karte'], ['spass', '✦ Spaß']].map(([k, l]) => `<button class="${sec === k ? 'on' : ''}" data-act="dpSec" data-v="${k}">${l}</button>`).join('')}</div>`;
   if (sec === 'ueber' || sec === 'pos') h += dpHero(Z, V, gv, inv, 'oben') + dpHero(Z, V, gv, inv, 'kacheln') + dpVerlauf(Z) + dpPosListe() + dpGewicht(V);
@@ -7456,7 +7490,13 @@ const dpGlatt = P => { if (!P.length) return ''; let d = `M${P[0][0].toFixed(1)}
 /* ---------- Chart im Stil von Trade Republic: Start in der Mitte, gestrichelte Linie am Zeitraum-Beginn ---------- */
 const DP_RG = [['1t', '1T', 1], ['1w', '1W', 7], ['1m', '1M', 30], ['3m', '3M', 91], ['1j', '1J', 365], ['kauf', 'Seit Kauf', 0]];
 const dpErsterKauf = p => (p ? p.buys || [] : S.depot.flatMap(x => x.buys || [])).map(b => b.date).sort()[0] || (p ? p.valueDate : null) || today();
-function dpFenster(rg, p) { const t = today(), r = DP_RG.find(x => x[0] === rg) || DP_RG[2], fk = dpErsterKauf(p); let a = r[2] ? addD(t, -r[2]) : fk; if (a < fk) a = fk; if (a >= t) a = addD(t, -1); return { a, t, lbl: r[2] === 1 ? 'seit gestern' : r[2] ? 'seit ' + { 7: '1 Woche', 30: '1 Monat', 91: '3 Monaten', 365: '1 Jahr' }[r[2]] : 'seit Kauf' }; }
+/* 1T heißt wie bei Trade Republic: gegenüber dem Schlusskurs des letzten Handelstags (montags also gegenüber Freitag) */
+function dpFenster(rg, p) {
+  const t = today(), r = DP_RG.find(x => x[0] === rg) || DP_RG[2], fk = dpErsterKauf(p); let a = r[2] ? addD(t, -r[2]) : fk;
+  if (r[2] === 1) { const st = (p ? [p] : S.depot).map(x => x.kursAm ? x.valueDate || '' : '').sort().pop() || t; a = kursVortag(st < t ? st : t, !!p && p.kursQ === 'kr'); }
+  if (a < fk) a = fk; if (a >= t) a = addD(t, -1);
+  return { a, t, lbl: r[2] === 1 ? (a === addD(t, -1) ? 'seit gestern' : 'seit ' + ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'][pd(a).getDay()]) : r[2] ? 'seit ' + { 7: '1 Woche', 30: '1 Monat', 91: '3 Monaten', 365: '1 Jahr' }[r[2]] : 'seit Kauf' };
+}
 /* Kursentwicklung in einem Zeitraum, ohne neu eingezahltes Geld */
 function dpPerf(ps, a, t) { const v0 = sum(ps, p => dpWertAm(p, a)), v1 = sum(ps, p => p === undefined ? 0 : (t === today() ? p.value || 0 : dpWertAm(p, t))), zu = sum(ps, p => dpInv(p, t) - dpInv(p, a)), g = v1 - v0 - zu, b = v0 + Math.max(0, zu); return { v0, v1, g, pct: b ? g / b * 100 : 0 }; }
 function dpChart(o) {
@@ -7530,7 +7570,7 @@ function dpPosChart(p) {
   const rg = UI.dpPosR || 'kauf', { a, t, lbl } = dpFenster(rg, p), pf = dpPerf([p], a, t), i = dpInv(p), g = dpGV(p);
   return `<div class="dp-pc dpc-card"><div class="dp-pch">${dpRgBtns(rg, 'dpPosR', DP_RG_POS)}<div class="g-v num">${eur(p.value || 0)}</div><div class="g-d"><span class="${pf.g < 0 ? 'neg' : 'pos'}">${sgnEur(pf.g)} (${dpPct(pf.pct, 2)})</span> <span class="muted">${lbl}</span></div></div>
     ${dpPosSoll(p)}${dpChart({ a, t, wert: d => dpWertAm(p, d), h: 112 })}
-    <div class="dp-pst"><span>Investiert <b class="num">${eur0(i)}</b></span><span>G/V gesamt <b class="num ${g < 0 ? 'neg' : 'pos'}">${i ? dpPct(g / i * 100) : '–'}</b></span>${p.valueDate ? `<span>Stand <b>${fmtDs(p.valueDate)}</b></span>` : ''}</div>
+    <div class="dp-pst"><span>Investiert <b class="num">${eur0(i)}</b></span><span>G/V gesamt <b class="num ${g < 0 ? 'neg' : 'pos'}">${i ? dpPct(g / i * 100) : '–'}</b></span>${p.valueDate ? `<span>Stand <b>${kursStandKurz(p)}</b></span>` : ''}</div>
     <div class="row" style="gap:6px;margin-top:8px"><button class="btn sm sec" data-act="posOpen" data-id="${p.id}">Details</button><button class="btn sm sec" data-act="posEdit" data-id="${p.id}">Bearbeiten · Wert</button></div></div>`;
 }
 /* Soll-Wert einer Position: Anteil am Depot-Soll (Ziel) bzw. am Depotwert nach Zielgewichtung */
@@ -7911,7 +7951,7 @@ function posEdit(p) {
   const laender = Object.keys(GEO.c).map(a => [a, landName(a)]).sort((a, b) => a[1].localeCompare(b[1], 'de'));
   modal(isNew ? 'Neue Depot-Position' : esc(p.name), `${fIn('name', 'Name (z.B. MSCI World ETF)', p.name || '')}<div class="grid2">${fIn('isin', 'ISIN / WKN', p.isin || '')}${fSel('art', 'Art', DP_ART, art)}</div>
     <div class="grid3">${fMoney('value', 'Aktueller Wert (€)', p.value)}${fIn('qty', 'Stückzahl', p.qty ? String(p.qty).replace('.', ',') : '', 'text', 'inputmode="decimal" placeholder="' + (sum(p.buys || [], b => b.qty || 0) ? dec(sum(p.buys || [], b => b.qty || 0), 3) : 'z.B. 12,5') + '"')}${fIn('valueDate', 'Stand vom', p.valueDate || today(), 'date')}</div>
-    ${kursOnline() ? fIn('sym', 'Kürzel für Kurse (US-Aktien: leer lassen, ISIN reicht)', p.sym || '', 'text', 'placeholder="z.B. VGWL.DEX, ALV.DEX" autocapitalize="characters"') : ''}
+    ${kursOnline() ? fIn('sym', 'Kürzel für Kurse (nur nötig, wenn das Wertpapier nicht in der Kursdatei steht)', p.sym || '', 'text', 'placeholder="z.B. VGWL.DEX, ALV.DEX" autocapitalize="characters"') : ''}
     <h3>Käufe</h3>${(p.buys || []).length ? `<div class="card tight list" style="background:var(--card)">${p.buys.map((b, k) => `<div class="it"><span class="grow">${fmtD(b.date)}${b.qty ? ` · ${dec(b.qty, 3)} Stk.` : ''}</span><span class="num">${eur(b.amount)}</span><button type="button" class="ibtn" data-bdel="${k}" aria-label="Kauf löschen">×</button></div>`).join('')}</div>` : '<div class="sub" style="margin-bottom:8px">Noch keine Käufe.</div>'}
     <div class="grid3">${fIn('bDate', 'Kauf am', today(), 'date')}${fMoney('bAmount', 'Betrag (€)', '')}${fIn('bQty', 'Stück', '', 'text', 'inputmode="decimal"')}</div>
     <details class="mehr" ${isNew ? '' : 'open'}><summary>Ziel, Dividende und Karte</summary>
@@ -7966,10 +8006,10 @@ ACT.dpTaktik = () => {
 };
 
 /* ---------- Online-Kurse (nur wenn in den Einstellungen erlaubt) ----------
-   Standard ist 100 % offline. Nur im Modus „Nur Finanzkurse" fragt die App bei den Kursdiensten nach:
-   gesendet werden ausschließlich Kürzel/ISIN und der eigene Schlüssel – nie Stückzahlen, Werte, Namen oder andere Daten.
-   Schlüssel liegen getrennt im Gerät und kommen NICHT in die Sicherungsdatei.
-   Aufteilung: US-Aktien über Twelve Data (800 Abfragen/Tag gratis), alles andere über Alpha Vantage (25/Tag gratis). */
+   Standard ist 100 % offline. Nur im Modus „Nur Finanzkurse" lädt die App eine öffentliche Kursdatei (siehe unten):
+   dabei wird nichts über das eigene Depot gesendet. Nur für Wertpapiere, die dort fehlen, fragt sie mit eigenen Schlüsseln
+   bei Twelve Data oder Alpha Vantage nach: dann gehen ausschließlich Kürzel/ISIN und der Schlüssel raus, nie Stückzahlen oder Werte.
+   Schlüssel liegen getrennt im Gerät und kommen NICHT in die Sicherungsdatei. */
 const KURS_ANB = {
   td: { n: 'Twelve Data', host: 'https://api.twelvedata.com', tag: 790, hint: 'twelvedata.com · gratis 800 Abfragen am Tag, nur US-Börsen' },
   av: { n: 'Alpha Vantage', host: 'https://www.alphavantage.co', tag: 25, hint: 'alphavantage.co · gratis 25 Abfragen am Tag, auch Europa (Kürzel z.B. VGWL.DEX)' }
@@ -8013,7 +8053,7 @@ function kursWaehrung(sym, cur) {
   return { DEX: 'EUR', FRK: 'EUR', PAR: 'EUR', AMS: 'EUR', MIL: 'EUR', LON: 'GBX', TRT: 'CAD', SWX: 'CHF' }[m[1]] || 'USD';
 }
 /* Welcher Dienst für welche Position: US-Werte über Twelve Data, Rest über Alpha Vantage (falls Schlüssel da) */
-/* Bekannte Kürzel für Toms Positionen: ETFs über Xetra bei Alpha Vantage, TotalEnergies als US-Aktie (ADR 1:1), Krypto über Twelve Data */
+/* Bekannte Kürzel für den Weg über eigene Schlüssel: ETFs über Xetra bei Alpha Vantage, TotalEnergies als US-Aktie (ADR 1:1), Krypto über Twelve Data */
 const KURS_BEKANNT = { IE00B53SZB19: { sym: 'SXRV.DEX' }, IE0006WW1TQ4: { sym: 'EXUS.DEX' }, IE0005AJA0P1: { sym: 'LDGL.DEX' }, IE000DD75KQ5: { sym: 'SPSA.DEX' }, FR0000120271: { symTd: 'TTE' }, BTC: { symTd: 'BTC/USD' }, ETH: { symTd: 'ETH/USD' }, XRP: { symTd: 'XRP/USD' }, SOL: { symTd: 'SOL/USD' } };
 function kursBekannt(p) { const k = KURS_BEKANNT[(p.isin || '').toUpperCase()]; if (!k) return; if (k.sym && !p.sym) p.sym = k.sym; if (k.symTd && !p.symTd) p.symTd = k.symTd; }
 function kursDienst(p) {
@@ -8021,19 +8061,21 @@ function kursDienst(p) {
   const us = /^US/i.test(p.isin || '') || (p.sym && !/\./.test(p.sym) && !p.isin), td = !!kursSchl('td'), av = !!kursSchl('av');
   if (us && td) return 'td'; if (av && p.sym) return 'av'; if (td && (p.sym || p.isin)) return 'td'; return '';
 }
-/* Preis je Stück in Originalwährung */
+/* Preis je Stück in Originalwährung, dazu von wann der Kurs ist */
 async function kursPreis(p, a) {
   if (a === 'av') {
     const j = await kursHol('av', '/query', { function: 'GLOBAL_QUOTE', symbol: p.sym }), q = j['Global Quote'] || {};
     if (j.Note || j.Information) return { err: 'Tageslimit erreicht', stop: true };
-    const pr = parseFloat(q['05. price']); return pr ? { pr, cur: kursWaehrung(p.sym, p.cur) } : { err: 'nicht gefunden' };
+    const pr = parseFloat(q['05. price']), tag = /^\d{4}-\d\d-\d\d$/.test(q['07. latest trading day'] || '') ? q['07. latest trading day'] : '';
+    return pr ? { pr, cur: kursWaehrung(p.sym, p.cur), tag, zeit: tag && tag < today() ? new Date(tag + 'T17:35:00').toISOString() : '' } : { err: 'nicht gefunden' };
   }
   let sym = p.symTd || (p.sym && !/\./.test(p.sym) ? p.sym : '');
   if (!sym && p.isin) { const j = await kursHol('td', '/symbol_search', { symbol: p.isin }); const L = j.data || [], d = L.find(x => x.country === 'United States') || L[0]; if (d) { sym = p.symTd = d.symbol; } }
   if (!sym) return { err: 'Kürzel/ISIN fehlt' };
   const j = await kursHol('td', '/quote', { symbol: sym });
-  if (j.status === 'error') return { err: j.code === 429 ? 'zu viele Abfragen' : /plan/i.test(j.message || '') ? 'nicht im Gratis-Plan (Kürzel für Alpha Vantage eintragen)' : 'nicht gefunden', stop: j.code === 401 || j.code === 429 };
-  const pr = parseFloat(j.close); return pr ? { pr, cur: kursWaehrung(sym, j.currency) } : { err: 'kein Kurs' };
+  if (j.status === 'error') return { err: j.code === 429 ? 'zu viele Abfragen' : /plan/i.test(j.message || '') ? 'nicht im Gratis-Plan' : 'nicht gefunden', stop: j.code === 401 || j.code === 429 };
+  const pr = parseFloat(j.close), lq = +j.last_quote_at || 0;
+  return pr ? { pr, cur: kursWaehrung(sym, j.currency), zeit: lq > 1e9 ? new Date(lq * 1000).toISOString() : '' } : { err: 'kein Kurs' };
 }
 async function kursFx(cur, cache) {
   if (cur === 'EUR') return 1;
@@ -8047,51 +8089,132 @@ async function kursFx(cur, cache) {
 /* Wie oft Alpha Vantage dran darf: Tagesbudget gleichmäßig auf ca. 16 wache Stunden verteilen */
 function kursAvKosten() { const n = S.depot.filter(p => dpQty(p) > 0 && kursDienst(p) === 'av').length; return n ? n + (S.depot.some(p => kursDienst(p) === 'av' && kursWaehrung(p.sym, p.cur) !== 'EUR') && !kursSchl('td') ? 1 : 0) + (S.settings.kursTarn && !kursSchl('td') ? 1 : 0) : 0; }
 function kursAvIntervall() { const k = kursAvKosten(); if (!k) return 0; const runs = Math.max(1, Math.floor(KURS_ANB.av.tag / k)); return Math.max(30, Math.ceil(16 * 60 / runs / 15) * 15); }
-const KURS_TD_MIN = 15;
-let _kursLaeuft = false;
-/* still = automatisch beim Öffnen: nur fällige Dienste, keine Meldungen */
-ACT.kurseHolen = async (d, still) => {
-  if (_kursLaeuft) return;
-  if (!kursOnline()) { if (!still) toast('Die App ist auf 100 % offline gestellt'); return; }
-  if (!kursSchl()) { if (!still) { toast('Erst in den Einstellungen einen Schlüssel eintragen'); ACT.settings(); } return; }
-  const s = S.settings, jetzt = Date.now(), alt = k => jetzt - (s[k] ? Date.parse(s[k]) : 0);
-  const faellig = { td: !still || alt('kursLetztTd') >= KURS_TD_MIN * 60000, av: !still || alt('kursLetztAv') >= kursAvIntervall() * 60000 };
-  const alle = S.depot.filter(p => dpQty(p) > 0 && kursDienst(p)), ps = alle.filter(p => faellig[kursDienst(p)]);
-  if (!alle.length) { if (!still) toast('Keine Position mit Stückzahl und Kürzel/ISIN'); return; }
-  if (!ps.length) { if (!still) toast('Alles aktuell'); return; }
-  _kursLaeuft = true; UI.kursLaeuft = true; if (!still) toast('Kurse werden geholt …'); else render();
-  const fx = {}, ok = [], fehl = [], stop = {}, genutzt = new Set();
-  const liste = ps.map(p => ({ p, a: kursDienst(p) }));
-  /* Tarnung: viele fremde US-Aktien mitfragen (über Twelve Data, das hat genug Abfragen) */
-  if (s.kursTarn) { const a = kursSchl('td') ? 'td' : 'av', n = 1; for (const t of KURS_TARN.filter(t => !ps.some(p => p.sym === t || p.symTd === t)).sort(() => Math.random() - .5).slice(0, n)) liste.splice(Math.floor(Math.random() * (liste.length + 1)), 0, { tarn: t, a }); }
-  let nr = 0; const nAlle = liste.filter(x => !x.tarn).length;
-  for (const x of liste) {
-    if (stop[x.a]) continue;
-    if (!x.tarn) { UI.kursInfo = `Kurse ${++nr} von ${nAlle} …`; if (!document.querySelector('.modal')) render(); }
-    try {
-      if (x.tarn) { await kursHol(x.a, x.a === 'av' ? '/query' : '/quote', x.a === 'av' ? { function: 'GLOBAL_QUOTE', symbol: x.tarn } : { symbol: x.tarn }); await kursPause(x.a === 'av' ? 1300 : 1100); continue; }
-      const p = x.p, r = await kursPreis(p, x.a); await kursPause(x.a === 'av' ? 1300 : 1100); genutzt.add(x.a);
-      if (r.err) { fehl.push(p.name + ': ' + r.err); if (r.stop) stop[x.a] = 1; continue; }
-      const f = await kursFx(r.cur, fx);
-      p.value = Math.round(r.pr * f * dpQty(p) * 100) / 100; p.valueDate = today(); p.kursAm = new Date().toISOString(); ok.push(p.name);
-    } catch (e) {
-      if (e.message === 'limit') { fehl.push(KURS_ANB[x.a].n + ': Tageslimit erreicht'); stop[x.a] = 1; }
-      else if (/offline|host/.test(e.message)) { fehl.push('gesperrt'); break; }
-      else { fehl.push('Keine Verbindung' + (location.protocol === 'https:' && !/github\.io/.test(location.host) ? ' (in der Vorschau ist das Internet gesperrt, klappt nur in der installierten App)' : '')); break; }
-    }
+const KURS_TD_MIN = 15, KURS_AV_MIN = 180;
+/* ---------- Kursdatei: Live-Kurse ohne Schlüssel ----------
+   Ein Dienst im GitHub-Projekt der App holt alle 10 Minuten die Kurse einer festen, breiten Liste von Wertpapieren
+   bei Lang & Schwarz (dieselben Kurse wie in Trade Republic), Krypto bei Kraken, und legt sie als Datei ab.
+   Die App lädt nur diese Datei. Dabei geht nichts raus: weder Kürzel noch ISIN noch sonst etwas über das eigene Depot. */
+const KURS_DATEI = 'https://raw.githubusercontent.com/schwanke-tom-oss/JATOS/kurse/';
+const KURS_QN = { ls: 'Lang & Schwarz', kr: 'Kraken', td: 'Twelve Data', av: 'Alpha Vantage' };
+let _kursDatei = null;
+async function kursDateiHol(name) {
+  if (!kursOnline()) throw new Error('offline');
+  if (!/^[a-z]+\.json$/.test(name)) throw new Error('host');
+  const r = await fetch(KURS_DATEI + name, { method: 'GET', credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store', mode: 'cors' });
+  if (!r.ok) throw new Error('datei');
+  return r.json();
+}
+const kursKey = p => (p.isin || '').trim().toUpperCase();
+const kursInDatei = p => !!(_kursDatei && _kursDatei.k && kursKey(p) && _kursDatei.k[kursKey(p)]);
+/* Letzter Handelstag vor einem Tag (Krypto: einfach der Tag davor) */
+const kursVortag = (tag, krypto) => { let x = addD(tag, -1); if (!krypto) while ([0, 6].includes(pd(x).getDay())) x = addD(x, -1); return x; };
+function kursWann(iso) {
+  const d = new Date(iso); if (!iso || isNaN(d)) return '';
+  const tag = ds(d), t = today(), hm = pad(d.getHours()) + ':' + pad(d.getMinutes());
+  return (tag === t ? 'heute' : tag === addD(t, -1) ? 'gestern' : WD[d.getDay()] + '. ' + fmtDs(tag)) + ', ' + hm + ' Uhr';
+}
+/* Einen Schlusskurs als Stand in den Verlauf der Position schreiben (Stückzahl an dem Tag × Kurs) */
+function kursStandMerken(p, d, kurs) {
+  const q = dpQtyAm(p, d); if (!(q > 1e-9)) return;
+  const h = p.hist || (p.hist = []), v = Math.round(q * kurs * 100) / 100, x = h.find(y => y.d === d);
+  if (x) x.v = v; else { h.push({ d, v }); h.sort((a, b) => a.d < b.d ? -1 : 1); }
+}
+/* Kurse aus der Datei auf die Positionen legen. Wert = Kurs × Stückzahl, Stand = Zeitpunkt des Kurses */
+function kursAusDatei(j) {
+  let neu = 0, da = 0;
+  for (const p of S.depot) {
+    const e = j && j.k && kursKey(p) ? j.k[kursKey(p)] : null, q = dpQty(p); if (!e || !(e.p > 0) || !(q > 0)) continue;
+    const zt = new Date(e.t); if (isNaN(zt)) continue;
+    const tag = ds(zt), wert = Math.round(e.p * q * 100) / 100; da++;
+    if (p.kursAm !== e.t || Math.abs((p.value || 0) - wert) > .004) neu++;
+    p.value = wert; p.valueDate = tag > today() ? today() : tag; p.kursAm = e.t; p.kursQ = e.q || 'ls'; p.kursP = e.p; delete p.kursErr; delete p.kursTag;
+    if (e.vt > 0) { p.kursVt = e.vt; kursStandMerken(p, kursVortag(p.valueDate, p.kursQ === 'kr'), e.vt); } else delete p.kursVt;
   }
-  if (ok.length) { save(); if (!document.querySelector('.modal')) render(); }
-  try { await kursVerlaufHolen(alle, stop, genutzt, fehl); } catch (e) {}
-  UI.kursInfo = '';
-  const iso = new Date().toISOString(); for (const a of genutzt) s[a === 'td' ? 'kursLetztTd' : 'kursLetztAv'] = iso; if (ok.length) s.kursLetzt = iso;
-  if (fehl.length && !ok.length) s.kursFehler = fehl[0]; else delete s.kursFehler;
-  _kursLaeuft = false; UI.kursLaeuft = false; save(); render();
+  return { neu, da };
+}
+/* Aus einer Kursreihe (Kurs je Stück) den Wertverlauf der Position bauen: Stückzahl am Tag × Kurs (× Wechselkurs) */
+function kursHistBauen(p, pr, fx) {
+  const amTag = (r, d) => { let b = r[0]; for (const x of r) { if (x.d > d) break; b = x; } return b ? b.v : 0; };
+  const buys = p.buys.slice().sort((x, y) => x.date < y.date ? -1 : 1), start = buys[0].date, heute = today(), pts = [];
+  for (const x of pr) { if (x.d < start || x.d >= heute) continue; const q = dpQtyAm(p, x.d); if (q <= 1e-9) continue; pts.push({ d: x.d, v: Math.round(q * x.v * (fx ? amTag(fx, x.d) : 1) * 100) / 100 }); }
+  if (!pts.length) return false;
+  const letzte = pts[pts.length - 1].d;
+  // Alte Stände ersetzen; nur echte neuere Kursstände behalten (keine Einstands-Stände vom Import)
+  p.hist = [...pts, ...(p.hist || []).filter(h => h.d > letzte && Math.abs(h.v - dpInv(p, h.d)) > .01)];
+  p.histAm = heute; return true;
+}
+/* Kursverlauf aus der Kursdatei: einmal am Tag (letzte Monate täglich, davor wöchentlich) */
+async function kursVerlaufDatei() {
+  const s = S.settings, heute = today(), ps = S.depot.filter(p => (p.buys || []).length && kursInDatei(p)), sig = heute + '|' + ps.map(p => p.id + ':' + p.buys.length).join(',');
+  if (!ps.length || s.kursVerlaufSig === sig) return 0;
+  UI.kursInfo = 'Kursverlauf wird geladen …'; kursAnz();
+  const j = await kursDateiHol('verlauf.json'); let n = 0;
+  for (const p of ps) { const r = (j.k || {})[kursKey(p)]; if (Array.isArray(r) && r.length && kursHistBauen(p, r.map(x => ({ d: x[0], v: +x[1] })).filter(x => x.v > 0), null)) n++; }
+  // Der Schlusskurs vom Vortag kommt aus der Kursdatei, falls der Verlauf ihn noch nicht hat
+  for (const p of ps) if (p.kursVt > 0 && p.valueDate) kursStandMerken(p, kursVortag(p.valueDate, p.kursQ === 'kr'), p.kursVt);
+  s.kursVerlaufSig = sig; return n;
+}
+let _kursLaeuft = false;
+/* still = automatisch (beim Öffnen, alle 5 Minuten): keine Meldungen, nur die kleine Anzeige */
+ACT.kurseHolen = async (d, still) => {
+  still = still === true; // beim Antippen kommt hier der Knopf an: das ist dann ausdrücklich NICHT still
+  if (_kursLaeuft) { if (!still) ACT.kursStatus(); return; }
+  if (!kursOnline()) { if (!still) toast('Die App ist auf 100 % offline gestellt'); return; }
+  const s = S.settings, jetzt = Date.now(), alt = k => jetzt - (s[k] ? Date.parse(s[k]) : 0);
+  const mitQ = S.depot.filter(p => dpQty(p) > 0);
+  if (!mitQ.length) { if (!still) toast('Keine Position mit Stückzahl'); return; }
+  if (still && alt('kursGeprueft') < 4 * 60000) return;
+  _kursLaeuft = true; UI.kursLaeuft = true; UI.kursInfo = 'Kurse werden geholt …'; kursAnz();
+  const t0 = Date.now(), fehl = [], stop = {}, genutzt = new Set(); let neu = 0, da = 0, netzWeg = false;
+  try {
+    /* 1. Kursdatei: ein Abruf für alles, ohne Schlüssel */
+    try { const j = await kursDateiHol('kurse.json'); _kursDatei = j; const r = kursAusDatei(j); neu += r.neu; da += r.da; s.kursDateiStand = j.stand || ''; delete s.kursDateiFehler; }
+    catch (e) { if (/^(offline|host)$/.test(e.message)) throw e; netzWeg = e.message !== 'datei'; s.kursDateiFehler = netzWeg ? 'Keine Verbindung' : 'Kursdatei nicht gefunden'; }
+    /* 2. Was nicht in der Kursdatei steht: über eigene Schlüssel (falls vorhanden) */
+    const ausDatei = p => /^(ls|kr)$/.test(p.kursQ || '') && p.kursAm && jetzt - Date.parse(p.kursAm) < 4 * 864e5;
+    const rest = netzWeg || !kursSchl() ? [] : mitQ.filter(p => !kursInDatei(p) && !ausDatei(p) && kursDienst(p));
+    const faellig = { td: !still || alt('kursLetztTd') >= KURS_TD_MIN * 60000, av: alt('kursLetztAv') >= (still ? Math.max(KURS_AV_MIN, kursAvIntervall()) : 20) * 60000 };
+    const ps = rest.filter(p => faellig[kursDienst(p)]), fx = {}, liste = ps.map(p => ({ p, a: kursDienst(p) }));
+    /* Tarnung: eine fremde US-Aktie mitfragen */
+    if (s.kursTarn && liste.length) { const a = kursSchl('td') ? 'td' : 'av'; for (const t of KURS_TARN.filter(t => !ps.some(p => p.sym === t || p.symTd === t)).sort(() => Math.random() - .5).slice(0, 1)) liste.splice(Math.floor(Math.random() * (liste.length + 1)), 0, { tarn: t, a }); }
+    let nr = 0;
+    for (const x of liste) {
+      if (stop[x.a]) continue;
+      if (!x.tarn) { UI.kursInfo = `Kurs ${++nr} von ${ps.length} über ${KURS_ANB[x.a].n} …`; kursAnz(); }
+      try {
+        if (x.tarn) { await kursHol(x.a, x.a === 'av' ? '/query' : '/quote', x.a === 'av' ? { function: 'GLOBAL_QUOTE', symbol: x.tarn } : { symbol: x.tarn }); await kursPause(x.a === 'av' ? 1300 : 1100); continue; }
+        const p = x.p, r = await kursPreis(p, x.a); await kursPause(x.a === 'av' ? 1300 : 1100); genutzt.add(x.a);
+        if (r.err) { p.kursErr = r.err; fehl.push(p.name + ': ' + r.err); if (r.stop) stop[x.a] = 1; continue; }
+        const f = await kursFx(r.cur, fx), wert = Math.round(r.pr * f * dpQty(p) * 100) / 100, zeit = r.zeit || new Date().toISOString();
+        if (Math.abs((p.value || 0) - wert) > .004 || (r.zeit && p.kursAm !== r.zeit)) neu++;
+        const tg = r.tag || ds(new Date(zeit)); p.value = wert; p.valueDate = tg < today() ? tg : today(); p.kursAm = zeit; p.kursQ = x.a; p.kursP = r.pr * f; delete p.kursVt; delete p.kursErr; if (r.tag) p.kursTag = r.tag; else delete p.kursTag; da++;
+      } catch (e) {
+        if (e.message === 'limit') { fehl.push(KURS_ANB[x.a].n + ': Tageslimit erreicht'); stop[x.a] = 1; }
+        else if (/offline|host/.test(e.message)) { fehl.push('gesperrt'); break; }
+        else { fehl.push('Keine Verbindung'); break; }
+      }
+    }
+    /* 3. Kursverlauf: aus der Kursdatei einmal am Tag, für den Rest einmal pro Woche über die Schlüssel */
+    if (!netzWeg) {
+      try { await kursVerlaufDatei(); } catch (e) {}
+      try { await kursVerlaufHolen(rest, stop, genutzt, fehl); } catch (e) {}
+    }
+  } catch (e) { fehl.push(/offline|host/.test(e.message) ? 'gesperrt' : 'Keine Verbindung'); }
+  const iso = new Date().toISOString(); for (const a of genutzt) s[a === 'td' ? 'kursLetztTd' : 'kursLetztAv'] = iso;
+  s.kursGeprueft = iso; if (da) s.kursLetzt = iso;
+  const vorschau = location.protocol === 'https:' && !/github\.io/.test(location.host) ? ' (in der Vorschau ist das Internet gesperrt, das klappt nur in der installierten App)' : '';
+  if (!da && (fehl.length || s.kursDateiFehler)) s.kursFehler = (fehl[0] || s.kursDateiFehler) + (/Verbindung/.test(fehl[0] || s.kursDateiFehler) ? vorschau : ''); else delete s.kursFehler;
+  if (!still) await kursPause(Math.max(0, 700 - (Date.now() - t0))); // der Knopf dreht sich mindestens kurz sichtbar
+  _kursLaeuft = false; UI.kursLaeuft = false; UI.kursInfo = ''; save();
+  const m = document.querySelector('.modal'); if (!m || m.classList.contains('kurs-m')) render();
+  const stand = mitQ.map(p => p.kursAm).filter(Boolean).sort().pop() || '', ohne = mitQ.filter(p => !p.kursAm).length, frisch = neu > 0;
+  kursAnz(still && da && frisch ? 'Kurse aktualisiert' : '');
   if (still) return;
-  toast(ok.length ? `${ok.length} Kurs${ok.length > 1 ? 'e' : ''} aktualisiert${fehl.length ? ' · ' + fehl.length + ' nicht' : ''}` : 'Keine Kurse geholt');
-  if (fehl.length) setTimeout(() => toast(fehl.slice(0, 3).join(' · ')), 2600);
+  if (!da) { toast('Keine Kurse geholt: ' + (s.kursFehler || 'keine Position mit ISIN')); return; }
+  toast((frisch ? `✓ Neue Kurse · Stand ${kursWann(stand)}` : `✓ Geprüft: kein neuerer Kurs da · Stand ${kursWann(stand)}`) + (ohne ? ` · ${ohne} ohne Kurs` : ''));
+  if (fehl.length) setTimeout(() => toast(fehl.slice(0, 3).join(' · ')), 2700);
 };
-/* Kursverlauf: einmal pro Woche je Position die Wochenkurse holen und daraus den echten Wertverlauf bauen.
-   Ohne das kennt die App nur die Stände seit dem Import, und 3M, 1J und „seit Kauf“ zeigen dasselbe. */
+/* Kursverlauf über die eigenen Schlüssel: einmal pro Woche je Position die Wochenkurse holen (nur für Positionen, die nicht in der Kursdatei stehen) */
 async function kursVerlaufHolen(alle, stop, genutzt, fehl = []) {
   const faellig = alle.filter(p => (p.buys || []).length && (!p.histAm || dayDiff(p.histAm, today()) >= 7));
   if (!faellig.length) return 0;
@@ -8104,40 +8227,66 @@ async function kursVerlaufHolen(alle, stop, genutzt, fehl = []) {
     else if (kursSchl('av') && kursRest('av') > 1) { const j = await kursHol('av', '/query', { function: 'FX_WEEKLY', from_symbol: cur, to_symbol: 'EUR' }); r = reihe(j['Time Series FX (Weekly)'], '4. close'); await kursPause(1300); }
     if (!r.length) throw new Error('fx'); return (fxH[cur] = r);
   };
-  const amTag = (r, d) => { let b = r[0]; for (const x of r) { if (x.d > d) break; b = x; } return b ? b.v : 0; };
   let nr = 0;
   for (const p of faellig) {
     const a = kursDienst(p); if (!a || stop[a] || kursRest(a) <= 1) continue;
-    UI.kursInfo = `Kursverlauf ${++nr} von ${faellig.length} (einmal pro Woche) …`; if (!document.querySelector('.modal')) render();
+    UI.kursInfo = `Kursverlauf ${++nr} von ${faellig.length} (einmal pro Woche) …`; kursAnz();
     try {
       let pr = [], cur = 'EUR';
       if (a === 'av') { const j = await kursHol('av', '/query', { function: 'TIME_SERIES_WEEKLY', symbol: p.sym }); if (j.Note || j.Information) { stop.av = 1; fehl.push('Alpha Vantage: Limit erreicht'); continue; } pr = reihe(j['Weekly Time Series'], '4. close'); cur = kursWaehrung(p.sym, p.cur); await kursPause(1300); }
       else { const sym = p.symTd || (p.sym && !/\./.test(p.sym) ? p.sym : ''); if (!sym) continue; const j = await kursHol('td', '/time_series', { symbol: sym, interval: '1week', outputsize: 400 }); if (j.status === 'error') { fehl.push(p.name + ': Verlauf ' + (j.code === 429 ? 'Limit' : 'nicht verfügbar')); if (j.code === 429) stop.td = 1; continue; } pr = (j.values || []).map(x => ({ d: x.datetime.slice(0, 10), v: parseFloat(x.close) })).filter(x => x.v > 0).reverse(); cur = kursWaehrung(sym, (j.meta || {}).currency || (/\/USD$/.test(sym) ? 'USD' : '')); await kursPause(1100); }
       genutzt.add(a); if (!pr.length) continue;
       const fx = cur === 'GBX' ? (await fxReihe('GBP')).map(x => ({ d: x.d, v: x.v / 100 })) : await fxReihe(cur);
-      const buys = p.buys.slice().sort((x, y) => x.date < y.date ? -1 : 1), start = buys[0].date, heute = today();
-      const pts = [];
-      for (const x of pr) { if (x.d < start || x.d >= heute) continue; const q = sum(buys.filter(b => b.date <= x.d), b => b.qty || 0); if (q <= 1e-9) continue; pts.push({ d: x.d, v: Math.round(q * x.v * (fx ? amTag(fx, x.d) : 1) * 100) / 100 }); }
-      if (!pts.length) continue;
-      const letzte = pts[pts.length - 1].d;
-      // Alte Stände ersetzen; nur echte neuere Kursstände behalten (keine Einstands-Stände vom Import)
-      if (!document.querySelector('.modal')) { save(); render(); }
-      p.hist = [...pts, ...(p.hist || []).filter(h => h.d > letzte && Math.abs(h.v - dpInv(p, h.d)) > .01)];
-      p.histAm = heute; n++;
+      if (kursHistBauen(p, pr, fx)) n++;
     } catch (e) { if (e.message === 'limit') stop[a] = 1; else if (e.message !== 'fx') throw e; }
   }
   return n;
 }
-/* Kleine Zeile im Depot: Stand der Kurse */
+/* ---------- Sichtbar machen, was die Kurse gerade tun ---------- */
+/* Zeile im Depot: Stand der Kurse. Antippen öffnet die Übersicht je Position */
 function kursStandZeile() {
   if (!kursOnline()) return '';
-  const s = S.settings, t = s.kursLetzt ? new Date(s.kursLetzt) : null, hh = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-  const txt = UI.kursLaeuft ? (UI.kursInfo || 'Kurse werden aktualisiert …') + ' Bitte die App offen lassen.' : t ? `Kurse von ${t.toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10) ? 'heute' : fmtD(s.kursLetzt.slice(0, 10))}, ${hh(t)} Uhr` : 'Noch keine Kurse geholt';
-  return `<div class="dp-kstand${UI.kursLaeuft ? ' laeuft' : ''}"><i></i>${txt}${s.kursFehler && !UI.kursLaeuft ? ` · <span class="neg">${esc(s.kursFehler)}</span>` : ''}</div>`;
+  const s = S.settings, ps = S.depot.filter(p => dpQty(p) > 0), stand = ps.map(p => p.kursAm).filter(Boolean).sort().pop(), ohne = ps.filter(p => !p.kursAm).length;
+  let txt, cls = '';
+  if (UI.kursLaeuft) { txt = esc(UI.kursInfo || 'Kurse werden geholt …'); cls = ' laeuft'; }
+  else if (s.kursFehler) { txt = `<span class="neg">${esc(s.kursFehler)}</span>${stand ? ' · letzter Kurs ' + kursWann(stand) : ''}`; cls = ' err'; }
+  else if (!stand) { txt = 'Noch keine Kurse geholt. Tippe auf ⟳ Kurse.'; cls = ' alt'; }
+  else txt = `Kurse von ${kursWann(stand)}${ohne ? ` · <span class="wrn">${ohne} ohne Kurs</span>` : ''}${s.kursGeprueft ? ` · geprüft ${kursWann(s.kursGeprueft).replace(/^heute, /, '')}` : ''}`;
+  return `<div class="dp-kstand click${cls}" data-act="kursStatus"><i></i><span>${txt}</span><b>›</b></div>`;
+}
+function kursStandKurz(p) { if (!p.kursAm) return p.valueDate ? fmtDs(p.valueDate) : ''; const d = new Date(p.kursAm); return ds(d) === today() ? pad(d.getHours()) + ':' + pad(d.getMinutes()) + ' Uhr' : fmtDs(ds(d)); }
+/* Fenster „Kurse“: läuft gerade etwas, von wann ist welcher Kurs, woher kommt er */
+function kursStatusHtml() {
+  const s = S.settings, ps = S.depot.filter(p => dpQty(p) > 0).sort((a, b) => (b.value || 0) - (a.value || 0));
+  const zeile = p => {
+    const q = dpQty(p), kurs = p.kursP || (p.value && q ? p.value / q : 0); let quelle, cls = '';
+    if (p.kursErr) { quelle = p.kursErr; cls = 'neg'; }
+    else if (!p.kursAm) { quelle = !kursKey(p) && !p.sym ? 'ISIN fehlt' : _kursDatei && !kursInDatei(p) ? 'steht nicht in der Kursdatei' : 'noch kein Kurs geholt'; cls = 'wrn'; }
+    else quelle = (KURS_QN[p.kursQ] || 'Kurs') + (p.kursQ === 'av' ? ' · nur Schlusskurs' : '');
+    return `<div class="ks-z"><div class="ks-n">${dpLogo(p, 26)}<div><b>${esc(p.name)}</b><small class="${cls}">${esc(quelle)}</small></div></div><div class="ks-k"><b class="num">${kurs ? eur(kurs) : '–'}</b><small>${p.kursAm ? kursWann(p.kursAm) : p.valueDate ? 'Stand ' + fmtDs(p.valueDate) : ''}</small></div></div>`;
+  };
+  const kopf = UI.kursLaeuft ? `<div class="ks-st laeuft"><i></i><div><b>Gerade werden Kurse geholt …</b><span>${esc(UI.kursInfo || '')} Bitte die App offen lassen.</span></div></div>`
+    : s.kursFehler ? `<div class="ks-st err"><i></i><div><b>${esc(s.kursFehler)}</b><span>${s.kursGeprueft ? 'Zuletzt versucht: ' + kursWann(s.kursGeprueft) : ''}</span></div></div>`
+    : `<div class="ks-st"><i></i><div><b>${s.kursGeprueft ? 'Zuletzt geprüft: ' + kursWann(s.kursGeprueft) : 'Noch nicht geprüft'}</b><span>${s.kursDateiStand ? 'Kursdatei von ' + kursWann(s.kursDateiStand) + ' · alle 10 Minuten neu' : ''}</span></div></div>`;
+  return `${kopf}<div class="ks-l">${ps.map(zeile).join('') || empty('Keine Position mit Stückzahl.')}</div>
+    <button type="button" class="btn kbtn${UI.kursLaeuft ? ' laeuft' : ''}" data-act="kurseHolen" style="width:100%;margin-top:12px" ${UI.kursLaeuft ? 'disabled' : ''}><i class="kdreh">⟳</i> ${UI.kursLaeuft ? 'Läuft …' : 'Jetzt aktualisieren'}</button>
+    <div class="sub" style="margin-top:10px">Die Kurse kommen von Lang &amp; Schwarz, wie bei Trade Republic, und sind etwa 10 bis 30 Minuten alt. Kleine Abweichungen zu Trade Republic sind deshalb normal. Nachts und am Wochenende gilt der letzte Kurs vom Handelstag.</div>`;
+}
+ACT.kursStatus = () => { if (document.querySelector('.kurs-m')) return; const m = modal('Kurse', `<div id="kursBox">${kursStatusHtml()}</div>`, null, { focus: false }); m.el.classList.add('kurs-m'); };
+/* Anzeige auffrischen, ohne die Seite neu aufzubauen: Zeile im Depot, Knopf, Fenster „Kurse“, kleine Meldung auf anderen Seiten */
+function kursAnz(fertig) {
+  const z = document.querySelector('.dp-kstand'); if (z) z.outerHTML = kursStandZeile();
+  document.querySelectorAll('[data-act=kurseHolen]').forEach(b => b.classList.toggle('laeuft', _kursLaeuft));
+  const box = document.querySelector('#kursBox'); if (box) box.innerHTML = kursStatusHtml();
+  let c = document.querySelector('#kurschip');
+  if (!fertig && (!_kursLaeuft || z || box)) { if (c && !c._bleibt) c.remove(); return; }
+  if (!c) { c = document.createElement('div'); c.id = 'kurschip'; document.body.appendChild(c); }
+  c.className = fertig ? 'ok' : ''; c.innerHTML = fertig ? '✓ ' + esc(fertig) : '<i class="kdreh">⟳</i> ' + esc(UI.kursInfo || 'Kurse werden geholt …');
+  if (fertig) { c._bleibt = 1; setTimeout(() => c.remove(), 1800); }
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 116;
+const APP_V = 117;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -8166,19 +8315,21 @@ function updEinstHtml() {
     <div class="sub" style="margin-bottom:12px">Tippe hier, um nachzusehen. Gibt es ein Update, fragt die App dich, ob du es willst. Ohne dein Ja lädt sie nichts herunter und ändert sich nicht. Dafür kurz Internet einschalten.</div>`;
 }
 function kursEinstHtml() {
-  const s = S.settings, on = kursOnline(), z = kursZaehler(), iv = kursAvIntervall();
+  const s = S.settings, on = kursOnline(), z = kursZaehler();
   const keyF = a => { const k = kursSchl(a); return `${fIn('key_' + a, KURS_ANB[a].n + ' Schlüssel', '', 'password', `autocomplete="off" placeholder="${k ? '•••••• gespeichert' : 'eintragen'}"`)}<div class="sub" style="margin:-6px 0 8px">${KURS_ANB[a].hint}${k ? ` · heute ${z[a] || 0} von ${KURS_ANB[a].tag} genutzt` : ''}</div>${k ? fChk('del_' + a, 'Schlüssel löschen', false) : ''}`; };
   return `${updEinstHtml()}<h3>🔒 Internet</h3>
     <div class="typesw">${[['offline', '100 % offline'], ['kurse', 'Nur Finanzkurse']].map(([v, l]) => `<label><input type="radio" name="netz" value="${v}" ${(on ? 'kurse' : 'offline') === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>
     <div data-k="netz">
-      <div class="sub" style="margin:2px 0 10px">Gesendet werden nur Kürzel oder ISIN, nie Stückzahlen, Werte oder andere Daten. Alles andere bleibt gesperrt. Schlüssel bleiben nur auf diesem Gerät und kommen nicht in die Sicherung.</div>
-      ${keyF('av')}${keyF('td')}
-      ${kursSchl() ? `<button type="button" class="btn sm sec" data-act="kursSchlTeilen" style="margin:0 0 6px">🔑 Schlüssel weitergeben</button><div class="sub" style="margin:0 0 10px">Schickt deine Schlüssel als Code (AirDrop, WhatsApp). Wer ihn einfügt, braucht kein eigenes Konto. Alle teilen sich dann das Tageslimit.</div>` : ''}
-      ${fIn('kursCode', 'Schlüssel-Code von jemand anderem einfügen', '', 'text', 'autocomplete="off" placeholder="JATOS-KURS:…"')}
-      <div class="sub" style="margin:0 0 10px">Am besten beide (gratis): US-Aktien laufen über Twelve Data, Europa und ETFs über Alpha Vantage. Für Alpha Vantage braucht jede Position ein Kürzel (in der Position eintragen).</div>
+      <div class="sub" style="margin:2px 0 10px">Die App lädt dann nur eine öffentliche Kursdatei: Kurse von Lang &amp; Schwarz wie bei Trade Republic, alle 10 Minuten neu. Dabei wird nichts über dich gesendet, auch nicht, welche Wertpapiere du hast. Ein Schlüssel ist nicht nötig. Alles andere bleibt gesperrt.</div>
       ${fChk('kursAuto', 'Beim Öffnen automatisch aktualisieren', s.kursAuto !== false)}
-      <div class="sub" style="margin:-4px 0 10px">US-Werte bei jedem Öffnen (höchstens alle ${KURS_TD_MIN} Min.)${iv ? `, Europa/ETFs etwa alle ${iv >= 60 ? dec(iv / 60, iv % 60 ? 1 : 0) + ' Std.' : iv + ' Min.'}, damit das Tageslimit reicht` : ''}. Im Hintergrund kann eine Web-App nichts abrufen.</div>
-      ${fChk('kursTarn', 'Tarnung: bei jeder Abfrage mehrere fremde US-Aktien mitfragen', s.kursTarn)}
+      <div class="sub" style="margin:-4px 0 10px">Solange die App offen ist, sieht sie alle 5 Minuten nach. Im Hintergrund kann eine Web-App nichts abrufen.</div>
+      <details class="kurs-schl"><summary>Eigene Schlüssel${kursSchl() ? ' (gespeichert)' : ' (meist nicht nötig)'}</summary>
+        <div class="sub" style="margin:6px 0 10px">Nur für Wertpapiere, die nicht in der Kursdatei stehen, und für die Weltmarkt-Karte. Dann gehen Kürzel oder ISIN an Twelve Data (US-Aktien) oder Alpha Vantage (Europa, nur Schlusskurse vom Vortag), nie Stückzahlen oder Werte. Schlüssel bleiben auf diesem Gerät.</div>
+        ${keyF('av')}${keyF('td')}
+        ${kursSchl() ? `<button type="button" class="btn sm sec" data-act="kursSchlTeilen" style="margin:0 0 6px">🔑 Schlüssel weitergeben</button><div class="sub" style="margin:0 0 10px">Schickt deine Schlüssel als Code (AirDrop, WhatsApp). Alle teilen sich dann das Tageslimit.</div>` : ''}
+        ${fIn('kursCode', 'Schlüssel-Code von jemand anderem einfügen', '', 'text', 'autocomplete="off" placeholder="JATOS-KURS:…"')}
+        ${fChk('kursTarn', 'Tarnung: bei Abfragen mit Schlüssel fremde US-Aktien mitfragen', s.kursTarn)}
+      </details>
     </div>`;
 }
 function kursEinstInit(f) {
@@ -8193,7 +8344,7 @@ function kursEinstSave(v, s) {
   if (s.netz === 'kurse') setTimeout(kursAutoCheck, 800);
 }
 function kursAutoCheck() {
-  const s = S.settings; if (!s || !kursOnline() || s.kursAuto === false || !kursSchl() || _kursLaeuft || document.hidden) return;
+  const s = S.settings; if (!s || !kursOnline() || s.kursAuto === false || _kursLaeuft || document.hidden) return;
   ACT.kurseHolen(null, true);
 }
 setInterval(kursAutoCheck, 5 * 60000); setTimeout(kursAutoCheck, 1500); document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(kursAutoCheck, 800); });
