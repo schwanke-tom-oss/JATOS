@@ -1,0 +1,50 @@
+name: Kurse
+
+# Holt alle 10 Minuten Kurse (Lang & Schwarz, Kraken) für die Liste in kursdienst/liste.txt
+# und legt sie im Zweig "kurse" ab. Die JATOS-App liest nur diese Dateien.
+on:
+  schedule:
+    - cron: '3-59/10 5-22 * * 1-5'
+    - cron: '17 */2 * * 0,6'
+  workflow_dispatch:
+    inputs:
+      debug:
+        description: 'Ausführliches Protokoll'
+        type: boolean
+        default: false
+      alles:
+        description: 'Alle Kurse und den ganzen Verlauf neu holen'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+concurrency:
+  group: kurse
+  cancel-in-progress: false
+
+jobs:
+  kurse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Letzten Stand holen
+        run: |
+          mkdir -p alt out
+          if git fetch -q --depth=1 origin kurse 2>/dev/null; then git archive FETCH_HEAD | tar -x -C alt; else echo "Noch kein Stand vorhanden"; fi
+      - name: Kurse abrufen
+        env:
+          DEBUG: ${{ inputs.debug }}
+          ALLES: ${{ inputs.alles }}
+        run: python3 kursdienst/kurse.py
+      - name: Veröffentlichen
+        run: |
+          cd out
+          git init -q -b kurse
+          git config user.name "kursdienst"
+          git config user.email "kursdienst@users.noreply.github.com"
+          git add -A
+          git commit -q -m "Kurse $(date -u +%FT%TZ)"
+          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" kurse

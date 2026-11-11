@@ -1,0 +1,62 @@
+# Wertpapiere, für die der Kursdienst Kurse bereitstellt (eine ISIN oder ein Krypto-Kürzel pro Zeile).
+# Die Liste ist bewusst breit: beliebte ETFs und Aktien, damit die App für viele Depots ohne Schlüssel funktioniert.
+ADA           # Cardano
+BTC           # Bitcoin
+CH0038863350  # Nestlé
+DE0005190003  # BMW
+DE0005557508  # Deutsche Telekom
+DE0005933931  # iShares Core DAX
+DE0007100000  # Mercedes-Benz
+DE0007164600  # SAP
+DE0007236101  # Siemens
+DE0007664039  # Volkswagen Vz.
+DE0008404005  # Allianz
+DE0008430026  # Münchener Rück
+DE000A0F5UH1  # iShares STOXX Global Select Dividend 100
+DE000BASF111  # BASF
+DE000BAY0017  # Bayer
+DK0062498333  # Novo Nordisk
+ETH           # Ethereum
+FR0000120271  # TotalEnergies
+FR0000121014  # LVMH
+IE0005AJA0P1  # L&G Global Quality Dividends
+IE0006WW1TQ4  # Xtrackers MSCI World ex USA
+IE000DD75KQ5  # SPDR MSCI ACWI IMI (Dist)
+IE00B0M62Q58  # iShares MSCI World (Dist)
+IE00B3RBWM25  # Vanguard FTSE All-World (Dist)
+IE00B3XXRP09  # Vanguard S&P 500 (Dist)
+IE00B4L5Y983  # iShares Core MSCI World
+IE00B53SZB19  # iShares Nasdaq 100
+IE00B5BMR087  # iShares Core S&P 500
+IE00B6R52259  # iShares MSCI ACWI
+IE00B8GKDB10  # Vanguard FTSE All-World High Dividend Yield
+IE00BJ0KDQ92  # Xtrackers MSCI World
+IE00BK5BQT80  # Vanguard FTSE All-World (Acc)
+IE00BKM4GZ66  # iShares Core MSCI EM IMI
+LU0274208692  # Xtrackers MSCI World Swap
+LU0908500753  # Amundi Core STOXX Europe 600
+NL0010273215  # ASML
+SOL           # Solana
+US0231351067  # Amazon
+US02079K3059  # Alphabet (A)
+US0378331005  # Apple
+US0846707026  # Berkshire Hathaway (B)
+US1912161007  # Coca-Cola
+US2546871060  # Walt Disney
+US30231G1022  # Exxon Mobil
+US30303M1027  # Meta Platforms
+US4592001014  # IBM
+US46625H1005  # JPMorgan Chase
+US4781601046  # Johnson & Johnson
+US56035L1044  # Main Street Capital
+US5801351017  # McDonald's
+US5949181045  # Microsoft
+US67066G1040  # NVIDIA
+US7134481081  # PepsiCo
+US7170811035  # Pfizer
+US7427181091  # Procter & Gamble
+US7561091049  # Realty Income
+US88160R1014  # Tesla
+US92826C8394  # Visa
+US9311421039  # Walmart
+XRP           # XRP
