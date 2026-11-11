@@ -2275,6 +2275,10 @@ function load() {
   if (!S.wishes) S.wishes = [];
   /* Früher vorgegebene Schichtarten entfernen, wenn unverändert und nie benutzt */
   if (!S.settings.stMig) { const alt = ['F|Früh|06:00|18:00', 'N|Nacht|18:00|06:00', 'X|Frei||']; S.shiftTypes = (S.shiftTypes || []).filter(t => !alt.includes([t.code, t.name, t.start, t.end].join('|')) || Object.values(S.shifts || {}).some(x => x.type === t.id)); S.settings.stMig = 1; }
+  // Einstand korrigieren: Verkäufe buchen den anteiligen Einstand aus, nicht den Erlös (wie Trade Republic „seit Kauf“)
+  if (!S.settings.kostMig) { for (const p of S.depot || []) { const b = (p.buys || []).slice().sort((x, y) => x.date < y.date ? -1 : 1); if (!b.some(x => x.qty < 0 && x.erloes == null)) continue; let q = 0, k = 0;
+      for (const x of b) { if (x.qty > 0) { q += x.qty; k += x.amount; } else if (x.qty < 0) { const a = -x.qty; let abg = q > 0 ? k * Math.min(1, a / q) : 0; k -= abg; q -= a; if (q < 1e-6) { abg += k; k = 0; q = 0; } x.erloes = -x.amount; x.amount = -Math.round(abg * 100) / 100; } }
+      p.buys = b; } S.settings.kostMig = 1; }
   if (!S.cats.some(c => c.type === 'ein' && /Dividend/i.test(c.name))) S.cats.push({ id: uid(), name: 'Dividenden', color: '#b9a0ff', type: 'ein', parent: null, budget: 0 });
 }
 function save() {
@@ -6703,7 +6707,10 @@ function trAusCsv(rows) {
         const P = pos[sym] = pos[sym] || { isin: sym, name: g(r, 'name') || sym, q: 0, kosten: 0, buys: [], kurs: 0 }; if (g(r, 'name')) P.name = g(r, 'name');
         const geld = Math.round(-(n(r, 'amount') + n(r, 'fee')) * 100) / 100;
         if (/BUY$/.test(typ)) { P.q += Math.abs(sh); P.kosten += geld; P.buys.push({ date: d, amount: geld, qty: Math.abs(sh) }); }
-        else if (/SELL$/.test(typ)) { const a = Math.abs(sh); if (P.q > 0) P.kosten -= P.kosten * Math.min(1, a / P.q); P.q -= a; P.buys.push({ date: d, amount: geld, qty: -a }); }
+        else if (/SELL$/.test(typ)) { // Verkauf: Einstand anteilig ausbuchen (wie Trade Republic „seit Kauf“), Erlös nur merken
+          const a = Math.abs(sh); let abg = P.q > 0 ? P.kosten * Math.min(1, a / P.q) : 0; P.kosten -= abg; P.q -= a;
+          if (P.q < 1e-6) { abg += P.kosten; P.kosten = 0; P.q = 0; }
+          P.buys.push({ date: d, amount: -Math.round(abg * 100) / 100, qty: -a, erloes: -geld }); }
         else { if (sh < 0 && P.q > 0) P.kosten -= P.kosten * Math.min(1, -sh / P.q); P.q += sh; }
         if (n(r, 'price')) P.kurs = n(r, 'price');
       }
@@ -7633,7 +7640,7 @@ function dpDivSeit() {
   /* Tabelle */
   const rows = ps.filter(p => (got[p.id] || exp[p.id] || dpDivR(p))).map(p => { const g = sum(Object.values(got[p.id] || {})), e = sum(dpDivPlan(12), m => sum(m.pos.filter(x => x.p === p), x => x.v)), z = dpZM(p).length; return { p, g, e, z, je: z ? e / z : 0 }; }).sort((a, b) => b.e - a.e || b.g - a.g);
   if (got._) rows.push({ p: null, g: sum(Object.values(got._)), e: 0, z: 0, je: 0 });
-  h += `<div class="dp-dvt"><div class="dp-dvt-h"><span>Position</span><span>Erhalten</span><span>Erwartet</span><span class="w">Ø je Zahlung</span><span class="w">Rendite</span></div>${rows.map(r => `<div class="dp-dvt-r${r.p ? ' click' : ''}" ${r.p ? `data-act="posOpen" data-id="${r.p.id}"` : ''}><span class="dp-chip-l ell">${r.p ? dpLogo(r.p, 24) : ''}<span class="ell">${r.p ? esc(r.p.name) : 'Ohne Zuordnung'}<small>${r.je ? `${eur(r.je)} / ${dpFreq(r.z)}` : ''}${r.p && r.dpDivR(p) ? ` · ${dec(r.dpDivR(p), 1)} %` : ''}</small></span></span><span class="num">${eur(r.g)}</span><span class="num erw">${eur(r.e)}</span><span class="num w">${r.je ? `${eur(r.je)} / ${dpFreq(r.z)}` : '–'}</span><span class="num w">${r.p && r.dpDivR(p) ? dec(r.dpDivR(p), 1) + ' %' : '–'}</span></div>`).join('')}</div>`;
+  h += `<div class="dp-dvt"><div class="dp-dvt-h"><span>Position</span><span>Erhalten</span><span>Erwartet</span><span class="w">Ø je Zahlung</span><span class="w">Rendite</span></div>${rows.map(r => `<div class="dp-dvt-r${r.p ? ' click' : ''}" ${r.p ? `data-act="posOpen" data-id="${r.p.id}"` : ''}><span class="dp-chip-l ell">${r.p ? dpLogo(r.p, 24) : ''}<span class="ell">${r.p ? esc(r.p.name) : 'Ohne Zuordnung'}<small>${r.je ? `${eur(r.je)} / ${dpFreq(r.z)}` : ''}${r.p && dpDivR(r.p) ? ` · ${dec(dpDivR(r.p), 1)} %` : ''}</small></span></span><span class="num">${eur(r.g)}</span><span class="num erw">${eur(r.e)}</span><span class="num w">${r.je ? `${eur(r.je)} / ${dpFreq(r.z)}` : '–'}</span><span class="num w">${r.p && dpDivR(r.p) ? dec(dpDivR(r.p), 1) + ' %' : '–'}</span></div>`).join('')}</div>`;
   /* Alle Zahlungen */
   const inP = div.filter(x => x.date >= von && x.date.slice(0, 7) <= bis);
   if (inP.length) h += `<details class="mehr"><summary>Alle ${inP.length} Zahlungen</summary><div class="list">${inP.slice().reverse().map(x => { const p = dpDivPos(x); return `<div class="it click" data-act="txEdit" data-id="${x.id}"><div class="grow"><div class="t">${p ? esc(p.name) : esc(x.note || 'Dividende')}</div><div class="s">${fmtD(x.date)}</div></div><span class="num pos">+${eur(x.amount)}</span></div>`; }).join('')}</div></details>`;
@@ -7950,7 +7957,11 @@ function kursWaehrung(sym, cur) {
   return { DEX: 'EUR', FRK: 'EUR', PAR: 'EUR', AMS: 'EUR', MIL: 'EUR', LON: 'GBX', TRT: 'CAD', SWX: 'CHF' }[m[1]] || 'USD';
 }
 /* Welcher Dienst für welche Position: US-Werte über Twelve Data, Rest über Alpha Vantage (falls Schlüssel da) */
+/* Bekannte Kürzel für Toms Positionen: ETFs über Xetra bei Alpha Vantage, TotalEnergies als US-Aktie (ADR 1:1), Krypto über Twelve Data */
+const KURS_BEKANNT = { IE00B53SZB19: { sym: 'SXRV.DEX' }, IE0006WW1TQ4: { sym: 'EXUS.DEX' }, IE0005AJA0P1: { sym: 'LDGL.DEX' }, IE000DD75KQ5: { sym: 'SPSA.DEX' }, FR0000120271: { symTd: 'TTE' }, BTC: { symTd: 'BTC/USD' }, ETH: { symTd: 'ETH/USD' }, XRP: { symTd: 'XRP/USD' }, SOL: { symTd: 'SOL/USD' } };
+function kursBekannt(p) { const k = KURS_BEKANNT[(p.isin || '').toUpperCase()]; if (!k) return; if (k.sym && !p.sym) p.sym = k.sym; if (k.symTd && !p.symTd) p.symTd = k.symTd; }
 function kursDienst(p) {
+  kursBekannt(p);
   const us = /^US/i.test(p.isin || '') || (p.sym && !/\./.test(p.sym) && !p.isin), td = !!kursSchl('td'), av = !!kursSchl('av');
   if (us && td) return 'td'; if (av && p.sym) return 'av'; if (td && (p.sym || p.isin)) return 'td'; return '';
 }
@@ -8027,7 +8038,7 @@ function kursStandZeile() {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 111;
+const APP_V = 112;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;

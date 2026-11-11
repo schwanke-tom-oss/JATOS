@@ -2,7 +2,7 @@
 // Es werden keine Daten verschickt; der Speicher der Einträge liegt ausschließlich im Gerät.
 // Updates nur auf Wunsch: Ein neues Update wird nur installiert, wenn in den Einstellungen
 // „Nach Update suchen“ gedrückt wurde (Freigabe für 10 Minuten in IndexedDB).
-const V = 111, C = 'alltagsplaner-v' + V;
+const V = 112, C = 'alltagsplaner-v' + V;
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
 function freigabe() {
   return new Promise(res => {
