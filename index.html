@@ -2122,27 +2122,18 @@ body:not(.bar-unten).gescrollt nav.tabs{background:linear-gradient(var(--bg) 0,v
 
 /* ---------- Breite Ansicht (Mac/Windows) ---------- */
 @media (min-width:1100px){
-  body.desk nav.tabs,body.desk.bar-unten nav.tabs{position:fixed;top:0;bottom:0;left:0;right:auto;width:212px;padding:22px 14px;transform:none!important;opacity:1!important;background:none!important;z-index:30;display:flex;align-items:flex-start}
-  body.desk .modus{flex-direction:column;max-width:none;width:100%;border-radius:22px;padding:8px;gap:3px;margin:0}
-  body.desk .modus button{box-sizing:border-box;flex:none;flex-direction:row;justify-content:flex-start;gap:11px;padding:11px 14px;font-size:14.5px;border-radius:14px;width:100%}
-  body.desk .tiles{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
-  body.desk .tiles .tile.wide{grid-column:auto}
-  body.desk .tile{overflow:hidden}
-  body.desk .modus .e{font-size:19px;line-height:1}
-  body.desk #app{max-width:1560px;margin:0 auto;padding-left:244px;padding-right:36px;padding-block:22px 60px}
-  body.desk .desk-split{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:26px;align-items:start}
-  body.desk .desk-l{position:sticky;top:22px}
-  body.desk .desk-l .pxszene{width:100%;max-width:none;margin:0;padding-top:0;border-radius:22px;max-height:none}
-  body.desk .desk-r{min-width:0}
-  body.desk .desk-cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;align-items:start;margin-bottom:12px}
+  body.desk #app{max-width:none;margin:0;padding-left:max(32px,env(safe-area-inset-left,0px));padding-right:max(32px,env(safe-area-inset-right,0px))}
+  body.desk .modus{max-width:760px}
+  body.desk .pxszene{max-height:none;max-width:min(580px,calc((100vh - 120px) * 201 / 230))}
+  body.desk .desk-cols{display:grid;grid-template-columns:repeat(var(--sp,2),minmax(0,1fr));gap:12px;align-items:start;margin-bottom:12px}
   body.desk .desk-col{display:flex;flex-direction:column;gap:12px;min-width:0}
   body.desk .desk-col>.card{margin:0}
   body.desk .konto-kacheln{grid-template-columns:repeat(4,minmax(0,1fr))}
+  body.desk .tiles{grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+  body.desk .tiles .tile.wide{grid-column:auto}
   body.desk .take{max-width:90ch}
   body.desk .modal{align-items:center}
   body.desk .sheet{border-radius:20px;max-height:86vh;padding-bottom:20px}
-  body.desk .toast{bottom:28px}
-  body.desk .fab{right:36px;bottom:28px}
 }
 
 </style>
@@ -2618,10 +2609,11 @@ function deskMauer(box) {
   let run = [];
   const flush = () => {
     if (run.length >= 2) {
-      const w = document.createElement('div'), c = [document.createElement('div'), document.createElement('div')], h = [0, 0];
+      const n = Math.min(run.length, box.clientWidth >= 1500 ? 3 : 2), w = document.createElement('div'), c = Array.from({ length: n }, () => document.createElement('div')), h = c.map(() => 0);
+      w.style.setProperty('--sp', n);
       w.className = 'desk-cols'; c.forEach(x => { x.className = 'desk-col'; w.appendChild(x); }); box.insertBefore(w, run[0]);
       const hs = run.map(el => el.offsetHeight);
-      run.forEach((el, i) => { const k = h[0] <= h[1] ? 0 : 1; c[k].appendChild(el); h[k] += hs[i] + 12; });
+      run.forEach((el, i) => { const k = h.indexOf(Math.min(...h)); c[k].appendChild(el); h[k] += hs[i] + 12; });
     }
     run = [];
   };
@@ -2631,14 +2623,8 @@ function deskMauer(box) {
 function deskLayout() {
   const an = DESK_MQ.matches; document.body.classList.toggle('desk', an);
   if (!an) return;
-  const app = $('#app'), sz = UI.tab === 'heute' && $(':scope > .pxszene', app);
-  if (sz) {
-    const l = document.createElement('div'), r = document.createElement('div'); l.className = 'desk-l'; r.className = 'desk-r';
-    const rest = [...app.children].filter(c => c !== sz && !c.classList.contains('fab'));
-    app.insertBefore(l, app.firstChild); l.appendChild(sz); app.insertBefore(r, l.nextSibling); rest.forEach(k => r.appendChild(k));
-    app.classList.add('desk-split');
-  } else app.classList.remove('desk-split');
-  [app, ...$$('.fin-ov,.desk-r', app)].forEach(deskMauer);
+  const app = $('#app'); app.classList.remove('desk-split');
+  [app, ...$$('.fin-ov', app)].forEach(deskMauer);
 }
 /* Tastenkürzel am Computer: 1–7 wechseln die Reiter (nicht beim Tippen in Feldern oder bei offenem Fenster) */
 document.addEventListener('keydown', e => { if (e.metaKey || e.ctrlKey || e.altKey || document.querySelector('.modal') || /^(INPUT|TEXTAREA|SELECT)$/.test((document.activeElement || {}).tagName || '')) return; const k = Object.keys(TABN)[+e.key - 1]; if (k && /^[1-9]$/.test(e.key)) { UI.tab = k; UI.paint = null; render(); } });
@@ -8151,7 +8137,7 @@ function kursStandZeile() {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 115;
+const APP_V = 116;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
