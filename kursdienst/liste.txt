@@ -43,7 +43,6 @@ US0378331005  # Apple
 US0846707026  # Berkshire Hathaway (B)
 US1912161007  # Coca-Cola
 US2546871060  # Walt Disney
-US30231G1022  # Exxon Mobil
 US30303M1027  # Meta Platforms
 US4592001014  # IBM
 US46625H1005  # JPMorgan Chase
