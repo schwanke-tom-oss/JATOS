@@ -7943,6 +7943,12 @@ const kursPause = ms => new Promise(r => setTimeout(r, ms));
 function kursZaehler() { const t = today(), z = S.settings.kursTag; if (!z || z.d !== t) S.settings.kursTag = { d: t, av: 0, td: 0 }; return S.settings.kursTag; }
 const kursRest = a => KURS_ANB[a].tag - (kursZaehler()[a] || 0);
 
+/* Gratis-Tarife erlauben nur wenige Abfragen pro Minute (Twelve Data 8, Alpha Vantage 5): vorher warten statt Fehler kassieren */
+const _kursT = { td: [], av: [] }, KURS_PRO_MIN = { td: 7, av: 4 };
+async function kursTakt(a) {
+  for (;;) { const now = Date.now(); _kursT[a] = _kursT[a].filter(t => now - t < 61000); if (_kursT[a].length < KURS_PRO_MIN[a]) break; await kursPause(61000 - (now - _kursT[a][0]) + 300); }
+  _kursT[a].push(Date.now());
+}
 /* Ein einziger Weg ins Internet: prüft Schalter, Host und Limit, sonst geht nichts raus */
 async function kursHol(a, pfad, q) {
   if (!kursOnline()) throw new Error('offline');
@@ -7951,7 +7957,7 @@ async function kursHol(a, pfad, q) {
   for (const [k, v] of Object.entries(q)) u.searchParams.set(k, v);
   u.searchParams.set('apikey', kursSchl(a));
   if (u.origin !== h) throw new Error('host');
-  kursZaehler()[a]++;
+  await kursTakt(a); kursZaehler()[a]++;
   const r = await fetch(u.href, { method: 'GET', credentials: 'omit', referrerPolicy: 'no-referrer', cache: 'no-store', mode: 'cors' });
   return r.json();
 }
@@ -8011,9 +8017,11 @@ ACT.kurseHolen = async (d, still) => {
   const fx = {}, ok = [], fehl = [], stop = {}, genutzt = new Set();
   const liste = ps.map(p => ({ p, a: kursDienst(p) }));
   /* Tarnung: viele fremde US-Aktien mitfragen (über Twelve Data, das hat genug Abfragen) */
-  if (s.kursTarn) { const a = kursSchl('td') ? 'td' : 'av', n = a === 'td' ? 6 : 1; for (const t of KURS_TARN.filter(t => !ps.some(p => p.sym === t || p.symTd === t)).sort(() => Math.random() - .5).slice(0, n)) liste.splice(Math.floor(Math.random() * (liste.length + 1)), 0, { tarn: t, a }); }
+  if (s.kursTarn) { const a = kursSchl('td') ? 'td' : 'av', n = 1; for (const t of KURS_TARN.filter(t => !ps.some(p => p.sym === t || p.symTd === t)).sort(() => Math.random() - .5).slice(0, n)) liste.splice(Math.floor(Math.random() * (liste.length + 1)), 0, { tarn: t, a }); }
+  let nr = 0; const nAlle = liste.filter(x => !x.tarn).length;
   for (const x of liste) {
     if (stop[x.a]) continue;
+    if (!x.tarn) { UI.kursInfo = `Kurse ${++nr} von ${nAlle} …`; if (!document.querySelector('.modal')) render(); }
     try {
       if (x.tarn) { await kursHol(x.a, x.a === 'av' ? '/query' : '/quote', x.a === 'av' ? { function: 'GLOBAL_QUOTE', symbol: x.tarn } : { symbol: x.tarn }); await kursPause(x.a === 'av' ? 1300 : 1100); continue; }
       const p = x.p, r = await kursPreis(p, x.a); await kursPause(x.a === 'av' ? 1300 : 1100); genutzt.add(x.a);
@@ -8026,7 +8034,9 @@ ACT.kurseHolen = async (d, still) => {
       else { fehl.push('Keine Verbindung' + (location.protocol === 'https:' && !/github\.io/.test(location.host) ? ' (in der Vorschau ist das Internet gesperrt, klappt nur in der installierten App)' : '')); break; }
     }
   }
-  try { await kursVerlaufHolen(alle, stop, genutzt); } catch (e) {}
+  if (ok.length) { save(); if (!document.querySelector('.modal')) render(); }
+  try { await kursVerlaufHolen(alle, stop, genutzt, fehl); } catch (e) {}
+  UI.kursInfo = '';
   const iso = new Date().toISOString(); for (const a of genutzt) s[a === 'td' ? 'kursLetztTd' : 'kursLetztAv'] = iso; if (ok.length) s.kursLetzt = iso;
   if (fehl.length && !ok.length) s.kursFehler = fehl[0]; else delete s.kursFehler;
   _kursLaeuft = false; UI.kursLaeuft = false; save(); render();
@@ -8036,7 +8046,7 @@ ACT.kurseHolen = async (d, still) => {
 };
 /* Kursverlauf: einmal pro Woche je Position die Wochenkurse holen und daraus den echten Wertverlauf bauen.
    Ohne das kennt die App nur die Stände seit dem Import, und 3M, 1J und „seit Kauf“ zeigen dasselbe. */
-async function kursVerlaufHolen(alle, stop, genutzt) {
+async function kursVerlaufHolen(alle, stop, genutzt, fehl = []) {
   const faellig = alle.filter(p => (p.buys || []).length && (!p.histAm || dayDiff(p.histAm, today()) >= 7));
   if (!faellig.length) return 0;
   const fxH = {}; let n = 0;
@@ -8049,12 +8059,14 @@ async function kursVerlaufHolen(alle, stop, genutzt) {
     if (!r.length) throw new Error('fx'); return (fxH[cur] = r);
   };
   const amTag = (r, d) => { let b = r[0]; for (const x of r) { if (x.d > d) break; b = x; } return b ? b.v : 0; };
+  let nr = 0;
   for (const p of faellig) {
     const a = kursDienst(p); if (!a || stop[a] || kursRest(a) <= 1) continue;
+    UI.kursInfo = `Kursverlauf ${++nr} von ${faellig.length} (einmal pro Woche) …`; if (!document.querySelector('.modal')) render();
     try {
       let pr = [], cur = 'EUR';
-      if (a === 'av') { const j = await kursHol('av', '/query', { function: 'TIME_SERIES_WEEKLY', symbol: p.sym }); if (j.Note || j.Information) { stop.av = 1; continue; } pr = reihe(j['Weekly Time Series'], '4. close'); cur = kursWaehrung(p.sym, p.cur); await kursPause(1300); }
-      else { const sym = p.symTd || (p.sym && !/\./.test(p.sym) ? p.sym : ''); if (!sym) continue; const j = await kursHol('td', '/time_series', { symbol: sym, interval: '1week', outputsize: 400 }); if (j.status === 'error') continue; pr = (j.values || []).map(x => ({ d: x.datetime.slice(0, 10), v: parseFloat(x.close) })).filter(x => x.v > 0).reverse(); cur = kursWaehrung(sym, (j.meta || {}).currency || (/\/USD$/.test(sym) ? 'USD' : '')); await kursPause(1100); }
+      if (a === 'av') { const j = await kursHol('av', '/query', { function: 'TIME_SERIES_WEEKLY', symbol: p.sym }); if (j.Note || j.Information) { stop.av = 1; fehl.push('Alpha Vantage: Limit erreicht'); continue; } pr = reihe(j['Weekly Time Series'], '4. close'); cur = kursWaehrung(p.sym, p.cur); await kursPause(1300); }
+      else { const sym = p.symTd || (p.sym && !/\./.test(p.sym) ? p.sym : ''); if (!sym) continue; const j = await kursHol('td', '/time_series', { symbol: sym, interval: '1week', outputsize: 400 }); if (j.status === 'error') { fehl.push(p.name + ': Verlauf ' + (j.code === 429 ? 'Limit' : 'nicht verfügbar')); if (j.code === 429) stop.td = 1; continue; } pr = (j.values || []).map(x => ({ d: x.datetime.slice(0, 10), v: parseFloat(x.close) })).filter(x => x.v > 0).reverse(); cur = kursWaehrung(sym, (j.meta || {}).currency || (/\/USD$/.test(sym) ? 'USD' : '')); await kursPause(1100); }
       genutzt.add(a); if (!pr.length) continue;
       const fx = cur === 'GBX' ? (await fxReihe('GBP')).map(x => ({ d: x.d, v: x.v / 100 })) : await fxReihe(cur);
       const buys = p.buys.slice().sort((x, y) => x.date < y.date ? -1 : 1), start = buys[0].date, heute = today();
@@ -8063,6 +8075,7 @@ async function kursVerlaufHolen(alle, stop, genutzt) {
       if (!pts.length) continue;
       const letzte = pts[pts.length - 1].d;
       // Alte Stände ersetzen; nur echte neuere Kursstände behalten (keine Einstands-Stände vom Import)
+      if (!document.querySelector('.modal')) { save(); render(); }
       p.hist = [...pts, ...(p.hist || []).filter(h => h.d > letzte && Math.abs(h.v - dpInv(p, h.d)) > .01)];
       p.histAm = heute; n++;
     } catch (e) { if (e.message === 'limit') stop[a] = 1; else if (e.message !== 'fx') throw e; }
@@ -8073,12 +8086,12 @@ async function kursVerlaufHolen(alle, stop, genutzt) {
 function kursStandZeile() {
   if (!kursOnline()) return '';
   const s = S.settings, t = s.kursLetzt ? new Date(s.kursLetzt) : null, hh = d => String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0');
-  const txt = UI.kursLaeuft ? 'Kurse werden aktualisiert …' : t ? `Kurse von ${t.toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10) ? 'heute' : fmtD(s.kursLetzt.slice(0, 10))}, ${hh(t)} Uhr` : 'Noch keine Kurse geholt';
+  const txt = UI.kursLaeuft ? (UI.kursInfo || 'Kurse werden aktualisiert …') + ' Bitte die App offen lassen.' : t ? `Kurse von ${t.toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10) ? 'heute' : fmtD(s.kursLetzt.slice(0, 10))}, ${hh(t)} Uhr` : 'Noch keine Kurse geholt';
   return `<div class="dp-kstand${UI.kursLaeuft ? ' laeuft' : ''}"><i></i>${txt}${s.kursFehler && !UI.kursLaeuft ? ` · <span class="neg">${esc(s.kursFehler)}</span>` : ''}</div>`;
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 113;
+const APP_V = 114;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
