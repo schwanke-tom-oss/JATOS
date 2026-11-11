@@ -7251,8 +7251,12 @@ function dpWertAm(p, d) {
   const hist = (p.hist || []).slice().sort((a, b) => a.d < b.d ? -1 : 1);
   if (!buys.length) { const h = hist.filter(x => x.d <= d).pop(); return h ? h.v : (p.valueDate && p.valueDate > d ? 0 : p.value || 0); }
   if (d < buys[0].date) return 0;
-  const g = [{ d: buys[0].date, g: 0 }, ...hist.filter(x => x.d >= buys[0].date).map(x => ({ d: x.d, g: x.v - dpInv(p, x.d) }))];
-  if (p.valueDate && !hist.some(x => x.d === p.valueDate)) g.push({ d: p.valueDate, g: (p.value || 0) - dpInv(p, p.valueDate) });
+  // Ganz verkauft und später neu gekauft: in der Lücke ist nichts da, an den Rändern ist der Gewinn 0
+  const mitQ = buys.every(b => b.qty), anker = [{ d: buys[0].date, g: 0 }];
+  if (mitQ) { let q = 0; for (const b of buys) { const v = q; q += b.qty; if ((v <= 1e-9) !== (q <= 1e-9)) anker.push({ d: b.date, g: 0 }); }
+    if (sum(buys.filter(b => b.date <= d), b => b.qty) <= 1e-9) return 0; }
+  const g = [...anker, ...hist.filter(x => x.d >= buys[0].date).map(x => ({ d: x.d, g: x.v - dpInv(p, x.d) }))];
+  if (p.valueDate && !hist.some(x => x.d === p.valueDate) && !anker.some(x => x.d === p.valueDate)) g.push({ d: p.valueDate, g: (p.value || 0) - dpInv(p, p.valueDate) });
   g.sort((a, b) => a.d < b.d ? -1 : 1);
   let gain = g[g.length - 1].g;
   for (let i = 0; i < g.length - 1; i++) if (d >= g[i].d && d <= g[i + 1].d) { const t = dayDiff(g[i].d, d) / Math.max(1, dayDiff(g[i].d, g[i + 1].d)); gain = g[i].g + (g[i + 1].g - g[i].g) * t; break; }
@@ -8022,6 +8026,7 @@ ACT.kurseHolen = async (d, still) => {
       else { fehl.push('Keine Verbindung' + (location.protocol === 'https:' && !/github\.io/.test(location.host) ? ' (in der Vorschau ist das Internet gesperrt, klappt nur in der installierten App)' : '')); break; }
     }
   }
+  try { await kursVerlaufHolen(alle, stop, genutzt); } catch (e) {}
   const iso = new Date().toISOString(); for (const a of genutzt) s[a === 'td' ? 'kursLetztTd' : 'kursLetztAv'] = iso; if (ok.length) s.kursLetzt = iso;
   if (fehl.length && !ok.length) s.kursFehler = fehl[0]; else delete s.kursFehler;
   _kursLaeuft = false; UI.kursLaeuft = false; save(); render();
@@ -8029,6 +8034,41 @@ ACT.kurseHolen = async (d, still) => {
   toast(ok.length ? `${ok.length} Kurs${ok.length > 1 ? 'e' : ''} aktualisiert${fehl.length ? ' · ' + fehl.length + ' nicht' : ''}` : 'Keine Kurse geholt');
   if (fehl.length) setTimeout(() => toast(fehl.slice(0, 3).join(' · ')), 2600);
 };
+/* Kursverlauf: einmal pro Woche je Position die Wochenkurse holen und daraus den echten Wertverlauf bauen.
+   Ohne das kennt die App nur die Stände seit dem Import, und 3M, 1J und „seit Kauf“ zeigen dasselbe. */
+async function kursVerlaufHolen(alle, stop, genutzt) {
+  const faellig = alle.filter(p => (p.buys || []).length && (!p.histAm || dayDiff(p.histAm, today()) >= 7));
+  if (!faellig.length) return 0;
+  const fxH = {}; let n = 0;
+  const reihe = (obj, key) => Object.entries(obj || {}).map(([d, v]) => ({ d, v: parseFloat(v[key]) })).filter(x => x.v > 0).sort((a, b) => a.d < b.d ? -1 : 1);
+  const fxReihe = async cur => {
+    if (cur === 'EUR') return null; if (fxH[cur]) return fxH[cur];
+    let r = [];
+    if (kursSchl('td') && kursRest('td') > 1) { const j = await kursHol('td', '/time_series', { symbol: 'EUR/' + cur, interval: '1week', outputsize: 400 }); r = (j.values || []).map(x => ({ d: x.datetime.slice(0, 10), v: 1 / parseFloat(x.close) })).filter(x => isFinite(x.v) && x.v > 0).reverse(); await kursPause(1100); }
+    else if (kursSchl('av') && kursRest('av') > 1) { const j = await kursHol('av', '/query', { function: 'FX_WEEKLY', from_symbol: cur, to_symbol: 'EUR' }); r = reihe(j['Time Series FX (Weekly)'], '4. close'); await kursPause(1300); }
+    if (!r.length) throw new Error('fx'); return (fxH[cur] = r);
+  };
+  const amTag = (r, d) => { let b = r[0]; for (const x of r) { if (x.d > d) break; b = x; } return b ? b.v : 0; };
+  for (const p of faellig) {
+    const a = kursDienst(p); if (!a || stop[a] || kursRest(a) <= 1) continue;
+    try {
+      let pr = [], cur = 'EUR';
+      if (a === 'av') { const j = await kursHol('av', '/query', { function: 'TIME_SERIES_WEEKLY', symbol: p.sym }); if (j.Note || j.Information) { stop.av = 1; continue; } pr = reihe(j['Weekly Time Series'], '4. close'); cur = kursWaehrung(p.sym, p.cur); await kursPause(1300); }
+      else { const sym = p.symTd || (p.sym && !/\./.test(p.sym) ? p.sym : ''); if (!sym) continue; const j = await kursHol('td', '/time_series', { symbol: sym, interval: '1week', outputsize: 400 }); if (j.status === 'error') continue; pr = (j.values || []).map(x => ({ d: x.datetime.slice(0, 10), v: parseFloat(x.close) })).filter(x => x.v > 0).reverse(); cur = kursWaehrung(sym, (j.meta || {}).currency || (/\/USD$/.test(sym) ? 'USD' : '')); await kursPause(1100); }
+      genutzt.add(a); if (!pr.length) continue;
+      const fx = cur === 'GBX' ? (await fxReihe('GBP')).map(x => ({ d: x.d, v: x.v / 100 })) : await fxReihe(cur);
+      const buys = p.buys.slice().sort((x, y) => x.date < y.date ? -1 : 1), start = buys[0].date, heute = today();
+      const pts = [];
+      for (const x of pr) { if (x.d < start || x.d >= heute) continue; const q = sum(buys.filter(b => b.date <= x.d), b => b.qty || 0); if (q <= 1e-9) continue; pts.push({ d: x.d, v: Math.round(q * x.v * (fx ? amTag(fx, x.d) : 1) * 100) / 100 }); }
+      if (!pts.length) continue;
+      const letzte = pts[pts.length - 1].d;
+      // Alte Stände ersetzen; nur echte neuere Kursstände behalten (keine Einstands-Stände vom Import)
+      p.hist = [...pts, ...(p.hist || []).filter(h => h.d > letzte && Math.abs(h.v - dpInv(p, h.d)) > .01)];
+      p.histAm = heute; n++;
+    } catch (e) { if (e.message === 'limit') stop[a] = 1; else if (e.message !== 'fx') throw e; }
+  }
+  return n;
+}
 /* Kleine Zeile im Depot: Stand der Kurse */
 function kursStandZeile() {
   if (!kursOnline()) return '';
@@ -8038,7 +8078,7 @@ function kursStandZeile() {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 112;
+const APP_V = 113;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
