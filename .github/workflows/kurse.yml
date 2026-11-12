@@ -1,7 +1,10 @@
 name: Kurse
 
-# Holt alle 10 Minuten Kurse (Lang & Schwarz, Kraken) für die Liste in kursdienst/liste.txt
+# Holt Kurse (Lang & Schwarz, Kraken) für die Liste in kursdienst/liste.txt
 # und legt sie im Zweig "kurse" ab. Die JATOS-App liest nur diese Dateien.
+# GitHub startet Zeitpläne oft nur etwa einmal pro Stunde. Deshalb holt ein Lauf
+# während der Handelszeit rund 100 Minuten lang alle 10 Minuten neue Kurse.
+# Der nächste Lauf wartet so lange und schließt dann direkt an.
 on:
   schedule:
     - cron: '3-59/10 5-22 * * 1-5'
@@ -27,24 +30,46 @@ concurrency:
 jobs:
   kurse:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 130
     steps:
       - uses: actions/checkout@v5
       - name: Letzten Stand holen
         run: |
           mkdir -p alt out
           if git fetch -q --depth=1 origin kurse 2>/dev/null; then git archive FETCH_HEAD | tar -x -C alt; else echo "Noch kein Stand vorhanden"; fi
-      - name: Kurse abrufen
+      - name: Kurse abrufen und veröffentlichen
         env:
           DEBUG: ${{ inputs.debug }}
           ALLES: ${{ inputs.alles }}
-        run: python3 kursdienst/kurse.py
-      - name: Veröffentlichen
+          ANLASS: ${{ github.event_name }}
+          ZIEL: https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git
         run: |
-          cd out
-          git init -q -b kurse
-          git config user.name "kursdienst"
-          git config user.email "kursdienst@users.noreply.github.com"
-          git add -A
-          git commit -q -m "Kurse $(date -u +%FT%TZ)"
-          git push -q -f "https://x-access-token:${{ github.token }}@github.com/${{ github.repository }}.git" kurse
+          ende=$(( $(date +%s) + 100*60 ))
+          runde=0
+          while :; do
+            runde=$(( runde + 1 ))
+            beginn=$(date +%s)
+            rm -rf out; mkdir -p out
+            if python3 kursdienst/kurse.py; then
+              ( cd out
+                git init -q -b kurse
+                git config user.name "kursdienst"
+                git config user.email "kursdienst@users.noreply.github.com"
+                git add -A
+                git commit -q -m "Kurse $(date -u +%FT%TZ)"
+                git push -q -f "$ZIEL" kurse )
+              # Der frische Stand ist die Grundlage der nächsten Runde
+              rm -rf alt; mkdir -p alt; cp out/*.json alt/
+            else
+              echo "Runde $runde ist fehlgeschlagen"
+              [ "$runde" -gt 1 ] || exit 1
+            fi
+            # Nur Zeitplan-Läufe während der Handelszeit (Mo–Fr 07:20–23:05 Uhr Berlin) laufen weiter
+            [ "$ANLASS" = "schedule" ] || break
+            tag=$(TZ=Europe/Berlin date +%u); uhr=$(TZ=Europe/Berlin date +%H%M)
+            { [ "$tag" -le 5 ] && [ "$((10#$uhr))" -ge 720 ] && [ "$((10#$uhr))" -le 2305 ]; } || break
+            [ $(( $(date +%s) + 600 )) -le "$ende" ] || break
+            rest=$(( 600 - ($(date +%s) - beginn) )); [ "$rest" -gt 20 ] || rest=20
+            echo "Runde $runde fertig, nächste in $rest Sekunden"
+            sleep "$rest"
+          done
