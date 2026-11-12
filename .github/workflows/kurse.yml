@@ -64,10 +64,11 @@ jobs:
               echo "Runde $runde ist fehlgeschlagen"
               [ "$runde" -gt 1 ] || exit 1
             fi
-            # Nur Zeitplan-Läufe während der Handelszeit (Mo–Fr 07:20–23:05 Uhr Berlin) laufen weiter
+            # Nur Zeitplan-Läufe an Handelstagen (Mo–Fr 06:00–23:05 Uhr Berlin) laufen weiter. Ein Lauf kurz vor
+            # Handelsbeginn bleibt so aktiv, statt bis zum nächsten Start (etwa eine Stunde später) eine Lücke zu lassen
             [ "$ANLASS" = "schedule" ] || break
             tag=$(TZ=Europe/Berlin date +%u); uhr=$(TZ=Europe/Berlin date +%H%M)
-            { [ "$tag" -le 5 ] && [ "$((10#$uhr))" -ge 720 ] && [ "$((10#$uhr))" -le 2305 ]; } || break
+            { [ "$tag" -le 5 ] && [ "$((10#$uhr))" -ge 600 ] && [ "$((10#$uhr))" -le 2305 ]; } || break
             [ $(( $(date +%s) + 600 )) -le "$ende" ] || break
             rest=$(( 600 - ($(date +%s) - beginn) )); [ "$rest" -gt 20 ] || rest=20
             echo "Runde $runde fertig, nächste in $rest Sekunden"
