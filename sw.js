@@ -2,8 +2,8 @@
 // Es werden keine Daten verschickt; der Speicher der Einträge liegt ausschließlich im Gerät.
 // Updates nur auf Wunsch: Ein neues Update wird nur installiert, wenn in den Einstellungen
 // „Nach Update suchen“ gedrückt wurde (Freigabe für 10 Minuten in IndexedDB).
-const V = 121, C = 'alltagsplaner-v' + V;
-const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png'];
+const V = 122, C = 'alltagsplaner-v' + V;
+const FILES = ['./', './index.html', './manifest.webmanifest', './icon-180.png', './icon-192.png', './icon-512.png', './ocr/worker.min.js', './ocr/tesseract-core-simd-lstm.js', './ocr/tesseract-core-simd-lstm.wasm', './ocr/deu.traineddata.gz'];
 function freigabe() {
   return new Promise(res => {
     try {
