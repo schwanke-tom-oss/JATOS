@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; font-src data:; connect-src https://raw.githubusercontent.com/schwanke-tom-oss/JATOS/kurse/ https://api.twelvedata.com https://www.alphavantage.co; manifest-src 'self'; worker-src 'self'; form-action 'none'; base-uri 'none'; frame-src 'none'; object-src 'none'">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="theme-color" content="#0d0f14">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -27,7 +27,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 var(--sans);font-variant-numeric:tabular-nums}
+html,body{margin:0;touch-action:pan-x pan-y;-webkit-text-size-adjust:100%;text-size-adjust:100%;background:var(--bg);color:var(--tx);font:15px/1.45 var(--sans);font-variant-numeric:tabular-nums}
 body{min-height:100vh}
 button,input,select,textarea{font:inherit;color:inherit}
 #app{max-width:760px;margin:0 auto;padding-block:6px calc(96px + var(--safe-b));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -2679,6 +2679,350 @@ html.g2 h1 .fg3{vertical-align:-2px;margin-right:4px}
 html.g2 .glb-c{border-radius:18px}
 html.g2 .glb-st{right:8px;bottom:12px}
 
+/* =====================================================================
+   Stufe 4: Depot-Medaillen, Erfolgsmomente, Punkt-Donut, Flugbogen, Dienstplan, Rang, Tageszeit
+   ===================================================================== */
+
+/* ---------- Depot-Abzeichen als Medaillen ---------- */
+.md3.mini{width:26px;height:26px;perspective:160px;--t:1.4px;display:inline-block;vertical-align:middle}
+.md3.mini .md3-k{inset:2px;animation:none!important}
+.md3.mini::before{inset:-3px}
+.md3.mini .md3-v{box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--c) 50%,#fff),inset 0 0 0 2px color-mix(in srgb,var(--c) 62%,#05060a)}
+.md3.mini .md3-v::after{display:none}
+html.g2 .dp-md3 .dp-bp{display:flex;letter-spacing:0}
+html.g2 .dp-md3 .dp-bp .md3{margin-left:-7px}
+html.g2 .dp-md3 summary{position:relative;padding-right:18px}
+html.g2 .dp-md3 summary::after{content:"";position:absolute;right:2px;top:50%;width:7px;height:7px;margin-top:-6px;border-right:1.5px solid var(--tx3);border-bottom:1.5px solid var(--tx3);transform:rotate(45deg);transition:transform .3s}
+html.g2 .dp-md3[open] summary::after{transform:rotate(225deg);margin-top:-1px}
+html.g2 .dp-md3 .rk-abz{margin-top:16px}
+html.g2 .dp-md3[open] .rk-abz .md3{animation:md3pop .7s cubic-bezier(.25,1.5,.4,1) both;animation-delay:calc(.05s + var(--k,0) * 45ms)}
+html.g2-ruhig .dp-md3[open] .rk-abz .md3{animation:none}
+
+/* ---------- Erfolgsmomente ---------- */
+.f3{position:fixed;inset:0;z-index:95;display:grid;place-items:center;pointer-events:none;overflow:hidden}
+.f3::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 50% 44%,color-mix(in srgb,var(--c) 30%,transparent),rgba(4,6,12,.62) 52%,rgba(4,6,12,.25));animation:f3licht 2.9s ease both}
+@keyframes f3licht{0%{opacity:0}10%{opacity:1}78%{opacity:1}100%{opacity:0}}
+.f3-ring{position:absolute;left:50%;top:44%;width:120px;height:120px;margin:-60px;border-radius:50%;border:2px solid var(--c);box-shadow:0 0 30px var(--c),inset 0 0 30px var(--c);animation:f3ring 1.15s cubic-bezier(.1,.7,.3,1) both}
+.f3-ring.r2{animation-delay:.2s;border-color:#fff;box-shadow:0 0 22px #fff}
+@keyframes f3ring{0%{transform:scale(.2);opacity:1}100%{transform:scale(7.5);opacity:0}}
+.f3-st{position:absolute;left:50%;top:44%;width:0;height:0}
+.f3-st i{position:absolute;left:-1.5px;top:0;width:3px;height:48vmax;transform-origin:50% 0;background:linear-gradient(color-mix(in srgb,var(--c) 80%,#fff),transparent 72%);opacity:0;animation:f3strahl 1.7s ease-out both;animation-delay:calc(var(--i) * 16ms)}
+@keyframes f3strahl{0%{opacity:0;transform:rotate(var(--w)) scaleY(.1)}22%{opacity:.55}100%{opacity:0;transform:rotate(calc(var(--w) + 16deg)) scaleY(1)}}
+.f3-kf{position:absolute;left:50%;top:44%;width:0;height:0}
+.f3-kf i{position:absolute;left:-3.5px;top:-5px;width:7px;height:11px;border-radius:2px;opacity:0;animation:f3kf 2s cubic-bezier(.2,.6,.35,1) both;animation-delay:calc(.12s + var(--d))}
+@keyframes f3kf{0%{transform:translate(0,0) rotate(0) scale(.3);opacity:1}38%{transform:translate(var(--x),var(--y)) rotate(calc(var(--r) * .5)) scale(1);opacity:1}100%{transform:translate(calc(var(--x) * 1.18),calc(var(--y) + var(--f))) rotate(var(--r)) scale(.9);opacity:0}}
+.f3-k{position:relative;display:grid;justify-items:center;gap:7px;padding:22px 30px 22px;min-width:236px;max-width:84vw;margin-top:-12vh;border-radius:28px;text-align:center;background:rgba(14,18,32,.84);-webkit-backdrop-filter:blur(22px) saturate(160%);backdrop-filter:blur(22px) saturate(160%);border:1px solid color-mix(in srgb,var(--c) 55%,rgba(255,255,255,.2));box-shadow:inset 0 1px 0 rgba(255,255,255,.2),0 30px 70px -20px #000,0 0 60px -10px var(--c);animation:f3k 2.9s cubic-bezier(.2,1.3,.3,1) both}
+@keyframes f3k{0%{transform:scale(.4) translateY(30px);opacity:0}13%{transform:none;opacity:1}84%{transform:none;opacity:1}100%{transform:scale(.94) translateY(-16px);opacity:0}}
+.f3-ico{width:58px;height:58px;display:grid;place-items:center;border-radius:50%;color:#0a0d16;background:radial-gradient(circle at 32% 24%,#fff,var(--c) 55%,color-mix(in srgb,var(--c) 60%,#000));box-shadow:0 0 26px var(--c);animation:f3ico .9s cubic-bezier(.3,1.6,.4,1) .15s both}
+@keyframes f3ico{0%{transform:scale(0) rotate(-90deg)}100%{transform:none}}
+.f3-ico svg{width:30px;height:30px}
+.f3-k em,.f3-rk em{font:600 11px/1 var(--sans);letter-spacing:.16em;text-transform:uppercase;font-style:normal;color:color-mix(in srgb,var(--c) 55%,#fff)}
+.f3-k b{font:500 38px/1.05 var(--disp);letter-spacing:-.02em;color:#fff;white-space:nowrap}
+.f3-s{font-size:13px;line-height:1.3;color:rgba(255,255,255,.66)}
+/* Rang-Aufstieg */
+.f3-rang{pointer-events:auto;cursor:pointer;transition:opacity .35s}
+.f3-rang.weg{opacity:0}
+.f3-rang::before{background:radial-gradient(circle at 50% 42%,color-mix(in srgb,var(--c) 26%,#0a0c15),#05070d 58%);opacity:.95;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);animation:f3rein95 .4s ease both}
+@keyframes f3rein95{from{opacity:0}to{opacity:.95}}
+@keyframes f3rein{from{opacity:0}}
+.f3-dreh{position:absolute;left:50%;top:42%;width:170vmax;height:170vmax;margin:-85vmax;background:repeating-conic-gradient(from 0deg,color-mix(in srgb,var(--c) 26%,transparent) 0 5deg,transparent 5deg 18deg);-webkit-mask:radial-gradient(circle,#000 0,transparent 46%);mask:radial-gradient(circle,#000 0,transparent 46%);animation:f3dreh 22s linear infinite,f3rein .9s ease .5s both}
+@keyframes f3dreh{to{transform:rotate(360deg)}}
+.f3-rang .f3-ring,.f3-rang .f3-kf{top:42%}
+.f3-rang .f3-ring{animation-delay:.75s}.f3-rang .f3-ring.r2{animation-delay:.95s}
+.f3-rang .f3-kf i{animation-delay:calc(.85s + var(--d))}
+.f3-rk{position:relative;display:grid;justify-items:center;gap:8px;text-align:center;margin-top:-10vh}
+.f3-rk em{animation:f3rein .5s ease .2s both}
+.f3-em{position:relative;width:200px;height:200px;display:grid;place-items:center}
+.f3-em>span{position:absolute;display:grid;place-items:center}
+.f3-alt{animation:f3alt 1s cubic-bezier(.5,0,.8,.4) both}
+@keyframes f3alt{0%{transform:scale(.6);opacity:0}25%{transform:scale(1);opacity:1}60%{transform:scale(1);opacity:1}100%{transform:scale(.3) translateY(-190px);opacity:0}}
+.f3-neu{filter:drop-shadow(0 0 30px color-mix(in srgb,var(--c) 75%,transparent));animation:f3neu .8s cubic-bezier(.2,1.5,.3,1) .75s both,f3schweb 3.2s ease-in-out 1.6s infinite}
+@keyframes f3neu{0%{transform:scale(3.4) rotate(-14deg);opacity:0}100%{transform:none;opacity:1}}
+@keyframes f3schweb{50%{transform:translateY(-7px)}}
+.f3-rk b{font:500 40px/1.05 var(--disp);letter-spacing:-.02em;color:#fff;animation:f3txt .6s cubic-bezier(.2,1.2,.3,1) 1.15s both}
+.f3-rk .f3-s{animation:f3txt .6s ease 1.3s both}
+@keyframes f3txt{from{transform:translateY(16px);opacity:0}}
+.f3-zu{font-size:11px;color:rgba(255,255,255,.4);margin-top:10px;animation:f3rein .6s ease 2.2s both}
+
+/* ---------- Punkt-Donut der Ausgaben ---------- */
+.pd3{position:relative;width:min(100%,330px);aspect-ratio:1;margin:2px auto 8px}
+.pd3 svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.pd3-p{fill:var(--c);transform-box:fill-box;transform-origin:center;transition:transform .45s cubic-bezier(.3,1.5,.4,1),opacity .3s}
+.pd3-g{cursor:pointer;transition:opacity .3s,filter .3s;filter:drop-shadow(0 0 3px color-mix(in srgb,var(--c) 70%,transparent))}
+.pd3-t{fill:none;stroke:transparent;stroke-width:58;pointer-events:stroke}
+.pd3.fokus .pd3-g:not(.an){opacity:.2;filter:none}
+.pd3-g.an{filter:drop-shadow(0 0 7px var(--c))}
+.pd3-g.an .pd3-p{transform:translate(calc(var(--ox) * 8px),calc(var(--oy) * 8px)) scale(1.22)}
+html.g2 #app :is(.g2-ein,.g2-rein) .pd3-p{animation:pd3rein .9s cubic-bezier(.2,.9,.25,1.12) both;animation-delay:calc(.15s + var(--i) * 9ms)}
+@keyframes pd3rein{0%{transform:translate(var(--dx),var(--dy)) scale(0);opacity:0}45%{opacity:1}}
+.pd3-sc{position:absolute;inset:4%;border-radius:50%;pointer-events:none;background:conic-gradient(from 0deg,transparent 0 78%,rgba(255,255,255,.34) 92%,transparent 100%);-webkit-mask:radial-gradient(circle,transparent 52%,#000 53% 70%,transparent 71%);mask:radial-gradient(circle,transparent 52%,#000 53% 70%,transparent 71%);mix-blend-mode:screen;animation:pd3dreh 7s linear infinite}
+@keyframes pd3dreh{to{transform:rotate(360deg)}}
+.pd3-m{position:absolute;inset:30%;display:grid;align-content:center;justify-items:center;gap:3px;text-align:center;pointer-events:none}
+.pd3-m span{font-size:12px;color:var(--tx2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pd3-m b{font:500 27px/1.05 var(--disp);letter-spacing:-.02em;color:var(--tx);white-space:nowrap}
+.pd3-m em{font-style:normal;font-size:11.5px;color:var(--tx3)}
+.pd3-m.pd3-w{animation:pd3w .4s cubic-bezier(.3,1.5,.4,1)}
+@keyframes pd3w{from{transform:scale(.82);opacity:.3}}
+.pd3-leg{display:flex;flex-wrap:wrap;gap:6px;justify-content:center}
+.pd3-leg button{position:relative;display:inline-flex;align-items:center;gap:6px;font:500 12px/1 var(--sans);color:var(--tx2);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.09);border-radius:999px;padding:7px 10px;cursor:pointer;transition:background .2s,border-color .2s,color .2s,transform .15s}
+.pd3-leg button:active{transform:scale(.94)}
+.pd3-leg button i{width:8px;height:8px;border-radius:50%;background:var(--c);box-shadow:0 0 8px var(--c)}
+.pd3-leg button b{font-weight:600;color:var(--tx3)}
+.pd3-leg button.an{color:var(--tx);background:color-mix(in srgb,var(--c) 18%,transparent);border-color:color-mix(in srgb,var(--c) 60%,transparent)}
+.pd3-leg button.an b{color:var(--tx)}
+html.g2-ruhig .pd3-sc{display:none}
+html.g2-ruhig .pd3-p{transition:none}
+
+/* ---------- Stufe 4: Dienstplan mit Leben ---------- */
+@keyframes kl3puls{0%,100%{box-shadow:0 0 0 1px var(--amb),0 0 10px -4px var(--amb)}50%{box-shadow:0 0 0 1px var(--amb),0 0 22px 0 var(--amb)}}
+@keyframes kl3puls2{0%,100%{box-shadow:0 0 8px -2px var(--amb)}50%{box-shadow:0 0 18px 2px var(--amb)}}
+html.g2 .cal .d{isolation:isolate}
+html.g2 .cal .d.today{animation:kl3puls 2.8s ease-in-out infinite}
+html.g2 .cal .d.today .n{color:var(--amb);font-weight:700}
+html.g2 .tkk-tag.heute .tkk-nr{animation:kl3puls2 2.8s ease-in-out infinite}
+html.g2 .cal .d .kl3-n{position:absolute;inset:0;z-index:-1;pointer-events:none;border-radius:inherit;background:radial-gradient(1px 1px at 22% 30%,#fff 60%,transparent),radial-gradient(1px 1px at 70% 22%,#fff 60%,transparent),radial-gradient(1.2px 1.2px at 48% 58%,#fff 60%,transparent),radial-gradient(1px 1px at 84% 66%,#fff 60%,transparent),radial-gradient(1px 1px at 14% 78%,#fff 60%,transparent),linear-gradient(180deg,rgba(52,64,150,.55),rgba(18,22,60,.25))}
+html.g2 .cal .d .kl3-n::before{content:"";position:absolute;inset:0;background:radial-gradient(1.3px 1.3px at 36% 44%,#fff 60%,transparent),radial-gradient(1.3px 1.3px at 62% 80%,#fff 60%,transparent),radial-gradient(1px 1px at 90% 40%,#fff 60%,transparent);animation:kl3fun 3.2s ease-in-out infinite}
+html.g2 .cal .d .kl3-n::after{content:"";position:absolute;right:5px;top:5px;width:7px;height:7px;border-radius:50%;box-shadow:-2px 1px 0 0 #ffe7a3;filter:drop-shadow(0 0 3px rgba(255,231,163,.7))}
+@keyframes kl3fun{0%,100%{opacity:.15}50%{opacity:1}}
+html.g2 .kl3-vor{transform-origin:0 50%;animation:kl3vor .55s cubic-bezier(.2,.8,.25,1)}
+html.g2 .kl3-zur{transform-origin:100% 50%;animation:kl3zur .55s cubic-bezier(.2,.8,.25,1)}
+@keyframes kl3vor{0%{transform:perspective(1100px) rotateY(-62deg);opacity:.15}100%{transform:none;opacity:1}}
+@keyframes kl3zur{0%{transform:perspective(1100px) rotateY(62deg);opacity:.15}100%{transform:none;opacity:1}}
+html.g2-ruhig .cal .d.today,html.g2-ruhig .tkk-tag.heute .tkk-nr,html.g2-ruhig .cal .d .kl3-n::before{animation:none}
+
+/* ---------- Stufe 4: Tageszeit auf der Heute-Seite ---------- */
+html.g2[data-tab=heute][data-zeit=morgen]{--amb:#ffb36b;--amb2:#ff7fa8}
+html.g2[data-tab=heute][data-zeit=tag]{--amb:#f5c451;--amb2:#5ab8ff}
+html.g2[data-tab=heute][data-zeit=abend]{--amb:#ff8a5c;--amb2:#b07cff}
+html.g2[data-tab=heute][data-zeit=nacht]{--amb:#8fa8ff;--amb2:#c6a6ff}
+html.g2 #app .card.tz3{position:relative;overflow:hidden;padding-bottom:12px;background:radial-gradient(250px circle at var(--gx,-400px) var(--gy,-400px),rgba(255,255,255,.12),transparent 66%),linear-gradient(180deg,var(--tzh1),var(--tzh2) 70%,transparent),var(--glas)}
+html.g2 .tz3{--tzh1:rgba(90,150,255,.16);--tzh2:rgba(245,196,81,.05)}
+html.g2 .tz3.tz3-morgen{--tzh1:rgba(255,140,170,.16);--tzh2:rgba(255,179,107,.1)}
+html.g2 .tz3.tz3-abend{--tzh1:rgba(120,90,220,.2);--tzh2:rgba(255,138,92,.14)}
+html.g2 .tz3.tz3-nacht{--tzh1:rgba(30,40,110,.4);--tzh2:rgba(60,70,160,.08)}
+html.g2 .tz3 .row,html.g2 .tz3 .tz3-svg,html.g2 .tz3 .tz3-f{position:relative}
+html.g2 .tz3-svg{display:block;width:100%;height:auto;margin:4px 0 0;overflow:visible}
+html.g2 .tz3-b{fill:none;stroke:rgba(255,255,255,.2);stroke-width:1.2;stroke-dasharray:2 5}
+html.g2 .tz3-z{fill:none;stroke:url(#tz3v);stroke-width:2.4;stroke-linecap:round;filter:drop-shadow(0 0 4px var(--amb))}
+html.g2 .tz3-h{stroke:rgba(255,255,255,.28);stroke-width:1}
+html.g2 .tz3-hof{fill:var(--amb);opacity:.22;animation:tz3hof 3.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+html.g2 .tz3-so{fill:#fff3c4;filter:drop-shadow(0 0 6px var(--amb)) drop-shadow(0 0 14px var(--amb))}
+html.g2 .tz3-str{stroke:var(--amb);stroke-width:1.8;stroke-linecap:round;animation:tz3dreh 14s linear infinite;transform-box:fill-box;transform-origin:center}
+html.g2 .tz3-mo{fill:#eef1ff;filter:drop-shadow(0 0 6px var(--amb))}
+@keyframes tz3hof{0%,100%{transform:scale(.85);opacity:.16}50%{transform:scale(1.12);opacity:.3}}
+@keyframes tz3dreh{to{transform:rotate(360deg)}}
+html.g2 .tz3-f{display:flex;align-items:flex-end;justify-content:space-between;gap:8px;font-size:13px;font-variant-numeric:tabular-nums;margin-top:-2px}
+html.g2 .tz3-f>span{display:flex;flex-direction:column;gap:1px;min-width:0}
+html.g2 .tz3-f>span.r{text-align:right}
+html.g2 .tz3-f em{font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3)}
+html.g2 .tz3-f .tz3-t{display:block;text-align:center;color:var(--tx2);font-size:12.5px;flex:1}
+html.g2 .tz3-f .tz3-t b{color:var(--tx);font-weight:600}
+html.g2 .tz3-st{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity 1s;background:radial-gradient(1px 1px at 8% 20%,#fff 60%,transparent),radial-gradient(1.2px 1.2px at 18% 62%,#fff 60%,transparent),radial-gradient(1px 1px at 31% 14%,#fff 60%,transparent),radial-gradient(1px 1px at 44% 40%,#fff 60%,transparent),radial-gradient(1.4px 1.4px at 57% 12%,#fff 60%,transparent),radial-gradient(1px 1px at 66% 52%,#fff 60%,transparent),radial-gradient(1px 1px at 78% 24%,#fff 60%,transparent),radial-gradient(1.2px 1.2px at 90% 46%,#fff 60%,transparent),radial-gradient(1px 1px at 95% 12%,#fff 60%,transparent)}
+html.g2 .tz3-st::after{content:"";position:absolute;inset:0;background:radial-gradient(1.5px 1.5px at 24% 34%,#fff 60%,transparent),radial-gradient(1.3px 1.3px at 52% 26%,#fff 60%,transparent),radial-gradient(1.5px 1.5px at 83% 36%,#fff 60%,transparent),radial-gradient(1.2px 1.2px at 12% 44%,#fff 60%,transparent);animation:kl3fun 2.6s ease-in-out infinite}
+html.g2 .tz3.tz3-n .tz3-st{opacity:.85}
+html.g2 .tz3.tz3-abend .tz3-st{opacity:.3}
+html.g2 .tz3.g2-ruht .tz3-hof,html.g2 .tz3.g2-ruht .tz3-str,html.g2 .tz3.g2-ruht .tz3-st::after{animation-play-state:paused}
+html.g2-ruhig .tz3-hof,html.g2-ruhig .tz3-str,html.g2-ruhig .tz3-st::after{animation:none}
+
+/* ---------- Stufe 4: Reise mit Flugbogen ---------- */
+html.g2 .fb3{padding:10px 12px 12px;overflow:hidden}
+html.g2 .fb3-c{display:block;width:100%;height:210px;border-radius:16px;cursor:pointer;touch-action:pan-y;-webkit-tap-highlight-color:transparent}
+html.g2 .fb3-z{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin-top:6px}
+html.g2 .fb3-z>span{display:flex;flex-direction:column;gap:1px;min-width:0;flex:1}
+html.g2 .fb3-z>span.r{text-align:right}
+html.g2 .fb3-z>span b{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+html.g2 .fb3-z em{font-style:normal;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3)}
+html.g2 .fb3-z .fb3-m{flex:none;text-align:center;align-items:center;padding:0 4px}
+html.g2 .fb3-z .fb3-m b{font-size:17px;color:var(--amb);text-shadow:0 0 14px color-mix(in srgb,var(--amb) 50%,transparent)}
+@media(min-width:900px){html.g2 .fb3-c{height:250px}}
+
+/* ---------- Zeitkonten: Tachos, Urlaubs-Tank, Münzen (Stufe 5) ---------- */
+html:not(.g2) .zk-grid{--amb:#7aa2ff;--amb2:#a58bff}
+.zk-grid{display:grid;grid-template-columns:1fr;gap:12px;margin:0 0 12px}
+.zk-grid>.card.zk{margin:0;min-width:0;display:flex;flex-direction:column;gap:4px;overflow:hidden}
+@media(min-width:640px){.zk-grid{grid-template-columns:1fr 1fr}}
+.zk .sub{font-size:12px}
+.zk-paar{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.zk-t{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0}
+.zk-t svg{width:100%;max-width:190px;height:auto;display:block;overflow:visible}
+.zk-tl{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--tx3,#8a8a8a);margin-bottom:2px}
+.zk-v{font-size:20px;font-weight:700;margin-top:-4px;letter-spacing:.01em;color:var(--zc)}
+.zk-v.neg{color:var(--zc)}
+.zk-sch{fill:#000;opacity:.35}
+.zk-tick{stroke:currentColor;opacity:.35;stroke-width:1}
+.zk-tick.gross{opacity:.7;stroke-width:1.6}
+.zk-nadel{transform-box:view-box;transform-origin:80px 84px;transform:rotate(var(--w));filter:drop-shadow(0 0 4px var(--zc))}
+.zk-spitze{fill:var(--zc)}
+.zk-nabe{fill:#20232c;stroke:var(--zc);stroke-width:2}
+.zk-fuss{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--tx2,#aaa);margin-top:6px;padding-top:8px;border-top:1px solid var(--line)}
+.zk-fuss a{color:var(--amb)}
+.zk-sum{font-size:20px;color:var(--amb)}
+/* Urlaub */
+.zk-urlaub{display:grid;grid-template-columns:minmax(90px,120px) 1fr;gap:14px;align-items:center;margin-top:8px}
+.zk-tank{position:relative}
+.zk-tank svg{width:100%;height:auto;display:block}
+.zk-tank>b{position:absolute;left:0;right:0;top:40%;text-align:center;font-size:18px;font-weight:700;color:#fff;text-shadow:0 1px 8px rgba(0,0,0,.6)}
+.zk-glas{fill:rgba(255,255,255,.05);stroke:rgba(255,255,255,.28);stroke-width:1.5}
+.zk-glanz{fill:rgba(255,255,255,.12)}
+.zk-welle{fill:url(#zkw)}
+.zk-welle.w2{opacity:.45}
+.zk-blase{fill:rgba(255,255,255,.55);opacity:0}
+.zk-uz{display:flex;flex-direction:column;gap:2px;min-width:0}
+.zk-uz>div{display:flex;justify-content:space-between;gap:8px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13px}
+.zk-uz>div:last-child{border-bottom:0}
+.zk-uz span{color:var(--tx2,#aaa)}
+.zk-uz .hl b{font-size:17px;color:var(--amb)}
+.zk-uz .hl b.neg{color:var(--bad)}
+/* Münzen */
+.zk-mz{width:100%;max-width:340px;height:auto;display:block;margin:6px auto 0;overflow:visible}
+.zk-ms{fill:var(--c);filter:brightness(.62)}
+.zk-mo{fill:var(--c);stroke:rgba(255,255,255,.45);stroke-width:.8}
+.zk-me{font-size:7px;font-weight:800;fill:rgba(0,0,0,.55)}
+.zk-mw{font-size:11px;font-weight:700;fill:currentColor}
+.zk-ml{font-size:9.5px;fill:currentColor;opacity:.65;letter-spacing:.04em}
+
+/* Bewegung: nur im Nachtglas, nicht im ruhigen Modus */
+html.g2 .zk{background:linear-gradient(160deg,color-mix(in srgb,var(--amb) 9%,transparent),transparent 60%),var(--card)}
+html.g2 .zk-v{text-shadow:0 0 14px color-mix(in srgb,var(--zc) 55%,transparent)}
+html.g2 .zk-glas{stroke:color-mix(in srgb,var(--amb) 45%,rgba(255,255,255,.3))}
+html.g2:not(.g2-ruhig) .zk-welle{animation:zkWelle 3.4s linear infinite}
+html.g2:not(.g2-ruhig) .zk-welle.w2{animation-duration:5.2s;animation-direction:reverse}
+@keyframes zkWelle{to{transform:translateX(60px)}}
+html.g2:not(.g2-ruhig) .zk-blase{animation:zkBlase 4.2s ease-in calc(var(--k) * .55s) infinite}
+@keyframes zkBlase{0%{opacity:0;transform:translateY(0)}15%{opacity:.8}100%{opacity:0;transform:translateY(-70px)}}
+html.g2:not(.g2-ruhig) .zk:not(.zk-an) .zk-nadel{transform:rotate(-90deg)}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk-nadel{animation:zkNadel 1.5s cubic-bezier(.3,1.4,.5,1) calc(.15s + var(--i) * .12s) both}
+@keyframes zkNadel{0%{transform:rotate(-90deg)}100%{transform:rotate(var(--w))}}
+html.g2:not(.g2-ruhig) .zk:not(.zk-an) .zk-zone{opacity:0}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk-zone{animation:zkZone .45s ease-out calc(var(--z) * .07s) both}
+@keyframes zkZone{0%{opacity:0;transform:scale(.9)}100%{opacity:1;transform:none}}
+html.g2 .zk-zone{transform-box:view-box;transform-origin:80px 84px}
+html.g2:not(.g2-ruhig) .zk:not(.zk-an) .zk-pegel{transform:translateY(112px)!important}
+html.g2:not(.g2-ruhig) .zk-pegel{transition:transform 1.8s cubic-bezier(.2,.8,.2,1) .2s}
+html.g2:not(.g2-ruhig) .zk:not(.zk-an) .zk-m{opacity:0}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk-m{animation:zkMuenze .5s cubic-bezier(.35,1.6,.6,1) calc(.1s + var(--k) * .07s) both}
+@keyframes zkMuenze{0%{opacity:0;transform:translateY(-40px)}60%{opacity:1}100%{opacity:1;transform:none}}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk-spitze{animation:zkGlimm 2.4s ease-in-out 1.8s infinite}
+@keyframes zkGlimm{50%{opacity:.4}}
+
+/* ---------- Stufe 5: Himmel auf Heute nach Tageszeit und Wetter (wx) ---------- */
+#himmel .wx{position:absolute;inset:0;opacity:0;transition:opacity 1.2s ease}
+html.g2[data-wx-ph] #himmel .wx{opacity:1}
+#himmel .wx>*{position:absolute;display:block;pointer-events:none}
+#himmel .st,#himmel .au{transition:opacity 1.4s ease}
+/* Grundfarbe des Himmels: oben hell, nach unten in den dunklen App-Hintergrund auslaufend, damit Text und Karten lesbar bleiben */
+#himmel .wx-tag{inset:0;opacity:0;transition:opacity 1.4s ease,background 1.4s ease;background:linear-gradient(180deg,var(--w1) 0%,var(--w2) 26%,var(--w3) 46%,color-mix(in srgb,var(--w3) 40%,transparent) 64%,transparent 86%)}
+html[data-wx-ph=morgen] #himmel .wx-tag{--w1:#34489a;--w2:#8c6fbc;--w3:#ffab9c;opacity:1}
+html[data-wx-ph=tag] #himmel .wx-tag{--w1:#2a76d6;--w2:#4f9eee;--w3:#93cbf6;opacity:1}
+html[data-wx-ph=abend] #himmel .wx-tag{--w1:#1d225e;--w2:#5a3388;--w3:#ff8a5c;opacity:1}
+html[data-wx-ph=nacht] #himmel .wx-tag{--w1:#070b18;--w2:#0b1124;--w3:#0e1428}
+html[data-wx-ph]:is([data-wx~=wolkig]) #himmel .wx-tag{filter:saturate(.6) brightness(.92)}
+html[data-wx-ph]:not([data-wx-ph=nacht]):is([data-wx~=regen]) #himmel .wx-tag{--w1:#3f4756;--w2:#5f6878;--w3:#7f8896;opacity:1;filter:none}
+html[data-wx-ph]:not([data-wx-ph=nacht]):is([data-wx~=gewitter]) #himmel .wx-tag{--w1:#232835;--w2:#3a4050;--w3:#565d6d;opacity:1;filter:none}
+html[data-wx-ph]:not([data-wx-ph=nacht]):is([data-wx~=schnee]) #himmel .wx-tag{--w1:#5b6679;--w2:#8490a2;--w3:#aab3c1;opacity:1;filter:none}
+html[data-wx-ph]:not([data-wx-ph=nacht]):is([data-wx~=nebel]) #himmel .wx-tag{--w1:#7d8796;--w2:#a2aab6;--w3:#c2c8d0;opacity:1;filter:none}
+html[data-wx-ph=nacht]:is([data-wx~=regen],[data-wx~=gewitter],[data-wx~=schnee],[data-wx~=nebel]) #himmel .wx-tag{--w1:#121722;--w2:#1b2230;--w3:#262e3d;opacity:1}
+/* Sterne nur nachts, bei Wolken weniger */
+html[data-wx-ph]:not([data-wx-ph=nacht]) #himmel .st,html[data-wx-ph]:not([data-wx-ph=nacht]) #himmel .schnuppe{opacity:0!important}
+html[data-wx-ph]:not([data-wx-ph=nacht]) #himmel .au{opacity:.35}
+html[data-wx-ph=nacht]:is([data-wx~=regen],[data-wx~=gewitter],[data-wx~=schnee],[data-wx~=nebel]) #himmel .st{opacity:.08}
+html[data-wx-ph=nacht][data-wx~=wolkig] #himmel .st{opacity:.4}
+/* Karten am hellen Himmel etwas dunkler, damit Schrift gut lesbar bleibt */
+html.g2[data-wx-ph]:not([data-wx-ph=nacht]){--card:rgba(8,12,24,.52);--card2:rgba(12,18,34,.62)}
+html.g2[data-wx-ph]:not([data-wx-ph=nacht]) #app h1,html.g2[data-wx-ph]:not([data-wx-ph=nacht]) #app .kopf .sub{text-shadow:0 1px 14px rgba(0,10,30,.45)}
+
+/* Sonne oben rechts: weiche Scheibe, Strahlenkranz dreht sich langsam */
+#himmel .wx-sonne{right:max(18px,7vw);top:var(--wxTop,calc(env(safe-area-inset-top,0px) + 132px));width:66px;height:66px;border-radius:50%;opacity:0;transform:scale(.6);transition:opacity 1.4s ease,transform 1.4s cubic-bezier(.3,1.4,.5,1),top 1.4s ease;
+  background:radial-gradient(circle at 42% 40%,#fffdf0 0%,#fff1a8 38%,#ffd35c 72%,#ffb83d 100%);box-shadow:0 0 30px 8px rgba(255,220,120,.6),0 0 90px 36px rgba(255,200,90,.28),0 0 200px 90px rgba(255,190,90,.12)}
+#himmel .wx-sonne::before{content:"";position:absolute;inset:-46px;border-radius:50%;background:repeating-conic-gradient(rgba(255,236,170,.32) 0deg 4deg,transparent 4deg 18deg);-webkit-mask:radial-gradient(closest-side,transparent 52%,#000 58%,transparent 100%);mask:radial-gradient(closest-side,transparent 52%,#000 58%,transparent 100%);animation:wxDreh 80s linear infinite}
+#himmel .wx-sonne b{position:absolute;inset:-14px;border-radius:50%;background:radial-gradient(closest-side,rgba(255,250,220,.5),transparent);animation:wxAtmen 5s ease-in-out infinite}
+@keyframes wxDreh{to{transform:rotate(360deg)}}
+@keyframes wxAtmen{50%{transform:scale(1.18);opacity:.6}}
+html[data-wx-ph=tag] #himmel .wx-sonne{opacity:1;transform:none}
+html[data-wx-ph=morgen] #himmel .wx-sonne,html[data-wx-ph=abend] #himmel .wx-sonne{opacity:1;transform:none;top:calc(var(--wxTop,calc(env(safe-area-inset-top,0px) + 132px)) + 64px);background:radial-gradient(circle at 42% 40%,#fff6e0 0%,#ffd08a 40%,#ff9a52 78%,#ff7a3c 100%);box-shadow:0 0 34px 10px rgba(255,160,90,.6),0 0 110px 46px rgba(255,130,80,.3),0 0 240px 110px rgba(255,120,90,.14)}
+html[data-wx-ph]:is([data-wx~=regen],[data-wx~=gewitter],[data-wx~=schnee]) #himmel .wx-sonne{opacity:0;transform:scale(.7)}
+html[data-wx-ph]:not([data-wx-ph=nacht])[data-wx~=nebel] #himmel .wx-sonne{opacity:.55;transform:none;background:radial-gradient(circle,#fffaf0,#f1ead8);box-shadow:0 0 60px 30px rgba(255,255,240,.3)}
+html[data-wx~=nebel] #himmel .wx-sonne::before{display:none}
+
+/* Echter Mond oben rechts, mit Schein */
+#himmel .wx-mond{right:max(20px,7vw);top:var(--wxTop,calc(env(safe-area-inset-top,0px) + 132px));width:62px;height:62px;opacity:0;transform:translateY(16px);transition:opacity 1.6s ease,transform 1.6s ease;filter:drop-shadow(0 0 16px rgba(255,246,214,.45))}
+#himmel .wx-mond::before{content:"";position:absolute;inset:-60px;border-radius:50%;background:radial-gradient(closest-side,rgba(220,228,255,.16),transparent);animation:wxAtmen 7s ease-in-out infinite}
+#himmel .wx-mond svg{position:relative;width:100%;height:100%;display:block}
+html[data-wx-ph=nacht] #himmel .wx-mond{opacity:1;transform:none}
+html[data-wx-ph=nacht]:is([data-wx~=regen],[data-wx~=gewitter],[data-wx~=schnee]) #himmel .wx-mond{opacity:.18}
+html[data-wx-ph=nacht][data-wx~=nebel] #himmel .wx-mond{opacity:.5;filter:blur(1.5px) drop-shadow(0 0 24px rgba(255,246,214,.5))}
+
+/* Wolken: weiche Kugeln, die langsam vorbeiziehen */
+#himmel .wx-wolken{inset:0;opacity:0;transition:opacity 1.6s ease}
+#himmel .wx-w{position:absolute;left:0;top:var(--y);width:calc(220px * var(--s));height:calc(90px * var(--s));animation:wxZiehen var(--d) linear var(--v) infinite;--wc:rgba(255,255,255,.9);opacity:var(--wo,1)}
+#himmel .wx-w i{position:absolute;display:block;border-radius:50%;background:radial-gradient(closest-side,var(--wc),color-mix(in srgb,var(--wc) 60%,transparent) 55%,transparent)}
+#himmel .wx-w i:nth-child(1){left:0;top:34%;width:46%;height:66%}
+#himmel .wx-w i:nth-child(2){left:22%;top:0;width:44%;height:100%}
+#himmel .wx-w i:nth-child(3){left:46%;top:14%;width:40%;height:80%}
+#himmel .wx-w i:nth-child(4){left:62%;top:40%;width:38%;height:60%}
+@keyframes wxZiehen{from{transform:translateX(-45vw)}to{transform:translateX(115vw)}}
+/* klarer Tag: nur zwei dünne Wolken */
+html[data-wx-ph]:not([data-wx-ph=nacht]) #himmel .wx-wolken{opacity:1}
+html[data-wx-ph] #himmel .wx-w:not(.wx-w0){display:none}
+html[data-wx-ph] #himmel .wx-w0{--wo:.55}
+html[data-wx-ph=morgen] #himmel .wx-w{--wc:rgba(255,206,214,.85)}
+html[data-wx-ph=abend] #himmel .wx-w{--wc:rgba(255,160,140,.75)}
+html[data-wx-ph]:is([data-wx~=wolkig],[data-wx~=regen],[data-wx~=gewitter],[data-wx~=schnee],[data-wx~=nebel]) #himmel .wx-wolken{opacity:1}
+html[data-wx-ph]:is([data-wx~=wolkig],[data-wx~=regen],[data-wx~=gewitter],[data-wx~=schnee]) #himmel .wx-w{display:block;--wo:1}
+html[data-wx-ph][data-wx~=wolkig] #himmel .wx-w{--wc:rgba(236,241,248,.88)}
+html[data-wx-ph][data-wx~=regen] #himmel .wx-w{--wc:rgba(92,100,116,.96)}
+html[data-wx-ph][data-wx~=gewitter] #himmel .wx-w{--wc:rgba(60,66,80,.95)}
+html[data-wx-ph][data-wx~=schnee] #himmel .wx-w{--wc:rgba(196,204,216,.9)}
+html[data-wx-ph=nacht]:is([data-wx~=wolkig],[data-wx~=regen],[data-wx~=gewitter],[data-wx~=schnee]) #himmel .wx-w{--wc:rgba(84,94,124,.75)}
+html[data-wx-ph=nacht][data-wx~=wolkig] #himmel .wx-w:nth-child(2n){display:none}
+
+/* Nebel: helle Schwaden auf halber Höhe, hinter dem Schloss */
+#himmel .wx-nebel{inset:0;opacity:0;transition:opacity 1.6s ease}
+#himmel .wx-nebel i{position:absolute;left:-50vw;width:200vw;height:22vh;border-radius:50%;background:radial-gradient(closest-side,rgba(236,240,246,.8),rgba(236,240,246,.32) 60%,transparent);animation:wxSchwade 38s ease-in-out infinite alternate}
+#himmel .wx-nebel i:nth-child(1){top:22vh}
+#himmel .wx-nebel i:nth-child(2){top:36vh;animation-duration:52s;animation-delay:-20s;height:26vh}
+#himmel .wx-nebel i:nth-child(3){top:50vh;animation-duration:44s;animation-delay:-8s;opacity:.7}
+@keyframes wxSchwade{from{transform:translateX(-12vw)}to{transform:translateX(12vw)}}
+html[data-wx-ph][data-wx~=nebel] #himmel .wx-nebel{opacity:1}
+html[data-wx-ph=nacht][data-wx~=nebel] #himmel .wx-nebel{opacity:.35}
+
+/* Regenbogen nach dem Regen */
+#himmel .wx-bogen{left:-20vw;right:-20vw;top:calc(env(safe-area-inset-top,0px) + 150px);height:120vw;max-height:900px;border-radius:50%;opacity:0;transition:opacity 3s ease;
+  background:radial-gradient(closest-side,transparent 78%,rgba(150,90,255,.35) 80%,rgba(70,120,255,.35) 82%,rgba(60,210,140,.35) 84%,rgba(255,230,80,.38) 86%,rgba(255,150,60,.35) 88%,rgba(255,70,80,.32) 90%,transparent 92%);
+  -webkit-mask:linear-gradient(#000 30%,transparent 52%);mask:linear-gradient(#000 30%,transparent 52%)}
+html[data-wx-ph]:not([data-wx-ph=nacht])[data-wx~=bogen] #himmel .wx-bogen{opacity:1}
+
+/* Zugvögel ziehen morgens und abends vorbei */
+#himmel .wx-vogel{right:0;top:calc(env(safe-area-inset-top,0px) + 260px);width:60px;height:30px;opacity:0;animation:wxVogel 46s linear 6s infinite}
+#himmel .wx-vogel i{position:absolute;width:12px;height:6px;border:solid rgba(30,26,60,.75);border-width:1.6px 0 0;border-radius:50% 50% 0 0;animation:wxFlug .7s ease-in-out infinite alternate}
+#himmel .wx-vogel i::after{content:"";position:absolute;left:10px;top:-1.6px;width:12px;height:6px;border:inherit;border-width:1.6px 0 0;border-radius:50% 50% 0 0}
+#himmel .wx-vogel i:nth-child(1){left:0;top:10px}
+#himmel .wx-vogel i:nth-child(2){left:22px;top:2px;animation-delay:-.3s}
+#himmel .wx-vogel i:nth-child(3){left:30px;top:18px;animation-delay:-.5s;transform:scale(.8)}
+@keyframes wxFlug{to{transform:scaleY(-.6)}}
+@keyframes wxVogel{0%{transform:translate(20vw,0);opacity:0}4%{opacity:1}30%{transform:translate(-120vw,-60px);opacity:1}31%,100%{opacity:0;transform:translate(-120vw,-60px)}}
+html[data-wx-ph]:not([data-wx-ph=morgen]):not([data-wx-ph=abend]) #himmel .wx-vogel,html[data-wx-ph]:is([data-wx~=regen],[data-wx~=gewitter],[data-wx~=schnee],[data-wx~=nebel]) #himmel .wx-vogel{display:none}
+
+/* Regen, Schnee und Blitz */
+#himmel .wx-cv{inset:0;width:100%;height:100%}
+#himmel .wx-blitz{inset:0;background:radial-gradient(ellipse at 50% 10%,rgba(235,242,255,.85),rgba(200,215,255,.35) 50%,transparent 80%);opacity:0}
+#himmel .wx-blitz.an{animation:wxBlitz .5s ease-out}
+@keyframes wxBlitz{0%{opacity:.9}15%{opacity:.1}30%{opacity:.7}100%{opacity:0}}
+html.g2-ruhig #himmel .wx *{animation:none!important}
+html.g2-ruhig #himmel .wx-vogel{display:none}
+/* Mehr Bewegung (a5) */
+html.g2 .a5-wort{display:inline-block;white-space:nowrap}
+html.g2:not(.g2-ruhig) .a5-b{display:inline-block;animation:a5Auf .7s cubic-bezier(.2,1.3,.4,1) calc(.08s + var(--i) * .035s) both}
+@keyframes a5Auf{0%{opacity:0;transform:translateY(.45em) scale(.85);filter:blur(4px);text-shadow:0 0 18px var(--amb)}60%{opacity:1;filter:none}100%{opacity:1;transform:none;text-shadow:none}}
+html.g2:not(.g2-ruhig) .a5-welle .d,html.g2:not(.g2-ruhig) .a5-welle.tkk-grid>*{animation:a5Zelle .45s cubic-bezier(.2,1.2,.4,1) calc(var(--a5) * .028s) both}
+@keyframes a5Zelle{0%{opacity:0;transform:scale(.6) translateY(6px)}100%{opacity:1;transform:none}}
+.a5-f{position:fixed;width:0;height:0;z-index:96;pointer-events:none}
+.a5-f i{position:absolute;display:block}
+.a5-ring{left:-14px;top:-14px;width:28px;height:28px;border-radius:50%;border:2px solid var(--c);box-shadow:0 0 12px var(--c);animation:a5Ring .55s ease-out both}
+.a5-p{left:-2.5px;top:-2.5px;width:5px;height:5px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c);animation:a5Funke .65s cubic-bezier(.2,.8,.3,1) both}
+@keyframes a5Ring{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.9);opacity:0}}
+@keyframes a5Funke{0%{transform:rotate(var(--w)) translateX(4px) scale(1);opacity:1}100%{transform:rotate(var(--w)) translateX(var(--r)) scale(.2);opacity:0}}
+
 </style>
 </head>
 <body>
@@ -2754,6 +3098,8 @@ const eur = n => (n || 0).toLocaleString('de-DE', { style: 'currency', currency:
 const eur0 = n => (n || 0).toLocaleString('de-DE', { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 });
 const dec = (n, d = 1) => (n || 0).toLocaleString('de-DE', { minimumFractionDigits: d, maximumFractionDigits: d });
 const hm = h => { const neg = h < 0; h = Math.abs(h); const m = Math.round(h * 60); return (neg ? '−' : '') + Math.floor(m / 60) + ':' + pad(m % 60); };
+/* Stunden aus „4:30“, „4,5“ oder „4“; leer ergibt undefined */
+const stdIn = v => { const x = String(v ?? '').trim(); if (!x) return undefined; if (x.includes(':')) { const [h, m] = x.split(':'); return (+h || 0) + (+m || 0) / 60; } const n = parseFloat(x.replace(',', '.')); return isNaN(n) ? undefined : n; };
 const tmin = t => { if (!t) return null; const [h, m] = t.split(':').map(Number); return h * 60 + (m || 0); };
 const WD = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
 const WDL = ['Sonntag', 'Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag'];
@@ -2833,6 +3179,9 @@ function load() {
   if (!S.missions) S.missions = [];
   if (!S.wishes) S.wishes = [];
   /* Früher vorgegebene Schichtarten entfernen, wenn unverändert und nie benutzt */
+  /* Nur noch EU und DA als Abwesenheit (Toms Wunsch 19.11.2026), Zulagen-Sätze aus der Tabelle ab 04/2025 */
+  if (!S.settings.absMig) { S.settings.absAktiv = ['U', 'Z']; S.settings.absMig = 1; }
+  if (!S.settings.duzMig) { const z = S.settings.duz || {}; if (!z.nacht && !z.samstag && !z.sonntag && !z.feiertag) S.settings.duz = { nacht: 3.06, samstag: 1.53, sonntag: 6.50, feiertag: 6.50 }; S.settings.duzMig = 1; }
   if (!S.settings.stMig) { const alt = ['F|Früh|06:00|18:00', 'N|Nacht|18:00|06:00', 'X|Frei||']; S.shiftTypes = (S.shiftTypes || []).filter(t => !alt.includes([t.code, t.name, t.start, t.end].join('|')) || Object.values(S.shifts || {}).some(x => x.type === t.id)); S.settings.stMig = 1; }
   // Einstand korrigieren: Verkäufe buchen den anteiligen Einstand aus, nicht den Erlös (wie Trade Republic „seit Kauf“)
   if (!S.settings.kostMig) { for (const p of S.depot || []) { const b = (p.buys || []).slice().sort((x, y) => x.date < y.date ? -1 : 1); if (!b.some(x => x.qty < 0 && x.erloes == null)) continue; let q = 0, k = 0;
@@ -2907,7 +3256,14 @@ function autoBook() {
 
 /* ---------- Arbeit: Berechnungen ---------- */
 const stype = id => byId(S.shiftTypes, id);
-const ABS = { U: { n: 'Urlaub', c: '#2ecc8f' }, K: { n: 'Krank', c: '#ff5d6c' }, S: { n: 'Sonderurlaub', c: '#38c7d6' }, D: { n: 'Dienstreise', c: '#f5b84b' }, Z: { n: 'Freizeitausgleich', c: '#b07cff' }, L: { n: 'Lehrgang/Fortbildung', c: '#e0a6ff' } };
+const ABS = { U: { n: 'Erholungsurlaub', kz: 'EU', c: '#2ecc8f' }, Z: { n: 'Dienstausgleich', kz: 'DA', c: '#b07cff' }, K: { n: 'Krank', kz: 'K', c: '#ff5d6c' }, S: { n: 'Sonderurlaub', kz: 'SU', c: '#38c7d6' }, D: { n: 'Dienstreise', kz: 'DR', c: '#f5b84b' }, L: { n: 'Lehrgang/Fortbildung', kz: 'LG', c: '#e0a6ff' } };
+const absKz = k => (ABS[k] || {}).kz || k;
+/* Abwesenheiten, die im Dienstplan zur Auswahl stehen. Gelöschte bleiben an alten Tagen sichtbar */
+const absAktiv = () => (S.settings.absAktiv || Object.keys(ABS)).filter(k => ABS[k]);
+/* Geplante Stunden eines Tages laut Dienstplan, ohne Dienst ein Fünftel der Wochenstunden */
+function planTagH(d) { const s = S.shifts[d], t = s && stype(s.type); return t && t.start ? spanH(shiftSpan(d, s, false)) : (+S.settings.soll || 40) / 5; }
+/* Stunden, die ein Dienstausgleich vom Konto abzieht: eingetragene Uhrzeit, sonst eingetragene Stunden, sonst der geplante Dienst */
+function daStunden(d) { const a = S.abs[d]; if (!a || a.type !== 'Z') return 0; if (a.von && a.bis) { let x = tmin(a.bis) - tmin(a.von); if (x <= 0) x += 1440; return x / 60; } return a.hours != null && a.hours !== '' && !isNaN(+a.hours) ? +a.hours : planTagH(d); }
 function shiftSpan(date, s, actual = true) { // {a,b,pause} in Minuten ab 00:00 des Tages
   const t = stype(s.type); if (!t) return null;
   const st = (actual && s.aStart) || t.start, en = (actual && s.aEnd) || t.end;
@@ -2944,16 +3300,49 @@ function duzMonth(ymStr) {
   const z = S.settings.duz; r.eur = r.nacht * (z.nacht || 0) + r.samstag * (z.samstag || 0) + r.sonntag * (z.sonntag || 0) + r.feiertag * (z.feiertag || 0);
   return r;
 }
-function overtimeTotal() {
-  let o = 0; for (const d in S.shifts) o += dayWork(d).over;
-  for (const d in S.abs) if (S.abs[d].type === 'Z') o -= (+S.abs[d].hours || 0);
+/* Überstundenkonto: Abweichungen vom Plan minus Dienstausgleich. Mit Kontostand laut Dienststelle zählt nur, was danach kommt */
+/* ---------- Zulage für Dienst zu wechselnden Zeiten (§ 17a/17b EZulV) ----------
+   2,40 € je Nachtdienststunde 20–6 Uhr (höchstens 108 € im Monat, Rest geht bis 135 Std. in den Folgemonat), 1 € je Stunde 0–6 Uhr,
+   20 € im Monat bei mindestens drei Diensten überwiegend an Samstag, Sonntag oder Feiertag.
+   Voraussetzung: mindestens 5 Nachtdienststunden und mindestens viermal 7 bis 17 Std. Unterschied zwischen zwei Dienstbeginnen */
+const DWZ = { std: 2.40, n06: 1, we: 20, max: 108, uebMax: 135 };
+function dwzRoh(ym) {
+  const r = { nacht: 0, n06: 0, we: 0, wechsel: 0, beg: [] };
+  for (const d of Object.keys(S.shifts).filter(x => x.startsWith(ym)).sort()) { const s = S.shifts[d], sp = shiftSpan(d, s, true); if (!sp) continue;
+    let weM = 0; for (let m = sp.a; m < sp.b; m++) { const tag = m >= 1440 ? addD(d, 1) : d, h = Math.floor((m % 1440) / 60), wd = pd(tag).getDay();
+      if (h >= 20 || h < 6) r.nacht++; if (h < 6) r.n06++; if (wd === 0 || wd === 6 || holiday(tag)) weM++; }
+    if (weM * 2 > sp.b - sp.a) r.we++; r.beg.push(sp.a % 1440); }
+  /* Dienste, deren Beginn von einem anderen Dienst im Monat 7 bis 17 Std. abweicht */
+  r.wechsel = r.beg.filter((b, i) => r.beg.some((c, j) => { const x = Math.abs(b - c) / 60; return j !== i && x >= 7 && x <= 17; })).length;
+  r.nacht /= 60; r.n06 /= 60; r.ok = r.nacht >= 5 && r.wechsel >= 4; return r;
+}
+function dwzMonat(ym) {
+  const ms = Object.keys(S.shifts).map(d => d.slice(0, 7)).filter(m => m < ym).sort(); let ueb = 0;
+  if (ms.length) for (let m = ms[0]; m < ym; m = addM(m, 1)) { const r = dwzRoh(m), da = ueb + (r.ok ? r.nacht : 0), bez = Math.min(da, DWZ.max / DWZ.std); ueb = Math.min(DWZ.uebMax, da - bez); }
+  const r = dwzRoh(ym), da = ueb + (r.ok ? r.nacht : 0), bez = Math.min(da, DWZ.max / DWZ.std);
+  r.uebIn = ueb; r.bez = bez; r.uebOut = Math.min(DWZ.uebMax, da - bez);
+  r.eNacht = Math.round(bez * DWZ.std * 100) / 100; r.e06 = r.ok ? Math.round(r.n06 * DWZ.n06 * 100) / 100 : 0; r.eWe = r.ok && r.we >= 3 ? DWZ.we : 0;
+  r.eur = r.eNacht + r.e06 + r.eWe; return r;
+}
+function overtimeTotal(bis) {
+  const st = S.settings.otStand, ab = st && st.d ? st.d : ''; let o = st && st.d ? +st.h || 0 : 0;
+  for (const d in S.shifts) if (!S.shifts[d].ma && d > ab && (!bis || d <= bis)) o += dayWork(d).over;
+  for (const d in S.abs) if (!S.abs[d].ma && d > ab && (!bis || d <= bis)) o -= daStunden(d);
   return o;
 }
 function vacation(y) {
+  if (+S.settings.urlaubH > 0) return vacationH(y);
   const used = Object.entries(S.abs).filter(([d, a]) => a.type === 'U' && d.startsWith(String(y))).length;
   const carry = S.carry[y] !== undefined ? +S.carry[y] : (y > +S.settings.created.slice(0, 4) ? Math.max(0, vacation(y - 1).rest) : 0);
   const total = (+S.settings.urlaub || 0) + carry;
   return { used, carry, total, rest: total - used };
+}
+/* Urlaub in Stunden (wie im Zeitportal): jeder EU-Tag zieht die geplanten Stunden dieses Tages ab */
+function vacationH(y) {
+  const used = sum(Object.entries(S.abs).filter(([d, a]) => a.type === 'U' && d.startsWith(String(y))), ([d]) => planTagH(d));
+  const ck = S.carryH || {}, carry = ck[y] !== undefined ? +ck[y] : (y > +S.settings.created.slice(0, 4) ? Math.max(0, vacationH(y - 1).rest) : 0);
+  const total = (+S.settings.urlaubH || 0) + carry;
+  return { used, carry, total, rest: total - used, h: true };
 }
 
 /* ---------- Kalender: alle Einträge eines Tages ---------- */
@@ -2973,7 +3362,7 @@ function dayItems(d) {
   const out = [];
   const h = holiday(d); if (h) out.push({ k: 'hol', t: h, c: '#ff5d6c' });
   const s = S.shifts[d]; if (s) { const t = stype(s.type); if (t) out.push({ k: 'shift', t: t.name + (t.start ? ` ${s.aStart || t.start}–${s.aEnd || t.end}` : ''), c: t.color, code: t.code }); }
-  const a = S.abs[d]; if (a) out.push({ k: 'abs', t: ABS[a.type].n, c: ABS[a.type].c, code: a.type });
+  const a = S.abs[d]; if (a && ABS[a.type]) out.push({ k: 'abs', t: ABS[a.type].n + (a.type === 'Z' ? ' ' + hm(daStunden(d)) + ' h' : ''), c: ABS[a.type].c, code: absKz(a.type) });
   for (const e of S.events) if (evOccurs(e, d)) { const c = ecat(e.cat); out.push({ k: 'ev', t: e.title, time: e.time, end: e.endTime, c: c.color, id: e.id, cat: c.name }); }
   const md = d.slice(5);
   for (const b of S.bdays) if (b.date && b.date.slice(5) === md) { const age = b.date.slice(0, 4) > '1800' ? (+d.slice(0, 4) - +b.date.slice(0, 4)) : null; out.push({ k: 'bday', t: `🎂 ${b.name}${age ? ' (' + age + ')' : ''}`, c: '#ff6b9a', id: b.id }); }
@@ -3489,11 +3878,12 @@ function designNach(neu) {
   if (!g2()) return;
   if ('IntersectionObserver' in window) { _holoIO = _holoIO || new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('h3-ruht', !e.isIntersecting))); document.querySelectorAll('#app .h3:not(.h3-gross)').forEach(h => _holoIO.observe(h)); }
   dp3Start(neu); glbStart(neu);
-  if ('IntersectionObserver' in window) { _ruhIO = _ruhIO || new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('g2-ruht', !e.isIntersecting)), { rootMargin: '60px' }); document.querySelectorAll('#app .fg3, #app .rk-abz, #app .rg3, #app .kb, #app .fluss').forEach(x => _ruhIO.observe(x)); }
+  if ('IntersectionObserver' in window) { _ruhIO = _ruhIO || new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle('g2-ruht', !e.isIntersecting)), { rootMargin: '60px' }); document.querySelectorAll('#app .fg3, #app .rk-abz, #app .rg3, #app .kb, #app .fluss, #app .pd3, #app .tz3').forEach(x => _ruhIO.observe(x)); }
   document.querySelectorAll('#app .lf-bars').forEach(b => [...b.querySelectorAll('button')].forEach((x, i) => x.style.setProperty('--i', i)));
   const tabNeu = designNach._tab !== UI.tab; designNach._tab = UI.tab;
   if (neu) { const sg = document.querySelector('#app .seg'); if (sg) sg.classList.add('g2-neu'); }
   if (UI.tab === 'sport' && typeof abzNeuPruefen === 'function') { clearTimeout(designNach._abz); designNach._abz = setTimeout(() => { try { abzNeuPruefen(); } catch (e) {} }, 900); }
+  if (typeof design3Nach === 'function') { try { design3Nach(neu, tabNeu); } catch (e) {} }
   if (neu && !g2Ruhig()) { try { einzug(!tabNeu); zaehlen(); zeichnen(); } catch (e) {} }
 }
 
@@ -3608,6 +3998,7 @@ function abzNeuPruefen() {
   const a = ABZ.find(x => x[0] === neu[0]); abzBanner(a, neu.length);
 }
 function abzBanner(a, n = 1) {
+  if (typeof _f3an !== 'undefined' && _f3an) { setTimeout(() => abzBanner(a, n), 700); return; } // erst nach einer laufenden Feier
   document.querySelectorAll('.md3-neu').forEach(x => x.remove());
   const b = document.createElement('button'); b.type = 'button'; b.className = 'md3-neu'; b.style.setProperty('--c', a[3]);
   b.innerHTML = `${abzMed(a, true, 1, 0)}<span><em>${n > 1 ? `${n} neue Abzeichen` : 'Neues Abzeichen'}</em><b>${esc(a[1])}${n > 1 ? ` <small>+${n - 1}</small>` : ''}</b></span>${abzKonfetti(a[3])}`;
@@ -3661,6 +4052,400 @@ function segIco(tab, k, l) {
   return /^<i>/.test(l) ? l.replace(/^<i>[^<]*<\/i>/, ico) : ico + l.replace(/^\S+\s+/, '');
 }
 
+/* ---------- Nachtglas Stufe 4: Depot-Medaillen, Erfolgsmomente, Punkt-Donut, Flugbogen, Dienstplan, Rang-Aufstieg, Tageszeit ---------- */
+
+/* Symbole der Depot-Abzeichen */
+const _azPct = n => _az(n, 13.4, n.length > 2 ? 9.6 : 11) + `<text x="12" y="19.6" text-anchor="middle" font-size="5.6" font-weight="800" fill="currentColor" stroke="none" font-family="Urbanist,system-ui,sans-serif">%</text>`;
+Object.assign(ABZI, {
+  dp_start: '<path d="M12 21.500V11.500M12 13.500c0-4.200-2.600-6.700-7.800-6.700 0 4.600 2.600 6.700 7.800 6.700zM12 10.500c0-3.700 2.500-6.200 7.300-6.200 0 4.100-2.500 6.200-7.300 6.200z"/>',
+  dp_div: SEGI['depot:div'], dp_5: ABZI.w5, dp_plus: ABZI.w12,
+  dp_z10: _azPct('10'), dp_z25: _azPct('25'), dp_z50: _azPct('50'), dp_z75: _azPct('75'), dp_z100: SEGI['sport:ziele'],
+  dp_jahr: _azKal(_az('1', 18.200, 8.6)),
+  dp_100: _az('100', 13.4, 9.4) + `<text x="12" y="19.6" text-anchor="middle" font-size="5.6" font-weight="800" fill="currentColor" stroke="none" font-family="Urbanist,system-ui,sans-serif">€</text>`,
+  dp_soll: ABZI.frueh
+});
+/* L = Liste aus dpAbzListe (v_depot.js). Zugeklappt zeigt die Zeile die letzten fünf als kleine Münzen, aufgeklappt alle als Medaillen */
+function dpAbzMed(L) {
+  const ok = L.filter(x => x.ok), nx = L.filter(x => !x.ok).sort((a, b) => b.p - a.p)[0];
+  const mini = x => `<span class="md3 ok mini" style="--c:${x.c}"><span class="md3-k"><i class="md3-f md3-v">${abzIco(x.id)}</i></span></span>`;
+  return `<details class="dp-badges dp-md3"${UI.dpAbzAuf ? ' open' : ''}><summary><b>${ok.length} von ${L.length} Abzeichen</b><span class="sub">${nx ? `Nächstes: ${esc(nx.name)}${nx.p > 0 && nx.p < 1 ? ` (${Math.round(nx.p * 100)} %)` : ''}` : 'Alle geschafft!'}</span><span class="dp-bp">${ok.slice(-5).map(mini).join('')}</span></summary>
+    <div class="rk-abz">${[...L].sort((a, b) => (b.ok - a.ok) || (b.p - a.p)).map((x, i) => `<button type="button" class="rk-m${x.ok ? ' ok' : ''}" data-act="dpAbzInfo" data-id="${x.id}" style="--c:${x.c}">${abzMed(x.a, x.ok, x.p, i)}<span class="rk-mn">${esc(x.name)}</span></button>`).join('')}</div></details>`;
+}
+
+/* Nach jedem Aufbau der Seite (aus designNach) */
+function design3Nach(neu, tabNeu) {
+  const dm = document.querySelector('#app .dp-md3'); if (dm) dm.addEventListener('toggle', () => { UI.dpAbzAuf = dm.open; });
+  if (UI.tab === 'sport') { clearTimeout(design3Nach._rg); design3Nach._rg = setTimeout(() => { try { rangNeuPruefen(); } catch (e) {} }, 350); }
+  try { kl3Blaettern(neu); } catch (e) {}
+  if (UI.tab === 'heute') { try { const z = tzJetzt(); document.documentElement.dataset.zeit = z.ph; } catch (e) {} tzStart(neu); }
+  try { wxSetzen(); } catch (e) {}
+  try { a5Nach(neu, tabNeu); } catch (e) {}
+  if (UI.tab === 'reisen') fbStart(neu);
+  if (UI.tab === 'finanzen' && (UI.sub.finanzen || 'uebersicht') === 'uebersicht') { clearTimeout(design3Nach._zl); design3Nach._zl = setTimeout(() => { try { if (UI.tab === 'finanzen') zielNeuPruefen(); } catch (e) {} }, 700); }
+}
+
+/* ---------- Erfolgsmomente: Lichtstoß, Konfetti und eine hochzählende Zahl. Mehrere hintereinander stellen sich an ---------- */
+Object.assign(ABZI, { f_ziel: ABZI.sub50, f_training: SEGI['sport:gym'], f_rekord: ABZI.legende, f_budget: '<path d="M12 2.500l7.500 3v6c0 4.700-3 8.300-7.500 10-4.500-1.700-7.500-5.300-7.500-10v-6z"/><path d="M8.300 12l2.700 2.700 4.900-5.200"/>' });
+const _f3q = []; let _f3an = false;
+/* o = { titel, sub, wert, fmt, c, ico } oder { rang, alt, p } */
+function feier(o) {
+  if (!g2()) return;
+  if (g2Ruhig()) { if (!o.rang) toast(o.titel + (o.sub ? ': ' + o.sub : '')); else toast(`Aufstieg: ${o.rang.n} ${['', 'I', 'II', 'III'][o.rang.stufe]}`); return; }
+  _f3q.push(o); if (!_f3an) f3Weiter();
+}
+function f3Weiter() { const o = _f3q.shift(); if (!o) { _f3an = false; return; } _f3an = true; (o.rang ? rangZeig : feierZeig)(o, () => setTimeout(f3Weiter, 220)); }
+const f3Konfetti = (c, n = 34) => `<span class="f3-kf" aria-hidden="true">${Array.from({ length: n }, (_, i) => { const w = (i / n * 360 + (i * 47 % 23)) * RAD, r = 90 + (i * 53 % 150), x = Math.cos(w) * r, y = Math.sin(w) * r * .8 - 40; return `<i style="--x:${x.toFixed(0)}px;--y:${y.toFixed(0)}px;--f:${(120 + i * 31 % 140)}px;--r:${(i * 97 % 720) - 360}deg;--d:${i % 7 * 22}ms;background:${i % 4 === 0 ? '#fff' : i % 4 === 1 ? c : i % 4 === 2 ? 'var(--amb)' : 'var(--amb2)'};${i % 3 === 0 ? 'border-radius:50%;height:7px' : ''}"></i>`; }).join('')}</span>`;
+function feierZeig(o, fertig) {
+  const el = document.createElement('div'); el.className = 'f3'; el.setAttribute('role', 'status'); el.style.setProperty('--c', o.c || 'var(--amb)');
+  const fmt = o.fmt || (v => dec(v, 0)), hat = typeof o.wert === 'number' && isFinite(o.wert);
+  el.innerHTML = `<i class="f3-ring"></i><i class="f3-ring r2"></i><span class="f3-st" aria-hidden="true">${Array.from({ length: 14 }, (_, i) => `<i style="--w:${(i * 360 / 14).toFixed(1)}deg;--i:${i}"></i>`).join('')}</span>${f3Konfetti(o.c || '#fff')}
+    <div class="f3-k"><span class="f3-ico">${abzIco(o.ico || 'gold')}</span><em>${esc(o.titel)}</em>${hat ? `<b class="num">${fmt(0)}</b>` : ''}${o.sub ? `<span class="f3-s">${esc(o.sub)}</span>` : ''}</div>`;
+  document.body.appendChild(el);
+  if (hat) { const b = el.querySelector('b'), t0 = performance.now() + 260, D = 1100; const lauf = t => { if (!el.isConnected) return; const p = Math.max(0, Math.min(1, (t - t0) / D)); b.textContent = fmt(o.wert * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(lauf); else b.textContent = fmt(o.wert); }; requestAnimationFrame(lauf); }
+  setTimeout(() => { el.remove(); fertig && fertig(); }, 2900);
+}
+/* Rang-Aufstieg: das alte Abzeichen weicht, das neue fährt groß herein. Antippen schließt */
+function rangZeig(o, fertig) {
+  const r = o.rang, alt = o.alt, R = ['', 'I', 'II', 'III'], el = document.createElement('div'); el.className = 'f3 f3-rang'; el.style.setProperty('--c', r.c);
+  el.innerHTML = `<i class="f3-dreh"></i><i class="f3-ring"></i><i class="f3-ring r2"></i>${f3Konfetti(r.c, 44)}
+    <div class="f3-rk"><em>Aufstieg</em><div class="f3-em">${alt ? `<span class="f3-alt">${rangEmblem(alt, 120, 'f3a')}</span>` : ''}<span class="f3-neu">${rangEmblem(r, 190, 'f3n')}</span></div><b>${esc(r.n)} ${R[r.stufe]}</b><span class="f3-s">${dec(o.p, 0)} Punkte${alt ? ` · vorher ${esc(alt.n)} ${R[alt.stufe]}` : ''}</span><span class="f3-zu">Antippen zum Schließen</span></div>`;
+  let zu = false; const ende = () => { if (zu) return; zu = true; el.classList.add('weg'); setTimeout(() => { el.remove(); fertig && fertig(); }, 380); };
+  el.addEventListener('pointerdown', ende); document.body.appendChild(el); setTimeout(ende, 4600);
+}
+function rangNeuPruefen() {
+  if (!g2() || typeof rangVon !== 'function') return; const p = sportPunkte(S.workouts).p, r = rangVon(p), alt = S.settings.rangGesehen;
+  if (typeof alt !== 'number') { S.settings.rangGesehen = r.j; return; }
+  if (r.j > alt) { S.settings.rangGesehen = r.j; if (typeof save === 'function') save(); feier({ rang: r, alt: RG_STUFEN[alt], p }); } else if (r.j < alt) S.settings.rangGesehen = r.j;
+}
+ACT.rangFeier = () => { const p = sportPunkte(S.workouts).p, r = rangVon(p); document.querySelectorAll('.modal').forEach(m => m.remove()); _modalStack = []; feier({ rang: r, alt: r.j > 0 ? RG_STUFEN[r.j - 1] : null, p }); };
+/* Sparziele: einmal feiern, sobald der Stand das Ziel erreicht */
+function zielNeuPruefen() {
+  if (!g2()) return; const G = S.settings.gefeiert || (S.settings.gefeiert = {}); let neu = false; const da = [];
+  const pruef = (k, erreicht, o) => { if (erreicht) { if (!G[k]) { G[k] = 1; neu = true; da.push(o); } } else if (G[k]) { delete G[k]; neu = true; } };
+  for (const ms of S.missions || []) { if (!(ms.target > 0)) continue; pruef('m' + ms.id, missWert(ms) >= ms.target, { titel: 'Ziel erreicht', sub: ms.name, wert: ms.target, fmt: eur0, c: ms.color || '#6b7cff', ico: 'f_ziel' }); }
+  for (const g of S.goals || []) { if (!(g.target > 0)) continue; pruef('g' + g.id, (g.saved || 0) >= g.target, { titel: 'Sparziel erreicht', sub: g.name, wert: g.target, fmt: eur0, c: g.color || '#5fd08d', ico: 'f_ziel' }); }
+  /* mehrere auf einmal: nur das größte zeigen und die anderen nennen */
+  if (da.length) { da.sort((a, b) => b.wert - a.wert); const o = da[0]; if (da.length > 1) { o.titel = `${da.length} Ziele erreicht`; o.sub = `${o.sub} und ${da.length === 2 ? da[1].sub : (da.length - 1) + ' weitere'}`; } feier(o); }
+  /* Budget des letzten Monats: einmal je Monat nachsehen, feiern nur, wenn jede Kategorie im Rahmen blieb */
+  const lm = addM(today().slice(0, 7), -1);
+  if (G.bud !== lm) { G.bud = lm; neu = true; const bc = S.cats.filter(c => c.type === 'aus' && !c.parent && c.budget > 0), sp = spentTop(lm), ges = sum(bc, c => sp[c.id] || 0);
+    if (bc.length && ges > 0 && bc.every(c => (sp[c.id] || 0) <= c.budget)) feier({ titel: 'Budget eingehalten', sub: `${fmtYM(lm)} · alle ${bc.length} Budgets im Rahmen`, wert: sum(bc, c => c.budget) - ges, fmt: v => eur0(v) + ' übrig', c: '#5fd08d', ico: 'f_budget' }); }
+  if (neu && typeof save === 'function') save();
+}
+
+/* ---------- Ausgaben als Punkt-Donut: jede Kategorie ein Bogen aus Lichtpunkten, antippen holt sie nach vorn ---------- */
+function pdKarte(m) {
+  const ms = perMonths(m), st = perStats(ms), ges = st.aus; if (!(ges > 0)) return '';
+  let L = Object.entries(st.tops).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]).map(([k, v]) => { const c = cat(k); return { id: k, n: c ? c.name : 'Ohne Kategorie', c: c ? c.color : '#6b7386', v }; });
+  if (L.length > 7) { const rest = L.slice(6); L = [...L.slice(0, 6), { id: '_rest', n: `${rest.length} weitere`, c: '#8a8f98', v: sum(rest, x => x.v) }]; }
+  /* 72 Schritte im Kreis verteilen: jede Kategorie mindestens einer, der Rest nach Anteil */
+  const N = 72, n = L.map(x => Math.max(1, Math.floor(x.v / ges * N))); let frei = N - sum(n, x => x);
+  const rang = L.map((x, i) => [x.v / ges * N - Math.floor(x.v / ges * N), i]).sort((a, b) => b[0] - a[0]);
+  for (let i = 0; frei > 0; i++, frei--) n[rang[i % rang.length][1]]++;
+  for (let i = 0; frei < 0; i = (i + 1) % n.length) if (n[i] > 1) { n[i]--; frei++; }
+  const RI = [[86, 2.2], [100, 2.8], [115, 3.4], [131, 4]], sel = L.some(x => x.id === UI.pdCat) ? UI.pdCat : null; let s = 0, g = '';
+  L.forEach((x, li) => { let p = ''; const a0 = s / N * 360 - 90, a1 = (s + n[li]) / N * 360 - 90;
+    for (let k = 0; k < n[li]; k++, s++) { const w = ((s + .5) / N * 360 - 90) * RAD, cw = Math.cos(w), sw = Math.sin(w);
+      RI.forEach(([r, pr], ri) => { p += `<circle class="pd3-p" cx="${(150 + cw * r).toFixed(1)}" cy="${(150 + sw * r).toFixed(1)}" r="${pr}" style="--dx:${(-cw * r).toFixed(0)}px;--dy:${(-sw * r).toFixed(0)}px;--ox:${cw.toFixed(2)};--oy:${sw.toFixed(2)};--i:${s + ri * 5}"/>`; }); }
+    const bog = (r, a, b) => `${(150 + Math.cos(a * RAD) * r).toFixed(1)} ${(150 + Math.sin(a * RAD) * r).toFixed(1)}`, gr = a1 - a0 > 180 ? 1 : 0;
+    g += `<g class="pd3-g${sel === x.id ? ' an' : ''}" data-act="pdCat" data-id="${x.id}" style="--c:${x.c}"><path class="pd3-t" d="M${bog(108, a0)}A108 108 0 ${gr} 1 ${bog(108, a1 - .01)}"/>${p}</g>`; });
+  const pct = x => { const p = x.v / ges * 100; return p < 1 ? '<1' : dec(p, 0); }, akt = L.find(x => x.id === sel);
+  return `<div class="card pd3k"><div class="row sb"><span class="g-l">Wohin dein Geld ging</span><span class="sub">${perLabel(ms[0])}</span></div>
+    <div class="pd3${sel ? ' fokus' : ''}" data-ges="${esc(eur0(ges))}"><svg viewBox="0 0 300 300" aria-label="Ausgaben nach Kategorie">${g}</svg><i class="pd3-sc"></i>
+      <div class="pd3-m"><span>${akt ? esc(akt.n) : 'Ausgaben'}</span><b class="num">${eur0(akt ? akt.v : ges)}</b><em>${akt ? pct(akt) + ' %' : L.length + (L.length === 1 ? ' Kategorie' : ' Kategorien')}</em></div></div>
+    <div class="pd3-leg">${L.map(x => `<button type="button" class="${sel === x.id ? 'an' : ''}" data-act="pdCat" data-id="${x.id}" data-n="${esc(x.n)}" data-v="${esc(eur0(x.v))}" data-p="${pct(x)} %" style="--c:${x.c}"><i></i>${esc(x.n)}<b>${pct(x)} %</b></button>`).join('')}</div></div>`;
+}
+/* Auswahl ohne Neuaufbau der Seite, damit die Punkte nicht noch einmal einfliegen */
+ACT.pdCat = d => {
+  const box = document.querySelector('#app .pd3'); if (!box) return; UI.pdCat = UI.pdCat === d.id ? null : d.id; const karte = box.closest('.pd3k');
+  karte.querySelectorAll('.pd3-g, .pd3-leg button').forEach(x => x.classList.toggle('an', x.dataset.id === UI.pdCat)); box.classList.toggle('fokus', !!UI.pdCat);
+  const b = UI.pdCat && karte.querySelector(`.pd3-leg button[data-id="${UI.pdCat}"]`), m = box.querySelector('.pd3-m'), n = karte.querySelectorAll('.pd3-leg button').length;
+  m.children[0].textContent = b ? b.dataset.n : 'Ausgaben'; m.children[1].textContent = b ? b.dataset.v : box.dataset.ges; m.children[2].textContent = b ? b.dataset.p : n + (n === 1 ? ' Kategorie' : ' Kategorien');
+  m.classList.remove('pd3-w'); void m.offsetWidth; m.classList.add('pd3-w');
+};
+
+/* ---------- Dienstplan mit Leben: Heute pulsiert, Nachtdienste bekommen einen Sternenhimmel, der Monat blättert ---------- */
+const kl3Nacht = t => !!(t && t.start && t.end && (t.end <= t.start || t.start >= '18:00' || t.start < '04:00'));
+function kl3Blaettern(neu) {
+  let key = null, box = null;
+  if (UI.tab === 'arbeit') { const c = document.querySelector('#app .cal'); if (c) { key = 'a' + UI.month; box = c.closest('.card'); } }
+  else if (UI.tab === 'planung' && UI.calView === 'monat') { box = document.querySelector('#app .tkk-grid'); if (box) key = 'p' + String(UI.calDate).slice(0, 7); }
+  const alt = kl3Blaettern._k; kl3Blaettern._k = key;
+  if (neu || !key || !alt || alt[0] !== key[0] || alt === key || !box || g2Ruhig()) return;
+  const kl = key > alt ? 'kl3-vor' : 'kl3-zur'; box.classList.add(kl);
+  const f = e => { if (e.target !== box) return; box.classList.remove(kl); box.removeEventListener('animationend', f); }; box.addEventListener('animationend', f);
+}
+
+/* ---------- Tageszeit: Sonne oder Mond über dem Heimatort, Licht der Seite folgt dem Tag ---------- */
+function tzHeim() {
+  try { const h = ortSuche(S.settings.heimat || 'Berlin') || ortSuche('Berlin'); if (h) { const ll = glbXY({ x: h[2], y: h[3] }); return { nm: h[0], lat: ll[1], lon: ll[0] }; } } catch (e) {}
+  return { nm: 'Berlin', lat: 52.52, lon: 13.4 };
+}
+/* Sonnenauf- und -untergang in Minuten nach Mitternacht, Ortszeit des Geräts (Näherung der NOAA, auf wenige Minuten genau) */
+function tzSonne(d, lat, lon) {
+  const y = d.getFullYear(), N = Math.round((Date.UTC(y, d.getMonth(), d.getDate()) - Date.UTC(y, 0, 1)) / 864e5) + 1, g = 2 * Math.PI / 365 * (N - 1);
+  const eq = 229.18 * (.000075 + .001868 * Math.cos(g) - .032077 * Math.sin(g) - .014615 * Math.cos(2 * g) - .040849 * Math.sin(2 * g));
+  const de = .006918 - .399912 * Math.cos(g) + .070257 * Math.sin(g) - .006758 * Math.cos(2 * g) + .000907 * Math.sin(2 * g) - .002697 * Math.cos(3 * g) + .00148 * Math.sin(3 * g);
+  const la = lat * RAD, c = Math.cos(90.833 * RAD) / (Math.cos(la) * Math.cos(de)) - Math.tan(la) * Math.tan(de), tz = -new Date(y, d.getMonth(), d.getDate(), 12).getTimezoneOffset();
+  if (c > 1) return { polar: 'nacht' }; if (c < -1) return { polar: 'tag' };
+  const ha = Math.acos(c) / RAD; return { auf: 720 - 4 * (lon + ha) - eq + tz, unter: 720 - 4 * (lon - ha) - eq + tz };
+}
+function tzJetzt() {
+  const d = new Date(), H = tzHeim(), s = tzSonne(d, H.lat, H.lon), m = d.getHours() * 60 + d.getMinutes() + d.getSeconds() / 60;
+  const ph = s.polar ? s.polar : m < s.auf - 40 || m > s.unter + 50 ? 'nacht' : m < s.auf + 100 ? 'morgen' : m > s.unter - 90 ? 'abend' : 'tag';
+  return { H, s, m, ph };
+}
+const _tzHM = x => { x = ((Math.round(x) % 1440) + 1440) % 1440; return pad(Math.floor(x / 60)) + ':' + pad(x % 60); };
+const _tzDauer = x => { x = Math.max(0, Math.round(x)); const h = Math.floor(x / 60), mi = x % 60; return h ? `${h} Std.${mi ? ' ' + mi + ' Min.' : ''}` : `${mi} Min.`; };
+function tzStand() {
+  const z = tzJetzt(), { s, m } = z; if (s.polar) return null;
+  const tag = m >= s.auf && m <= s.unter, L = s.unter - s.auf;
+  if (tag) return { ...z, tag, L, p: (m - s.auf) / L, txt: `Noch <b>${_tzDauer(s.unter - m)}</b><br>Tageslicht` };
+  const seit = m > s.unter ? m - s.unter : m + 1440 - s.unter, bis = m < s.auf ? s.auf - m : s.auf + 1440 - m;
+  return { ...z, tag, L, p: seit / (1440 - L), txt: `Noch <b>${_tzDauer(bis)}</b><br>bis Sonnenaufgang` };
+}
+const TZ_N = { morgen: 'Guten Morgen, die Sonne steigt', tag: 'Die Sonne steht am Himmel', abend: 'Die Sonne geht bald unter', nacht: 'Der Mond ist aufgegangen' };
+function tzKarte() {
+  const z = tzStand(); if (!z) return '';
+  const ph = z.tag && z.ph === 'nacht' ? 'abend' : !z.tag && z.ph === 'tag' ? 'abend' : z.ph;
+  const strahl = Array.from({ length: 10 }, (_, i) => { const w = i * 36 * RAD; return `<line x1="${(Math.cos(w) * 12).toFixed(1)}" y1="${(Math.sin(w) * 12).toFixed(1)}" x2="${(Math.cos(w) * 16.5).toFixed(1)}" y2="${(Math.sin(w) * 16.5).toFixed(1)}"/>`; }).join('');
+  const koerper = z.tag ? `<circle class="tz3-hof" r="26"/><g class="tz3-str">${strahl}</g><circle class="tz3-so" r="8.5"/>`
+    : `<circle class="tz3-hof" r="24"/><path class="tz3-mo" d="M4.500-8.200A9 9 0 1 0 8.400 4.200 7.200 7.200 0 0 1 4.500-8.200z"/>`;
+  return `<div class="card tz3 tz3-${ph}${z.tag ? '' : ' tz3-n'}" data-p="${z.p.toFixed(4)}"><i class="tz3-st" aria-hidden="true"></i>
+    <div class="row sb"><span class="g-l">${TZ_N[ph]}</span><span class="sub">${esc(z.H.nm)}</span></div>
+    <svg class="tz3-svg" viewBox="0 0 320 108" aria-hidden="true"><defs><linearGradient id="tz3v" x1="0" x2="1"><stop offset="0" style="stop-color:var(--amb2)"/><stop offset="1" style="stop-color:var(--amb)"/></linearGradient></defs>
+      <path class="tz3-b" d="M22 92Q160 -44 298 92"/><path class="tz3-z" d="M22 92Q160 -44 298 92"/><line class="tz3-h" x1="4" y1="92" x2="316" y2="92"/>
+      <g class="tz3-k" transform="translate(22 92)">${koerper}</g></svg>
+    <div class="tz3-f"><span><em>${z.tag ? 'Aufgang' : 'Untergang'}</em>${_tzHM(z.tag ? z.s.auf : z.s.unter)}</span><span class="tz3-t">${z.txt}</span><span class="r"><em>${z.tag ? 'Untergang' : 'Aufgang'}</em>${_tzHM(z.tag ? z.s.unter : z.s.auf)}</span></div></div>`;
+}
+/* Beim Öffnen wandert Sonne oder Mond vom Horizont an ihren Platz und zieht eine Lichtspur */
+function tzStart(neu) {
+  const k = document.querySelector('#app .tz3'); if (!k || k._an) return; k._an = true;
+  const pf = k.querySelector('.tz3-z'), g = k.querySelector('.tz3-k'), L = pf.getTotalLength(), ziel = Math.max(0, Math.min(1, +k.dataset.p || 0)) * L;
+  pf.style.strokeDasharray = L.toFixed(1);
+  const setze = l => { const q = pf.getPointAtLength(l); g.setAttribute('transform', `translate(${q.x.toFixed(1)} ${q.y.toFixed(1)})`); pf.style.strokeDashoffset = (L - l).toFixed(1); };
+  if (!neu || g2Ruhig()) { setze(ziel); return; }
+  setze(0); const t0 = performance.now() + 250, D = 1500;
+  const lauf = t => { if (!k.isConnected) return; const u = Math.max(0, Math.min(1, (t - t0) / D)), e = 1 - Math.pow(1 - u, 3); setze(ziel * e); if (u < 1) requestAnimationFrame(lauf); else k.classList.add('da'); };
+  requestAnimationFrame(lauf);
+}
+
+/* ---------- Reise öffnen: kleine Weltkugel dreht sich von zu Hause zum Ziel, ein Flugzeug fliegt den Bogen ---------- */
+function fbDaten(tr) {
+  const p = tripPunkt(tr); if (!p) return null; const H = tzHeim(), ll = glbXY(p), a = glbVek(H.lat, H.lon), b = glbVek(ll[1], ll[0]);
+  const om = Math.acos(Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]))); if (om < .005) return null;
+  return { H, ziel: { nm: p.nm || tr.ort || tr.name, lat: ll[1], lon: ll[0] }, a, b, om, km: om * 6371 };
+}
+function fbKarte(tr) {
+  const f = fbDaten(tr); if (!f) return ''; const km = f.km, std = km > 350 ? km / 820 + .6 : 0;
+  const zeit = std ? `ca. ${std < 1.5 ? dec(Math.round(std * 60 / 5) * 5, 0) + ' Min.' : dec(Math.round(std * 2) / 2, std < 10 ? 1 : 0).replace(',0', '') + ' Std.'} Flug` : 'Luftlinie';
+  return `<div class="card fb3"><canvas id="fb3" class="fb3-c" data-id="${tr.id}" aria-label="Flugbogen von ${esc(f.H.nm)} nach ${esc(f.ziel.nm)}"></canvas>
+    <div class="fb3-z"><span><em>Von</em><b>${esc(f.H.nm)}</b></span><span class="fb3-m"><b class="num">${dec(km < 100 ? Math.round(km) : Math.round(km / 10) * 10, 0)} km</b><em>${zeit}</em></span><span class="r"><em>Nach</em><b>${esc(f.ziel.nm)}</b></span></div></div>`;
+}
+function fbStart(neu) {
+  const cv = document.getElementById('fb3'); if (!cv || cv._an) return; cv._an = true;
+  const tr = S.trips.find(x => x.id === cv.dataset.id), f = tr && fbDaten(tr); if (!f) return;
+  const ctx = cv.getContext('2d'), ruhig = g2Ruhig(), cs = getComputedStyle(document.documentElement), AMB = cs.getPropertyValue('--amb').trim() || '#42d6ff', AMB2 = cs.getPropertyValue('--amb2').trim() || '#46e3a4';
+  let W = 0, H = 0, R0 = 0, geo = null, zielLand = null;
+  const mass = () => { const r = cv.getBoundingClientRect(), dpr = Math.min(2.5, devicePixelRatio || 1); W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); R0 = Math.min(W * .4, H * .43); };
+  const slerp = (a, b, t, om) => { const so = Math.sin(om) || 1e-6, k1 = Math.sin((1 - t) * om) / so, k2 = Math.sin(t * om) / so; return [a[0] * k1 + b[0] * k2, a[1] * k1 + b[1] * k2, a[2] * k1 + b[2] * k2]; };
+  const om = f.om, mitte = slerp(f.a, f.b, .5, om), bump = .03 + .3 * om / Math.PI;
+  const zEnd = Math.max(1, Math.min(6, 1.15 / Math.sin(Math.min(1.5, om / 2 + .03)))), zStart = Math.min(9, zEnd * 1.7);
+  const bog = (t, hoch = true) => { const p = slerp(f.a, f.b, t, om); return [p, hoch ? 1 + bump * Math.sin(Math.PI * t) : 1]; };
+  let cr = 1, sr = 0, cn = 1, sn = 0, R = R0;
+  const proj = (p, hh = 1) => { const x = p[0] * cr + p[2] * sr, z1 = -p[0] * sr + p[2] * cr, y = p[1] * cn - z1 * sn, z = p[1] * sn + z1 * cn; return [W / 2 + x * R * hh, H / 2 - y * R * hh, z, Math.hypot(x, y) * hh]; };
+  const sicht = q => q[2] > 0 || q[3] > 1.01;
+  const ease = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+  const schild = (x, y, t, hell, links) => { ctx.font = '600 11px system-ui,-apple-system,"Segoe UI",sans-serif'; ctx.textBaseline = 'middle'; const s = t.length > 18 ? t.slice(0, 17) + '…' : t, w = ctx.measureText(s).width + 14;
+    let bx = links ? x - 10 - w : x + 10; bx = Math.max(4, Math.min(W - w - 4, bx)); const by = Math.max(4, Math.min(H - 22, y - 9));
+    ctx.fillStyle = 'rgba(8,12,24,.84)'; ctx.strokeStyle = hell ? '#ffffffcc' : 'rgba(255,255,255,.4)'; ctx.lineWidth = 1; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(bx, by, w, 18, 9); else ctx.rect(bx, by, w, 18); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.fillText(s, bx + 7, by + 9.5); };
+  const flieger = new Path2D('M9 0L3-1.2-1-7.5H-3L-1-1.4H-5.5L-7.5-4H-9L-8 0-9 4H-7.5L-5.5 1.4H-1L-3 7.5H-1L3 1.2Z');
+  function male(t, zeit) { // t = 0 … 1 Flug, darüber Ankunft
+    ctx.clearRect(0, 0, W, H);
+    const kc = ease(Math.min(1, t / .7)), c = slerp(f.a, mitte, kc, om / 2), zoom = zStart + (zEnd - zStart) * ease(Math.min(1, t / .85)), rot = -Math.atan2(c[0], c[2]), neig = Math.asin(Math.max(-1, Math.min(1, c[1])));
+    cr = Math.cos(rot); sr = Math.sin(rot); cn = Math.cos(neig); sn = Math.sin(neig); R = R0 * zoom; const cx = W / 2, cy = H / 2;
+    let g = ctx.createRadialGradient(cx, cy, R * .94, cx, cy, R * 1.3); g.addColorStop(0, AMB + '66'); g.addColorStop(.3, AMB + '22'); g.addColorStop(1, AMB + '00'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.3, 0, 7); ctx.fill();
+    g = ctx.createRadialGradient(cx - R * .4, cy - R * .46, R * .05, cx, cy, R); g.addColorStop(0, 'rgba(58,78,128,.98)'); g.addColorStop(.5, 'rgba(15,22,44,.98)'); g.addColorStop(1, 'rgba(4,6,13,.98)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
+    ctx.strokeStyle = AMB + 'a0'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.save(); ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.clip();
+    if (geo) {
+      ctx.fillStyle = 'rgba(190,206,244,.42)'; ctx.beginPath(); const pr = Math.min(1.6, .8 + zoom * .12);
+      for (const [v] of geo.grob) { const q = proj(v); if (q[2] <= .02 || q[0] < -4 || q[0] > W + 4 || q[1] < -4 || q[1] > H + 4) continue; ctx.moveTo(q[0] + pr, q[1]); ctx.arc(q[0], q[1], pr, 0, 7); } ctx.fill();
+      const pfad = r => { let offen = false; for (const p of r) { const q = proj(p); if (q[2] <= 0) { offen = false; continue; } offen ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); offen = true; } };
+      ctx.strokeStyle = 'rgba(190,208,246,' + (zoom > 2 ? .38 : .2) + ')'; ctx.lineWidth = .7; ctx.beginPath();
+      for (const C of geo.L) { const q = proj(C.m); if (q[2] < -Math.sin(Math.min(1.5, C.rad)) - .05) continue; for (const r of (zoom > 2 ? C.fein : C.grob)) pfad(r); } ctx.stroke();
+      if (zielLand) { ctx.beginPath(); for (const r of (zoom > 2 ? zielLand.fein : zielLand.grob)) { pfad(r); ctx.closePath(); } ctx.globalAlpha = .16 + .14 * Math.min(1, Math.max(0, (t - .6) / .4)); ctx.fillStyle = AMB; ctx.fill(); ctx.globalAlpha = .8; ctx.strokeStyle = AMB; ctx.lineWidth = 1; ctx.stroke(); ctx.globalAlpha = 1; }
+    }
+    ctx.restore();
+    const fp = Math.max(0, Math.min(1, (t - .12) / .8)), fq = ease(fp), N = 60;
+    ctx.beginPath(); let offen = false; for (let i = 0; i <= N; i++) { const [p, hh] = bog(i / N), q = proj(p, hh); if (sicht(q)) { offen ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); offen = true; } else offen = false; }
+    ctx.setLineDash([3, 5]); ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 1.2; ctx.stroke(); ctx.setLineDash([]);
+    if (fq > 0) { ctx.beginPath(); offen = false; const n = Math.max(2, Math.round(N * fq)); let q0 = null; for (let i = 0; i <= n; i++) { const [p, hh] = bog(fq * i / n), q = proj(p, hh); if (sicht(q)) { offen ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); offen = true; q0 = q0 || q; } else offen = false; }
+      const qa = proj(...bog(0)), qb = proj(...bog(fq)); g = ctx.createLinearGradient(qa[0], qa[1], qb[0], qb[1]); g.addColorStop(0, AMB2 + '30'); g.addColorStop(1, '#ffffff'); ctx.strokeStyle = g; ctx.lineWidth = 2; ctx.shadowColor = AMB; ctx.shadowBlur = 8; ctx.stroke(); ctx.shadowBlur = 0; }
+    const qh = proj(f.a); if (qh[2] > 0) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(qh[0], qh[1], 4, 0, 7); ctx.stroke(); }
+    const qz = proj(f.b), da = Math.max(0, Math.min(1, (t - .88) / .12));
+    if (qz[2] > 0) { if (da > 0) { const ph = ((zeit || 0) * .0009) % 1; ctx.strokeStyle = `rgba(255,255,255,${((1 - ph) * da).toFixed(2)})`; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(qz[0], qz[1], 4 + ph * 16, 0, 7); ctx.stroke(); }
+      ctx.fillStyle = AMB; ctx.beginPath(); ctx.arc(qz[0], qz[1], 3 + 1.5 * da, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(qz[0], qz[1], 1.6, 0, 7); ctx.fill(); }
+    if (fp > 0 && fp < 1) { const [p, hh] = bog(fq), q = proj(p, hh), [p2, h2] = bog(Math.min(1, fq + .01)), q2 = proj(p2, h2), w = Math.atan2(q2[1] - q[1], q2[0] - q[0]), s = .9 + .35 * Math.sin(Math.PI * fq);
+      if (sicht(q)) { ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(w); ctx.scale(s, s); ctx.shadowColor = AMB; ctx.shadowBlur = 12; ctx.fillStyle = '#fff'; ctx.fill(flieger); ctx.restore(); } }
+    const links = qz[0] < qh[0];
+    if (qh[2] > 0 && t < .9) schild(qh[0], qh[1], f.H.nm, false, !links);
+    if (qz[2] > 0 && da > 0) { ctx.globalAlpha = da; schild(qz[0], qz[1], f.ziel.nm, true, links); ctx.globalAlpha = 1; }
+  }
+  const D = 3000, NACH = 2600; let t0 = 0, lauf = 0;
+  const spiel = () => { const id = ++lauf; t0 = performance.now(); const tick = z => { if (id !== lauf || !cv.isConnected) return; const e = z - t0, t = e / D; if (Math.abs(cv.clientWidth - W) > 1) mass(); male(Math.min(1.0001, t), z); if (e < D + NACH) requestAnimationFrame(tick); else male(1.0001, 0); }; requestAnimationFrame(tick); };
+  mass(); male(ruhig || !neu ? 1.0001 : 0, 0);
+  setTimeout(() => { try { geo = glbGeo(); const a2 = tr.country; zielLand = a2 && geo.L.find(C => C.a === a2) || null; } catch (e) {} if (ruhig || !neu) male(1.0001, 0); else spiel(); }, 40);
+  cv.addEventListener('click', () => { if (ruhig) return; spiel(); });
+}
+
+/* ---------- Nachtglas Stufe 5: Himmel auf Heute nach Tageszeit und echtem Wetter (Vorsilbe wx) ----------
+   Der App-Hintergrund selbst wird hell am Tag (Sonne oben rechts), dunkel mit Sternen und echtem Mond in der Nacht,
+   grau mit Regen, Schnee, Gewitter, Wolken oder Nebel. Schloss und Karten bleiben, wie sie sind. */
+
+/* Wetter: aus dem Kursdienst (S.wetter, höchstens 3 Std. alt) oder aus der Vorschau-Einstellung */
+function wetterJetzt() {
+  const o = UI.sceneOverride; if (o && o.wetter) return /^(sonne|regenbogen)$/.test(o.wetter) ? 'klar' : o.wetter;
+  const w = S.wetter; return w && w.art && Date.now() - (w.t || 0) < 3 * 36e5 ? w.art : '';
+}
+/* Regenbogen: kurz nachdem es aufgehört hat zu regnen, solange es hell ist */
+function wxBogen(art) {
+  const o = UI.sceneOverride; if (o && o.wetter) return o.wetter === 'regenbogen';
+  const w = S.wetter; return !!(w && /^(regen|gewitter)$/.test(w.vor || '') && /^(klar|wolkig)$/.test(art) && Date.now() - (w.seit || 0) < 75 * 60000);
+}
+function wxPhase() {
+  const o = UI.sceneOverride; if (o && o.phaseManuell && o.phase) return o.phase;
+  try { return tzJetzt().ph; } catch (e) { return 'nacht'; }
+}
+
+/* Echter Mond: Phase aus dem Datum (synodischer Monat ab einem bekannten Neumond), Krater und Meere, dunkle Seite mit Erdschein */
+function wxMondSvg(d = new Date()) {
+  const syn = 29.530588853, f = ((((d - Date.UTC(2000, 0, 6, 18, 14)) / 864e5) % syn + syn) % syn) / syn, k = (1 - Math.cos(2 * Math.PI * f)) / 2;
+  const rx = (30 * Math.abs(1 - 2 * k)).toFixed(2), zu = f < .5;
+  const lit = zu ? `M32 2A30 30 0 0 1 32 62A${rx} 30 0 0 ${k < .5 ? 0 : 1} 32 2Z` : `M32 2A30 30 0 0 0 32 62A${rx} 30 0 0 ${k < .5 ? 1 : 0} 32 2Z`;
+  const meere = [[24, 22, 9, 7, -20], [38, 18, 7, 5, 10], [40, 34, 8, 6, 30], [27, 40, 6, 8, 0], [44, 46, 5, 4, 0]];
+  const krater = [[20, 30, 2.6], [33, 28, 1.8], [46, 26, 2.2], [30, 50, 3.2], [16, 44, 1.6], [50, 38, 1.5], [36, 10, 1.4], [23, 13, 1.2], [42, 55, 1.6]];
+  return `<svg viewBox="0 0 64 64" aria-hidden="true"><defs>
+    <radialGradient id="wxmL" cx=".42" cy=".38" r=".7"><stop offset="0" stop-color="#fffbef"/><stop offset=".6" stop-color="#eee6cf"/><stop offset="1" stop-color="#c9c0a6"/></radialGradient>
+    <radialGradient id="wxmK" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#9c937c" stop-opacity=".55"/><stop offset="1" stop-color="#d9d1b9" stop-opacity=".1"/></radialGradient>
+    <clipPath id="wxmC"><path d="${lit}"/></clipPath></defs>
+    <circle cx="32" cy="32" r="30" fill="#1c2236"/><circle cx="32" cy="32" r="30" fill="#8d9ab8" opacity=".14"/>
+    <g clip-path="url(#wxmC)"><circle cx="32" cy="32" r="30" fill="url(#wxmL)"/>
+      ${meere.map(([x, y, a, b, w]) => `<ellipse cx="${x}" cy="${y}" rx="${a}" ry="${b}" transform="rotate(${w} ${x} ${y})" fill="#b3aa90" opacity=".45"/>`).join('')}
+      ${krater.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="url(#wxmK)"/><circle cx="${x + r * .25}" cy="${y + r * .25}" r="${r * .75}" fill="none" stroke="#fffaf0" stroke-opacity=".35" stroke-width=".5"/>`).join('')}</g>
+  </svg>`;
+}
+
+/* Wolken aus weichen Kugeln, ziehen langsam von links nach rechts */
+const WX_WOLKEN = [[8, 30, 1, 0], [20, 22, .8, -40], [34, 26, 1.15, -75], [14, 34, .7, -18], [27, 20, .95, -58], [4, 28, .85, -95], [40, 18, .75, -30]];
+function wxAufbau() {
+  const h = document.getElementById('himmel'); if (!h || h.querySelector('.wx')) return;
+  const el = document.createElement('div'); el.className = 'wx';
+  el.innerHTML = `<i class="wx-tag"></i><i class="wx-bogen"></i><i class="wx-sonne"><b></b></i><span class="wx-mond"></span>
+    <span class="wx-wolken">${WX_WOLKEN.map(([y, d, s, v], i) => `<span class="wx-w${i < 2 ? ' wx-w0' : ''}" style="--y:${y}vh;--d:${(70 + d * 3)}s;--s:${s};--v:${v}s"><i></i><i></i><i></i><i></i></span>`).join('')}</span>
+    <span class="wx-vogel"><i></i><i></i><i></i></span><span class="wx-nebel"><i></i><i></i><i></i></span><canvas class="wx-cv"></canvas><i class="wx-blitz"></i>`;
+  h.appendChild(el);
+}
+let _wxSig = '', _wxT = 0;
+function wxSetzen() {
+  const r = document.documentElement, auf = UI.tab === 'heute' && typeof g2 === 'function' && g2();
+  if (!auf) { if (r.dataset.wxPh) { delete r.dataset.wxPh; delete r.dataset.wx; } wxStopp(); return; }
+  wxAufbau();
+  const nv = document.querySelector('nav.tabs'), hm = document.getElementById('himmel'); if (nv && hm && scrollY < 40) { const b = nv.getBoundingClientRect().bottom; if (b > 0) hm.style.setProperty('--wxTop', Math.round(b + 30) + 'px'); }
+  const ph = wxPhase(), art = wetterJetzt() || 'klar', bogen = ph !== 'nacht' && wxBogen(art);
+  r.dataset.wxPh = ph; r.dataset.wx = bogen ? art + ' bogen' : art;
+  const m = document.querySelector('#himmel .wx-mond'), tag = new Date().toDateString();
+  if (m && m.dataset.tag !== tag) { m.innerHTML = wxMondSvg(); m.dataset.tag = tag; }
+  const sig = ph + art; if (sig !== _wxSig) { _wxSig = sig; WXP.length = 0; }
+  wxLauf();
+  clearInterval(_wxT); _wxT = setInterval(() => { if (UI.tab === 'heute' && !document.hidden) wxSetzen(); }, 60000);
+}
+
+/* Regen, Schnee und Blitze auf einer Fläche hinter allem. Läuft nur auf Heute, nur wenn sichtbar und nicht im ruhigen Modus */
+const WXP = []; let _wxRaf = 0, _wxLt = 0, _wxBlitz = null, _wxNext = 0;
+function wxStopp() { if (_wxRaf) cancelAnimationFrame(_wxRaf); _wxRaf = 0; const c = document.querySelector('#himmel .wx-cv'); if (c) c.getContext('2d').clearRect(0, 0, c.width, c.height); }
+function wxLauf() {
+  const art = document.documentElement.dataset.wx || '';
+  if (!/^(regen|gewitter|schnee)/.test(art) || g2Ruhig() || document.hidden) { wxStopp(); return; }
+  if (!_wxRaf) { _wxLt = 0; _wxRaf = requestAnimationFrame(wxBild); }
+}
+function wxBild(t) {
+  _wxRaf = 0; const c = document.querySelector('#himmel .wx-cv'), r = document.documentElement, art = (r.dataset.wx || '').split(' ')[0];
+  if (!c || UI.tab !== 'heute' || !/^(regen|gewitter|schnee)$/.test(art) || document.hidden) return;
+  const dpr = Math.min(2, devicePixelRatio || 1), W = innerWidth, H = innerHeight;
+  if (c.width !== Math.round(W * dpr) || c.height !== Math.round(H * dpr)) { c.width = Math.round(W * dpr); c.height = Math.round(H * dpr); }
+  const x = c.getContext('2d'), dt = Math.min(50, _wxLt ? t - _wxLt : 16) / 16; _wxLt = t;
+  x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, W, H);
+  const nacht = r.dataset.wxPh === 'nacht';
+  if (art === 'schnee') {
+    const ziel = Math.round(W * H / 5200), leer = !WXP.length;
+    while (WXP.length < ziel) WXP.push({ x: Math.random() * W, y: leer ? Math.random() * H : -10, z: Math.random(), p: Math.random() * 6 });
+    x.fillStyle = nacht ? '#dfe6ff' : '#ffffff';
+    for (const q of WXP) {
+      const s = .5 + q.z * 2.4; q.y += (.35 + q.z * 1.1) * dt; q.x += Math.sin(t / 900 + q.p) * (.2 + q.z * .5) * dt;
+      if (q.y > H + 6) { q.y = -6; q.x = Math.random() * W; }
+      x.globalAlpha = .35 + q.z * .6; x.beginPath(); x.arc(q.x, q.y, s, 0, 7); x.fill();
+    }
+  } else {
+    const gw = art === 'gewitter', ziel = Math.round(W * H / (gw ? 1700 : 2300));
+    while (WXP.length < ziel) WXP.push({ x: Math.random() * (W + 200), y: Math.random() * H, z: Math.random() });
+    x.strokeStyle = nacht ? '#9fb0d8' : '#dbe6f5'; x.lineCap = 'round';
+    for (const q of WXP) {
+      const v = (9 + q.z * 9) * dt, l = 8 + q.z * 16; q.y += v; q.x -= v * .22;
+      if (q.y > H + 20) { q.y = -20 - Math.random() * 60; q.x = Math.random() * (W + 200); }
+      x.globalAlpha = .25 + q.z * .5; x.lineWidth = .6 + q.z * 1.1; x.beginPath(); x.moveTo(q.x, q.y); x.lineTo(q.x + l * .22, q.y - l); x.stroke();
+    }
+    /* Blitz: Lichtblitz über den ganzen Himmel und ein verzweigter Strahl aus den Wolken */
+    if (gw) {
+      if (!_wxNext) _wxNext = t + 2500 + Math.random() * 5000;
+      if (t > _wxNext && !_wxBlitz) { _wxBlitz = { t0: t, bahn: wxBahn(W * (.15 + Math.random() * .7), H * .55) }; _wxNext = t + 4000 + Math.random() * 9000; const f = document.querySelector('#himmel .wx-blitz'); if (f) { f.classList.remove('an'); void f.offsetWidth; f.classList.add('an'); } }
+      if (_wxBlitz) { const e = t - _wxBlitz.t0; if (e > 420) _wxBlitz = null; else { const a = e < 80 ? 1 : e < 140 ? .2 : e < 220 ? .9 : Math.max(0, 1 - (e - 220) / 200);
+        for (const [w, al, col] of [[6, .18, '#9fc4ff'], [2.2, .9, '#ffffff']]) { x.globalAlpha = a * al; x.strokeStyle = col; x.lineWidth = w; for (const b of _wxBlitz.bahn) { x.beginPath(); b.forEach(([px, py], i) => i ? x.lineTo(px, py) : x.moveTo(px, py)); x.stroke(); } } } }
+    }
+  }
+  x.globalAlpha = 1;
+  _wxRaf = requestAnimationFrame(wxBild);
+}
+function wxBahn(x0, yEnd) {
+  const haupt = [[x0, 0]]; let xx = x0, yy = 0; const aeste = [];
+  while (yy < yEnd) { xx += (Math.random() - .5) * 34; yy += 10 + Math.random() * 18; haupt.push([xx, yy]);
+    if (Math.random() < .16 && aeste.length < 3) { const a = [[xx, yy]]; let ax = xx, ay = yy, dir = Math.random() < .5 ? -1 : 1; for (let i = 0; i < 5; i++) { ax += dir * (6 + Math.random() * 14); ay += 8 + Math.random() * 12; a.push([ax, ay]); } aeste.push(a); } }
+  return [haupt, ...aeste];
+}
+document.addEventListener('visibilitychange', () => { if (!document.hidden && UI.tab === 'heute') wxSetzen(); else wxStopp(); });
+addEventListener('resize', () => { WXP.length = 0; });
+
+/* ---------- Mehr Bewegung (Vorsilbe a5) ---------- */
+/* Überschrift jeder Seite: Buchstaben steigen beim Öffnen nacheinander aus dem Licht auf */
+function a5Titel() {
+  const h = document.querySelector('#app header.kopf h1'); if (!h || h.dataset.a5 || h.children.length) return;
+  const txt = h.textContent; if (!txt || txt.length > 60) return; h.dataset.a5 = '1'; h.setAttribute('aria-label', txt);
+  let i = 0; h.innerHTML = txt.split(/(\s+)/).map(w => /^\s+$/.test(w) ? w : `<span class="a5-wort" aria-hidden="true">${[...w].map(c => `<span class="a5-b" style="--i:${i++}">${esc(c)}</span>`).join('')}</span>`).join('');
+}
+/* Kalender: die Tage laufen beim Öffnen als Welle von oben links nach unten rechts ein */
+function a5Welle() {
+  const box = document.querySelector('#app .cal') || document.querySelector('#app .tkk-grid'); if (!box) return;
+  const zellen = box.querySelectorAll(box.classList.contains('cal') ? '.d' : ':scope > *'); if (zellen.length < 20) return;
+  zellen.forEach((z, k) => z.style.setProperty('--a5', (k % 7) + Math.floor(k / 7)));
+  box.classList.add('a5-welle'); setTimeout(() => box.classList.remove('a5-welle'), 1400);
+}
+/* Abhaken: kleiner Lichtring mit Funken genau dort, wo getippt wurde */
+function a5Funken(x, y, c) {
+  if (!g2() || g2Ruhig()) return;
+  const el = document.createElement('div'); el.className = 'a5-f'; el.style.cssText = `left:${x}px;top:${y}px;--c:${c || 'var(--amb)'}`;
+  el.innerHTML = '<i class="a5-ring"></i>' + Array.from({ length: 10 }, (_, k) => `<i class="a5-p" style="--w:${k * 36 + (k % 2) * 12}deg;--r:${18 + (k % 3) * 8}px"></i>`).join('');
+  document.body.appendChild(el); setTimeout(() => el.remove(), 800);
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[data-act]'); if (!b) return;
+  if (/(Toggle|Done)$/.test(b.dataset.act || '')) { const x = e.clientX, y = e.clientY; if (x || y) setTimeout(() => a5Funken(x, y), 0); }
+}, true);
+function a5Nach(neu, tabNeu) {
+  if (!g2() || g2Ruhig()) return;
+  if (tabNeu || neu) a5Titel();
+  if (tabNeu || neu) a5Welle();
+}
+
 /* ---------- Heute ---------- */
 VIEWS.heute = () => {
   const t = today(), d = pd(t), tm = addD(t, 1);
@@ -3677,7 +4462,7 @@ VIEWS.heute = () => {
 
   // Kacheln
   const shiftLine = day => { const s = S.shifts[day], a = S.abs[day];
-    if (a) return `<span class="chip" style="background:${ABS[a.type].c}">${a.type}</span> ${ABS[a.type].n}`;
+    if (a && ABS[a.type]) return `<span class="chip" style="background:${ABS[a.type].c}">${absKz(a.type)}</span> ${ABS[a.type].n}${a.type === 'Z' ? ' ' + hm(daStunden(day)) + ' h' : ''}`;
     if (!s) return '<span class="muted">nichts eingetragen</span>';
     const ty = stype(s.type); if (!ty) return '';
     return `<span class="chip" style="background:${ty.color}">${esc(ty.code)}</span> ${esc(ty.name)}${ty.start ? ` <span class="sub">${s.aStart || ty.start}–${s.aEnd || ty.end}</span>` : ''}`; };
@@ -3735,7 +4520,7 @@ ACT.settings = () => {
     <div class="typesw">${[['neu', '✦ Nachtglas (neu)'], ['klassisch', 'Klassisch']].map(([v, l]) => `<label><input type="radio" name="design" value="${v}" ${(s.design === 'klassisch' ? 'klassisch' : 'neu') === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>
     ${fChk('bewegung', 'Bewegung und Animationen (Nachtglas)', !s.ruhig)}
     <div class="typesw">${[['oben', '⬆︎ Reiter oben'], ['unten', '⬇︎ Reiter unten']].map(([v, l]) => `<label><input type="radio" name="bar" value="${v}" ${(s.bar || 'oben') === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>
-    <h3>DUZ-Sätze (€ pro Stunde)</h3>
+    <h3>Zulagen-Sätze § 4 EZulV (€ pro Stunde, ab 04/2025)</h3><div class="sub" style="margin:-4px 0 8px">Die Zulage für Dienst zu wechselnden Zeiten (2,40 € je Nachtstunde, 1 € 0–6 Uhr, 20 € Wochenende) rechnet die App fest. Die Nacht-Zulage hier gilt nur, wenn § 17a nicht erfüllt ist.</div>
     <div class="grid2">${fMoney('nacht', 'Nacht 20–6 Uhr', s.duz.nacht)}${fMoney('samstag', 'Samstag 13–20 Uhr', s.duz.samstag)}${fMoney('sonntag', 'Sonntag', s.duz.sonntag)}${fMoney('feiertag', 'Feiertag', s.duz.feiertag)}</div>
     <h3>🧙 JATOS</h3>
     ${fChk('jatos', 'JATOS anzeigen (Schloss und Begleiter)', s.jatos !== false)}
@@ -3744,7 +4529,8 @@ ACT.settings = () => {
     <div class="sub" style="margin:-4px 0 10px">Nur im Pixel-Stil: Beim Umschalten hebt die Burg ab oder landet.</div>
     ${fSel('outfit', 'Outfit', Object.entries(OUTFITS).map(([k, o]) => [k, o.n]), s.outfit || 'blau')}
     <div class="sub" style="margin:-4px 0 10px">Weitere Outfits kommen dazu, sobald es Bilder davon gibt.</div>
-    <div class="grid2">${fSel('scP', 'Schloss ansehen: Tageszeit', [['', 'wie jetzt'], ['morgen', 'Morgen'], ['tag', 'Tag'], ['abend', 'Abend'], ['nacht', 'Nacht']], UI.sceneOverride ? UI.sceneOverride.phase : '')}${fSel('scS', 'Jahreszeit', [['', 'wie jetzt'], ['fruehling', 'Frühling'], ['sommer', 'Sommer'], ['herbst', 'Herbst'], ['winter', 'Winter']], UI.sceneOverride ? UI.sceneOverride.season : '')}</div>
+    <div class="grid2">${fSel('scP', 'Himmel ansehen: Tageszeit', [['', 'wie jetzt'], ['morgen', 'Morgen'], ['tag', 'Tag'], ['abend', 'Abend'], ['nacht', 'Nacht']], UI.sceneOverride ? UI.sceneOverride.phase : '')}${fSel('scS', 'Jahreszeit', [['', 'wie jetzt'], ['fruehling', 'Frühling'], ['sommer', 'Sommer'], ['herbst', 'Herbst'], ['winter', 'Winter']], UI.sceneOverride ? UI.sceneOverride.season : '')}</div>
+    ${fSel('scW', 'Himmel ansehen: Wetter', [['', 'wie jetzt'], ['sonne', 'Klar'], ['wolkig', 'Bewölkt'], ['regen', 'Regen'], ['gewitter', 'Gewitter'], ['schnee', 'Schnee'], ['nebel', 'Nebel'], ['regenbogen', 'Regenbogen']], UI.sceneOverride && UI.sceneOverride.wetter || '')}
     ${kursEinstHtml()}
     <h3>Daten</h3>
     <div class="sub" style="margin-bottom:8px">Alle Daten liegen nur auf diesem Gerät. Zum Übertragen auf ein anderes Gerät: Sichern, Datei per AirDrop/WhatsApp schicken und dort importieren.</div>
@@ -3753,7 +4539,7 @@ ACT.settings = () => {
     v => { Object.assign(s, { name: v.name.trim(), nachname: v.nachname.trim(), dienstbez: v.dienstbez.trim(), kennnr: v.kennnr.trim(), land: v.land, eigNamen: (v.eigNamen || '').trim(), mainAcc: v.mainAcc || null, soll: numIn(v.soll), urlaub: numIn(v.urlaub) });
       s.duz = { nacht: num(v.nacht), samstag: num(v.samstag), sonntag: num(v.sonntag), feiertag: num(v.feiertag) };
       s.schule = !!v.schule; s.jatos = v.jatos; s.outfit = v.outfit; s.jstil = v.jstil === 'klassisch' ? 'klassisch' : 'pixel'; s.burgFliegt = !!v.burgFliegt; s.bar = v.bar === 'unten' ? 'unten' : 'oben'; s.design = v.design === 'klassisch' ? 'klassisch' : 'neu'; s.ruhig = !v.bewegung;
-      if (v.scP || v.scS) { const n = sceneInfo(); UI.sceneOverride = Object.assign(n, { phase: v.scP || n.phase, season: v.scS || n.season }); if (v.scS === 'herbst') UI.sceneOverride.halloween = true; if (v.scS === 'winter') UI.sceneOverride.advent = true; } else UI.sceneOverride = null;
+      if (v.scP || v.scS || v.scW) { const n = sceneInfo(); UI.sceneOverride = Object.assign(n, { phase: v.scP || n.phase, season: v.scS || n.season, phaseManuell: !!v.scP, wetter: v.scW || '' }); if (v.scS === 'herbst') UI.sceneOverride.halloween = true; if (v.scS === 'winter') UI.sceneOverride.advent = true; } else UI.sceneOverride = null;
       kursEinstSave(v, s);
       for (const k in _holCache) delete _holCache[k]; }, { init: kursEinstInit });
 };
@@ -4158,6 +4944,7 @@ FIN.uebersicht = () => {
   h += missionCard();
   h += wishCard();
   h += flowCard(m);
+  if (g2() && typeof pdKarte === 'function') h += pdKarte(m);
   // DUZ
   const z = duzMonth(m); const zh = z.nacht + z.samstag + z.sonntag + z.feiertag;
   if (zh > 0) {
@@ -4171,8 +4958,8 @@ FIN.uebersicht = () => {
 };
 ACT.duzBook = d => {
   if (needAcc()) return;
-  const z = duzMonth(d.m); const zc = S.cats.find(c => c.type === 'ein' && /DUZ|Zulage/i.test(c.name)) || S.cats.find(c => c.type === 'ein');
-  txEdit({ type: 'ein', amount: Math.round(z.eur * 100) / 100, cat: zc && zc.id, note: `DUZ ${fmtYM(d.m)}`, date: today(), duz: d.m });
+  const zw = dwzMonat(d.m), z = duzMonth(d.m), r = S.settings.duz; z.eur = zw.eur + (zw.ok ? 0 : z.nacht * (r.nacht || 0)) + z.samstag * (r.samstag || 0) + z.sonntag * (r.sonntag || 0) + z.feiertag * (r.feiertag || 0); const zc = S.cats.find(c => c.type === 'ein' && /DUZ|Zulage/i.test(c.name)) || S.cats.find(c => c.type === 'ein');
+  txEdit({ type: 'ein', amount: Math.round(z.eur * 100) / 100, cat: zc && zc.id, note: `Zulagen ${fmtYM(d.m)}`, date: today(), duz: d.m });
 };
 function txRow(t) {
   const c = cat(t.cat), a = acc(t.acc), to = acc(t.to);
@@ -4472,14 +5259,14 @@ ARB.dienstplan = () => {
   h += `<div class="sub" style="margin-bottom:6px">${UI.paint ? 'Tippe auf die Tage, um sie einzutragen. Nochmal auf die Schicht tippen zum Beenden.' : 'Schicht wählen und dann Tage antippen. Oder einen Tag antippen für Details (Zeiten, Überstunden).'}</div>`;
   if (!S.shiftTypes.length) h += `<div class="card" style="text-align:center;padding:18px"><div class="sub" style="margin-bottom:10px">Du hast noch keine Schichtarten. Lege deine Dienste mit Kürzel und Zeiten selbst an.</div><button class="btn sm" data-act="schOne">+ Erste Schichtart anlegen</button></div>`;
   h += `<div class="palette">${S.shiftTypes.map(t => `<button style="background:${t.color}" class="${UI.paint === t.id ? 'on' : ''}" data-act="paint" data-v="${t.id}">${esc(t.code)}</button>`).join('')}
-    ${Object.entries(ABS).map(([k, a]) => `<button style="background:${a.c}" class="${UI.paint === 'abs:' + k ? 'on' : ''}" data-act="paint" data-v="abs:${k}">${k}</button>`).join('')}
+    ${absAktiv().map(k => `<button style="background:${ABS[k].c}" class="${UI.paint === 'abs:' + k ? 'on' : ''}" data-act="paint" data-v="abs:${k}" title="${ABS[k].n}">${absKz(k)}</button>`).join('')}
     <button style="background:#2c3242;color:#e9ecf3" class="${UI.paint === 'del' ? 'on' : ''}" data-act="paint" data-v="del">⌫</button></div>`;
   h += `<div class="card" style="padding:8px">${monthGrid(m, { act: 'dpDay', html: d => {
     const s = S.shifts[d], a = S.abs[d]; let x = '';
-    if (s) { const t = stype(s.type); if (t) x += `<span class="chip" style="background:${t.color}">${esc(t.code)}${s.extra ? '+' : ''}</span>`; const w = dayWork(d); if (Math.abs(w.over) > 0.01) x += `<span style="font-size:10px" class="${w.over > 0 ? 'pos' : 'neg'}">${w.over > 0 ? '+' : ''}${hm(w.over)}</span>`; }
-    if (a) x += `<span class="chip" style="background:${ABS[a.type].c}">${a.type}</span>`;
+    if (s) { const t = stype(s.type); if (t && g2() && kl3Nacht(t)) x += '<i class="kl3-n" aria-hidden="true"></i>'; if (t) x += `<span class="chip" style="background:${t.color}">${esc(t.code)}${s.extra ? '+' : ''}</span>`; const w = dayWork(d); if (Math.abs(w.over) > 0.01) x += `<span style="font-size:10px" class="${w.over > 0 ? 'pos' : 'neg'}">${w.over > 0 ? '+' : ''}${hm(w.over)}</span>`; }
+    if (a && ABS[a.type]) { x += `<span class="chip" style="background:${ABS[a.type].c}">${absKz(a.type)}</span>`; if (a.type === 'Z') x += `<span style="font-size:10px" class="neg">−${hm(daStunden(d))}</span>`; }
     return x; } })}</div>`;
-  h += `<div class="legend">${S.shiftTypes.map(t => `<span><i class="chip" style="background:${t.color};height:16px;min-width:20px">${esc(t.code)}</i>${esc(t.name)}${t.start ? ' ' + t.start + '–' + t.end : ''}</span>`).join('')}${Object.entries(ABS).map(([k, a]) => `<span><i class="chip" style="background:${a.c};height:16px;min-width:20px">${k}</i>${a.n}</span>`).join('')}<span><b class="pos">+</b> = zusätzlicher Dienst</span></div>`;
+  h += `<div class="legend">${S.shiftTypes.map(t => `<span><i class="chip" style="background:${t.color};height:16px;min-width:20px">${esc(t.code)}</i>${esc(t.name)}${t.start ? ' ' + t.start + '–' + t.end : ''}</span>`).join('')}${absAktiv().map(k => `<span><i class="chip" style="background:${ABS[k].c};height:16px;min-width:20px">${absKz(k)}</i>${ABS[k].n}${k === 'Z' ? ' (zieht vom Überstundenkonto ab)' : ''}</span>`).join('')}<span><b class="pos">+</b> = zusätzlicher Dienst</span></div>`;
   // Monatssumme
   let plan = 0, ist = 0, cnt = 0; for (const d in S.shifts) if (d.startsWith(m)) { const w = dayWork(d); plan += w.plan; ist += w.ist; if (w.ist) cnt++; }
   h += `<div class="grid3" style="margin-top:12px"><div class="stat"><div class="l">Dienste</div><div class="v">${cnt}</div></div><div class="stat"><div class="l">Stunden</div><div class="v">${hm(ist)}</div></div><div class="stat"><div class="l">Überstunden</div><div class="v ${ist - plan < 0 ? 'neg' : 'pos'}">${hm(ist - plan)}</div></div></div>`;
@@ -4491,7 +5278,7 @@ ACT.dpDay = d => {
   const day = d.d;
   if (UI.paint) {
     if (UI.paint === 'del') { delete S.shifts[day]; delete S.abs[day]; }
-    else if (UI.paint.startsWith('abs:')) { const k = UI.paint.slice(4); if (S.abs[day] && S.abs[day].type === k) delete S.abs[day]; else S.abs[day] = { type: k, hours: k === 'Z' ? (+S.settings.soll || 40) / 5 : undefined }; }
+    else if (UI.paint.startsWith('abs:')) { const k = UI.paint.slice(4); if (S.abs[day] && S.abs[day].type === k) delete S.abs[day]; else S.abs[day] = { type: k }; }
     else { if (S.shifts[day] && S.shifts[day].type === UI.paint && !S.shifts[day].aStart) delete S.shifts[day]; else S.shifts[day] = { type: UI.paint }; }
     save(); render(); return;
   }
@@ -4502,19 +5289,20 @@ function dayEdit(day) {
   const t = stype(s.type);
   modal(fmtD(day) + (holiday(day) ? ' · ' + holiday(day) : ''), `
     ${fSel('type', 'Dienst laut Plan', [['', '– kein Dienst –'], ...S.shiftTypes.map(x => [x.id, `${x.code} · ${x.name}${x.start ? ' ' + x.start + '–' + x.end : ''}`])], s.type || '')}
-    ${fChk('extra', 'Zusätzlicher Dienst (nicht im Plan → komplett Überstunden)', s.extra)}
+    ${fChk('extra', 'Zusätzlicher Dienst (nicht im Plan → komplett Überstunden)', s.extra)}${fChk('ma', 'Angeordnete Mehrarbeit (zählt aufs Mehrarbeitskonto)', s.ma)}
     <h3>Tatsächlich gearbeitet <span class="muted">(leer = wie geplant)</span></h3>
     <div class="grid3">${fIn('aStart', 'Beginn', s.aStart || '', 'time')}${fIn('aEnd', 'Ende', s.aEnd || '', 'time')}${fIn('aPause', 'Pause (Min.)', s.aPause ?? '', 'number')}</div>
     ${fIn('anr', 'Abgerechnet gesamt (leer = automatisch, z.B. 11:30)', s.anr || '', 'text', 'inputmode="numeric" placeholder="automatisch"')}
     ${fIn('note', 'Bemerkung (steht im Dienstbuch)', s.note || '')}
-    ${fSel('abs', 'Abwesenheit', [['', '– keine –'], ...Object.entries(ABS).map(([k, x]) => [k, x.n])], a.type || '')}
-    <div data-k="zh">${fIn('hours', 'Freizeitausgleich: Stunden abziehen', a.hours ?? ((+S.settings.soll || 40) / 5), 'number')}</div>
+    ${fSel('abs', 'Abwesenheit', [['', '– keine –'], ...Object.keys(ABS).filter(k => absAktiv().includes(k) || k === a.type).map(k => [k, absKz(k) + ' · ' + ABS[k].n])], a.type || '')}
+    <div data-k="zh"><div class="grid2">${fIn('von', 'Dienstausgleich von', a.von || '', 'time')}${fIn('bis', 'bis', a.bis || '', 'time')}</div>${fIn('hours', 'oder Stunden (leer = geplanter Dienst)', a.hours ?? '', 'text', 'inputmode="decimal" placeholder="z.B. 4 oder 4:30"')}${fChk('dama', 'Von der Mehrarbeit abbauen statt von den Überstunden', a.ma)}<div class="sub" data-k="dah"></div></div>
     <div class="sub" data-k="info"></div>`,
     v => {
-      if (v.type) S.shifts[day] = { type: v.type, extra: v.extra, aStart: v.aStart || '', aEnd: v.aEnd || '', aPause: v.aPause === '' ? undefined : +v.aPause, anr: v.anr.trim(), note: v.note }; else delete S.shifts[day];
-      if (v.abs) S.abs[day] = { type: v.abs, hours: v.abs === 'Z' ? numIn(v.hours) : undefined }; else delete S.abs[day];
+      if (v.type) S.shifts[day] = { type: v.type, extra: v.extra, aStart: v.aStart || '', aEnd: v.aEnd || '', aPause: v.aPause === '' ? undefined : +v.aPause, anr: v.anr.trim(), note: v.note, ma: !!v.ma || undefined }; else delete S.shifts[day];
+      if (v.abs) S.abs[day] = v.abs === 'Z' ? { type: 'Z', von: v.von || undefined, bis: v.bis || undefined, hours: v.von && v.bis ? undefined : stdIn(v.hours), ma: !!v.dama || undefined } : { type: v.abs }; else delete S.abs[day];
     }, { init: f => {
       const upd = () => { $('[data-k=zh]', f).style.display = f.abs.value === 'Z' ? '' : 'none';
+        if (f.abs.value === 'Z') { const alt = S.abs[day], shAlt = S.shifts[day]; S.abs[day] = { type: 'Z', von: f.von.value, bis: f.bis.value, hours: stdIn(f.hours.value) }; if (f.type.value) S.shifts[day] = { type: f.type.value }; else delete S.shifts[day]; const h = daStunden(day); if (alt) S.abs[day] = alt; else delete S.abs[day]; if (shAlt) S.shifts[day] = shAlt; else delete S.shifts[day]; $('[data-k=dah]', f).innerHTML = `Zieht <b class="neg">${hm(h)} h</b> vom ${f.dama.checked ? 'Mehrarbeitskonto' : 'Überstundenkonto'} ab.`; }
         const tmp = { type: f.type.value, extra: f.extra.checked, aStart: f.aStart.value, aEnd: f.aEnd.value, aPause: f.aPause.value === '' ? undefined : +f.aPause.value };
         const ty = stype(tmp.type); if (!ty || !ty.start) { $('[data-k=info]', f).textContent = ''; return; }
         const plan = tmp.extra ? 0 : spanH(shiftSpan(day, tmp, false)), ist = spanH(shiftSpan(day, tmp, true));
@@ -4525,6 +5313,14 @@ ACT.schEdit = () => {
   const rows = S.shiftTypes.map(t => `<div class="it click" data-act="schOne" data-id="${t.id}"><span class="chip" style="background:${t.color}">${esc(t.code)}</span><div class="grow"><div class="t">${esc(t.name)}</div><div class="s">${t.start ? `${t.start}–${t.end} · Pause ${t.pause || 0} Min. · ${hm(spanH(shiftSpan('2000-01-03', { type: t.id }, false)))} h` : 'ohne Arbeitszeit'}</div></div><button type="button" class="ibtn" data-act="schDel" data-id="${t.id}" aria-label="Löschen">×</button></div>`).join('');
   modal('Schichtarten', `<div class="sub" style="margin-bottom:10px">Lege deine Dienste mit festen Zeiten an. Im Dienstplan wählst du dann nur noch das Kürzel.</div>${rows ? `<div class="card tight list" style="background:var(--card)">${rows}</div>` : '<div class="sub" style="margin-bottom:10px">Noch keine Schichtarten. Lege z.&nbsp;B. „F · Früh 06:00–14:00“ an.</div>'}<button type="button" class="btn sec full" data-act="schOne">+ Neue Schichtart</button>`, null);
 };
+/* Abwesenheiten im selben Fenster: jede lässt sich löschen, gelöschte lassen sich wieder hinzufügen */
+function absListe() {
+  const an = absAktiv(), aus = Object.keys(ABS).filter(k => !an.includes(k));
+  return `<h3 style="margin-top:16px">Abwesenheiten</h3>${an.length ? `<div class="card tight list" style="background:var(--card)">${an.map(k => `<div class="it"><span class="chip" style="background:${ABS[k].c}">${absKz(k)}</span><div class="grow"><div class="t">${ABS[k].n}</div><div class="s">${k === 'Z' ? 'mit Uhrzeit, zieht vom Überstundenkonto ab' : k === 'U' ? 'zieht vom Urlaub ab' : ''}</div></div><button type="button" class="ibtn" data-act="absTypDel" data-k="${k}" aria-label="Löschen">×</button></div>`).join('')}</div>` : '<div class="sub">Keine Abwesenheiten zur Auswahl.</div>'}
+    ${aus.length ? `<div class="row wrap" style="gap:6px;margin-top:8px">${aus.map(k => `<button type="button" class="btn sm sec" data-act="absTypAn" data-k="${k}">+ ${absKz(k)} ${ABS[k].n}</button>`).join('')}</div>` : ''}`;
+}
+ACT.absTypDel = async d => { const k = d.k, n = Object.values(S.abs).filter(a => a.type === k).length; if (!(await ask(`„${ABS[k].n}“ aus der Auswahl nehmen?${n ? ` Die ${n} schon eingetragenen Tage bleiben erhalten.` : ''}`, 'Löschen'))) return; S.settings.absAktiv = absAktiv().filter(x => x !== k); if (UI.paint === 'abs:' + k) UI.paint = null; save(); _modalStack.forEach(m => m.remove()); _modalStack = []; render(); ACT.schEdit(); };
+ACT.absTypAn = d => { S.settings.absAktiv = [...absAktiv(), d.k]; save(); _modalStack.forEach(m => m.remove()); _modalStack = []; render(); ACT.schEdit(); };
 ACT.schOne = d => {
   const t = d.id ? stype(d.id) : { color: '#4fd1c5', pause: 30 }; const isNew = !t.id;
   _modalStack.forEach(m => m.remove()); _modalStack = [];
@@ -4547,7 +5343,7 @@ ARB.stunden = () => {
   const m = UI.month; const [y, mo] = m.split('-').map(Number);
   let h = `<div class="row sb" style="margin-bottom:10px">${mnav()}</div>`;
   const ot = overtimeTotal();
-  h += `<div class="card"><div class="row sb"><h2 style="margin:0">Überstundenkonto gesamt</h2><b class="num ${ot < 0 ? 'neg' : 'pos'}" style="font-size:20px">${hm(ot)} h</b></div><div class="sub" style="margin-top:4px">Summe aller Abweichungen vom Dienstplan minus Freizeitausgleich.</div></div>`;
+  h += zkKarten(m);
   // Wochen
   const first = `${m}-01`, last = `${m}-${pad(dim(y, mo))}`; let wk = mondayOf(first);
   let rows = '', P = 0, I = 0;
@@ -4559,50 +5355,61 @@ ARB.stunden = () => {
   const soll = +S.settings.soll || 0;
   h += `<div class="card"><h2>Wochen</h2><table class="t"><tr><th>Woche</th><th>Plan</th><th>Ist</th><th>Über</th></tr>${rows}<tr><td><b>${MON[mo - 1]}</b></td><td><b>${hm(P)}</b></td><td><b>${hm(I)}</b></td><td class="${I - P < 0 ? 'neg' : 'pos'}"><b>${hm(I - P)}</b></td></tr></table>
     ${soll ? `<div class="sub" style="margin-top:8px">Zum Vergleich: ${dec(soll, 1)} h Soll pro Woche ≈ ${hm(soll * dim(y, mo) / 7)} h in diesem Monat.</div>` : ''}</div>`;
-  // DUZ
-  const z = duzMonth(m), r = S.settings.duz;
-  h += `<div class="card"><h2>DUZ – Dienst zu ungünstigen Zeiten</h2><table class="t"><tr><th>Zeitraum</th><th>Stunden</th><th>Satz</th><th>Betrag</th></tr>
-    ${[['nacht', 'Nacht 20–6 Uhr'], ['samstag', 'Samstag 13–20 Uhr'], ['sonntag', 'Sonntag'], ['feiertag', 'Feiertag']].map(([k, l]) => `<tr><td>${l}</td><td>${dec(z[k], 2)}</td><td>${r[k] ? eur(r[k]) : '–'}</td><td>${eur(z[k] * (r[k] || 0))}</td></tr>`).join('')}
-    <tr><td><b>Gesamt</b></td><td></td><td></td><td><b>${eur(z.eur)}</b></td></tr></table>
-    <div class="row wrap" style="margin-top:10px"><button class="btn sm sec" data-act="settings">Sätze ändern</button>${z.eur ? `<button class="btn sm" data-act="duzBook" data-m="${m}">In Finanzen buchen</button>` : ''}</div>
-    <div class="sub" style="margin-top:8px">${S.settings.land ? 'Feiertage: ' + LAENDER[S.settings.land] : '<span class="wrn">Bundesland in den Einstellungen wählen, damit Feiertage erkannt werden.</span>'}. Nachtstunden an Sonn- und Feiertagen zählen zusätzlich als Nacht.</div></div>`;
+  // Zulagen wie im Zeitportal (§ 17a/17b EZulV), dazu Sonn-, Feiertags- und Samstagszulage (§ 4 EZulV)
+  const zw = dwzMonat(m), z = duzMonth(m), r = S.settings.duz, nachtDuz = zw.ok ? 0 : z.nacht * (r.nacht || 0), duzEur = nachtDuz + z.samstag * (r.samstag || 0) + z.sonntag * (r.sonntag || 0) + z.feiertag * (r.feiertag || 0);
+  h += `<div class="card zl" id="zl"><div class="row sb"><h2 style="margin:0">Zulagen ${MON[mo - 1]}</h2><b class="num" style="font-size:20px">${eur(zw.eur)}</b></div>
+    <div class="row sb" style="margin:6px 0 2px"><span>§ 17a EZulV für DwZ erfüllt?</span><b class="${zw.ok ? 'pos' : 'neg'}">${zw.ok ? 'ja' : 'nein'}</b></div>
+    <table class="t"><tr><th></th><th>Anzahl</th><th>Betrag</th></tr>
+    <tr><td>zu vergütende Nachtstunden${zw.uebIn ? ` <span class="sub">inkl. ${hm(zw.uebIn)} aus Vormonat</span>` : ''}</td><td class="num">${hm(zw.bez)}</td><td class="num">${eur(zw.eNacht)}</td></tr>
+    <tr><td>zu vergütende Nachtstunden <span class="sub">(00:00–06:00 Uhr)</span></td><td class="num">${hm(zw.n06)}</td><td class="num">${eur(zw.e06)}</td></tr>
+    <tr><td>Dienste an WE/Feiertagen</td><td class="num">${zw.we}</td><td class="num">${eur(zw.eWe)}</td></tr>
+    <tr><td><b>Gesamtbetrag</b></td><td></td><td class="num"><b>${eur(zw.eur)}</b></td></tr></table>
+    <div class="sub" style="margin-top:8px">2,40 € je Nachtstunde (20–6 Uhr, höchstens 108 € im Monat${zw.uebOut ? `, ${hm(zw.uebOut)} h gehen in den nächsten Monat` : ''}), 1 € je Stunde 0–6 Uhr, 20 € ab drei Diensten am Wochenende oder Feiertag. ${zw.ok ? '' : `Noch nicht erfüllt: ${zw.nacht < 5 ? `${hm(zw.nacht)} von 5 Nachtstunden` : ''}${zw.nacht < 5 && zw.wechsel < 4 ? ', ' : ''}${zw.wechsel < 4 ? `${zw.wechsel} von 4 Wechseln (7 bis 17 Std. zwischen zwei Dienstbeginnen)` : ''}.`}</div>
+    ${duzEur ? `<h3>Weitere Zulagen (§ 4 EZulV)</h3><table class="t"><tr><th>Zeitraum</th><th>Stunden</th><th>Satz</th><th>Betrag</th></tr>
+    ${[['sonntag', 'Sonntag'], ['feiertag', 'Feiertag'], ['samstag', 'Samstag 13–20 Uhr'], ...(zw.ok ? [] : [['nacht', 'Nacht 20–6 Uhr']])].filter(([k]) => z[k]).map(([k, l]) => `<tr><td>${l}</td><td>${hm(z[k])}</td><td>${r[k] ? eur(r[k]) : '–'}</td><td>${eur(z[k] * (r[k] || 0))}</td></tr>`).join('')}
+    <tr><td><b>Gesamt</b></td><td></td><td></td><td><b>${eur(duzEur)}</b></td></tr></table>` : ''}
+    <div class="row wrap" style="margin-top:10px"><button class="btn sm sec" data-act="settings">Sätze ändern</button>${zw.eur + duzEur ? `<button class="btn sm" data-act="duzBook" data-m="${m}">In Finanzen buchen</button>` : ''}</div>
+    <div class="sub" style="margin-top:8px">${S.settings.land ? 'Feiertage: ' + LAENDER[S.settings.land] : '<span class="wrn">Bundesland in den Einstellungen wählen, damit Feiertage erkannt werden.</span>'}. Sätze ab 04/2025.</div></div>`;
   // Tagesliste
   const days = Object.keys(S.shifts).filter(d => d.startsWith(m) && (stype(S.shifts[d].type) || {}).start).sort();
   if (days.length) h += `<h3>Dienste im ${MON[mo - 1]}</h3><div class="card tight list">${days.map(d => { const s = S.shifts[d], t = stype(s.type), w = dayWork(d); if (!t) return ''; return `<div class="it click" data-act="dpDayEdit" data-d="${d}"><span class="chip" style="background:${t.color}">${esc(t.code)}</span><div class="grow"><div class="t">${fmtD(d)}</div><div class="s">${t.start ? `${s.aStart || t.start}–${s.aEnd || t.end}` : t.name}${s.note ? ' · ' + esc(s.note) : ''}</div></div><div style="text-align:right"><div class="num">${hm(w.ist)}</div>${Math.abs(w.over) > .01 ? `<div class="s num ${w.over > 0 ? 'pos' : 'neg'}">${w.over > 0 ? '+' : ''}${hm(w.over)}</div>` : ''}</div></div>`; }).join('')}</div>`;
   return h;
 };
 ACT.dpDayEdit = d => dayEdit(d.d);
+ACT.otStand = () => { const o = S.settings.otStand || {}; modal('Überstundenkonto übernehmen', `<div class="sub" style="margin-bottom:10px">Trag den Stand aus dem Zeitportal ein. Die App rechnet ab dem Tag danach weiter.</div><div class="grid2">${fIn('h', 'Stand (z.B. 35:12)', o.d ? hm(+o.h) : '', 'text', 'inputmode="decimal"')}${fIn('d', 'am', o.d || today(), 'date')}</div>`, v => { const h = stdIn(String(v.h).replace('−', '-')); if (h === undefined || !v.d) { delete S.settings.otStand; return; } S.settings.otStand = { h, d: v.d }; }, { del: o.d ? () => { delete S.settings.otStand; } : null }); };
 ARB.zeit = () => { const st = ARB.stunden(), i = st.indexOf('<h3>Dienste im'), u = `<h2 class="zeit-tr">🌴 Urlaub & Abwesenheiten</h2>` + ARB.urlaub(); return (i < 0 ? st : st.slice(0, i)) + u + dbAuswahl(); };
 
 ARB.urlaub = () => {
   const y = +(UI.year || today().slice(0, 4)); const v = vacation(y);
   let h = `<div class="row sb" style="margin-bottom:10px"><div class="mnav"><button class="ibtn" data-act="year" data-v="-1">‹</button><div class="lbl">${y}</div><button class="ibtn" data-act="year" data-v="1">›</button></div><button class="btn sm" data-act="absNew">+ Abwesenheit</button></div>`;
-  h += `<div class="card"><h2>Urlaub ${y}</h2><div class="grid3"><div class="stat"><div class="l">Anspruch</div><div class="v">${dec(v.total, 0)}</div></div><div class="stat"><div class="l">Genommen</div><div class="v">${v.used}</div></div><div class="stat"><div class="l">Rest</div><div class="v ${v.rest < 0 ? 'neg' : 'pos'}">${dec(v.rest, 0)}</div></div></div>
+  const H = !!v.h, f = x => H ? hm(x) : dec(x, 0);
+  h += `<div class="card"><h2>Erholungsurlaub ${y}${H ? ' <span class="sub">in Stunden</span>' : ''}</h2><div class="grid3"><div class="stat"><div class="l">Anspruch</div><div class="v">${f(v.total)}</div></div><div class="stat"><div class="l">Verbraucht</div><div class="v">${f(v.used)}</div></div><div class="stat"><div class="l">Noch verfügbar</div><div class="v ${v.rest < 0 ? 'neg' : 'pos'}">${f(v.rest)}</div></div></div>
     <div class="bar" style="margin-top:10px"><i style="width:${v.total ? Math.min(100, v.used / v.total * 100) : 0}%"></i></div>
-    <div class="sub" style="margin-top:8px">${S.settings.urlaub} Tage Jahresurlaub + ${dec(v.carry, 0)} Resturlaub aus ${y - 1} <a href="#" style="color:var(--acc)" data-act="carryEdit" data-y="${y}">ändern</a></div></div>`;
+    <div class="sub" style="margin-top:8px">${H ? `${hm(+S.settings.urlaubH)} h zustehend + ${hm(v.carry)} h Rest aus ${y - 1}` : `${S.settings.urlaub} Tage Jahresurlaub + ${dec(v.carry, 0)} Resturlaub aus ${y - 1}`} <a href="#" style="color:var(--acc)" data-act="carryEdit" data-y="${y}">ändern</a></div></div>`;
   const list = Object.entries(S.abs).filter(([d]) => d.startsWith(String(y))).sort((a, b) => a[0] < b[0] ? -1 : 1);
   const counts = {}; list.forEach(([, a]) => counts[a.type] = (counts[a.type] || 0) + 1);
-  h += `<div class="grid3" style="margin-bottom:12px">${Object.entries(ABS).filter(([k]) => k !== 'U').map(([k, a]) => `<div class="stat"><div class="l">${a.n}</div><div class="v" style="color:${a.c}">${counts[k] || 0}</div></div>`).join('')}</div>`;
+  const daH = sum(list.filter(([, a]) => a.type === 'Z'), ([d]) => daStunden(d)), weitere = Object.keys(ABS).filter(k => k !== 'U' && k !== 'Z' && (absAktiv().includes(k) || counts[k]));
+  h += `<div class="grid3" style="margin-bottom:12px"><div class="stat"><div class="l">Dienstausgleich</div><div class="v" style="color:${ABS.Z.c}">${counts.Z || 0}</div><div class="sub">${hm(daH)} h vom Konto</div></div>${weitere.map(k => `<div class="stat"><div class="l">${ABS[k].n}</div><div class="v" style="color:${ABS[k].c}">${counts[k] || 0}</div></div>`).join('')}</div>`;
   // Zeiträume zusammenfassen
   const ranges = []; list.forEach(([d, a]) => { const l = ranges[ranges.length - 1]; if (l && l.type === a.type && dayDiff(l.to, d) <= 3 && Object.keys(S.abs).filter(x => x > l.to && x < d).length === 0) { l.to = d; l.n++; } else ranges.push({ from: d, to: d, type: a.type, n: 1 }); });
-  h += `<div class="card tight list">${ranges.reverse().map(r => `<div class="it click" data-act="absRange" data-f="${r.from}" data-t="${r.to}" data-ty="${r.type}"><span class="chip" style="background:${ABS[r.type].c}">${r.type}</span><div class="grow"><div class="t">${ABS[r.type].n}</div><div class="s">${r.from === r.to ? fmtD(r.from) : fmtD(r.from) + ' – ' + fmtD(r.to)}</div></div><span class="num">${r.n} ${r.n === 1 ? 'Tag' : 'Tage'}</span></div>`).join('') || '<div class="it sub">Keine Einträge in diesem Jahr.</div>'}</div>`;
+  h += `<div class="card tight list">${ranges.reverse().map(r => `<div class="it click" data-act="absRange" data-f="${r.from}" data-t="${r.to}" data-ty="${r.type}"><span class="chip" style="background:${ABS[r.type].c}">${absKz(r.type)}</span><div class="grow"><div class="t">${ABS[r.type].n}</div><div class="s">${r.from === r.to ? fmtD(r.from) : fmtD(r.from) + ' – ' + fmtD(r.to)}</div></div><span class="num">${r.n} ${r.n === 1 ? 'Tag' : 'Tage'}</span></div>`).join('') || '<div class="it sub">Keine Einträge in diesem Jahr.</div>'}</div>`;
   return h;
 };
 ACT.year = d => { UI.year = +(UI.year || today().slice(0, 4)) + +d.v; render(); };
-ACT.carryEdit = d => { const y = +d.y; modal(`Resturlaub aus ${y - 1}`, fIn('carry', 'Übertragene Tage', vacation(y).carry, 'number') + '<div class="sub">Leer lassen = automatisch aus dem Vorjahr berechnen.</div>', v => { if (v.carry === '') delete S.carry[y]; else S.carry[y] = numIn(v.carry); }); };
-ACT.absNew = () => absEdit({ type: 'U', from: today(), to: today() });
+ACT.carryEdit = d => { const y = +d.y; if (+S.settings.urlaubH > 0) return modal(`Urlaub ${y} in Stunden`, fIn('anspruch', 'Zustehend pro Jahr (Stunden, z.B. 246)', hm(+S.settings.urlaubH).replace('−', ''), 'text', 'inputmode="decimal"') + fIn('carry', `Rest aus ${y - 1} (Stunden, leer = automatisch)`, (S.carryH || {})[y] !== undefined ? hm(S.carryH[y]) : '', 'text', 'inputmode="decimal"') + `<div class="sub">So wie im Zeitportal. Jeder EU-Tag zieht die geplanten Stunden dieses Tages ab.</div>`, v => { const a = stdIn(v.anspruch); if (a > 0) S.settings.urlaubH = a; S.carryH = S.carryH || {}; const c = stdIn(v.carry); if (c === undefined) delete S.carryH[y]; else S.carryH[y] = c; }); modal(`Resturlaub aus ${y - 1}`, fIn('carry', 'Übertragene Tage', vacation(y).carry, 'number') + '<div class="sub">Leer lassen = automatisch aus dem Vorjahr berechnen.</div>', v => { if (v.carry === '') delete S.carry[y]; else S.carry[y] = numIn(v.carry); }); };
+ACT.absNew = () => absEdit({ type: absAktiv()[0] || 'U', from: today(), to: today() });
 ACT.absRange = d => absEdit({ type: d.ty, from: d.f, to: d.t, existing: true });
 function absEdit(r) {
-  modal(r.existing ? 'Abwesenheit' : 'Neue Abwesenheit', `${fSel('type', 'Art', Object.entries(ABS).map(([k, a]) => [k, a.n]), r.type)}
+  modal(r.existing ? 'Abwesenheit' : 'Neue Abwesenheit', `${fSel('type', 'Art', Object.keys(ABS).filter(k => absAktiv().includes(k) || k === r.type).map(k => [k, absKz(k) + ' · ' + ABS[k].n]), r.type)}
     <div class="grid2">${fIn('from', 'Von', r.from, 'date')}${fIn('to', 'Bis', r.to, 'date')}</div>
     ${fChk('skipWe', 'Wochenenden und Feiertage auslassen', !r.existing)}${fChk('skipFree', 'Nur Tage mit Dienst laut Plan', false)}
-    <div class="sub">Für Urlaub zählt jeder eingetragene Tag als Urlaubstag.</div>`,
+    <div class="sub">${+S.settings.urlaubH > 0 ? 'Jeder EU-Tag zieht die geplanten Stunden dieses Tages vom Urlaub ab.' : 'Für Urlaub zählt jeder eingetragene Tag als Urlaubstag.'} Ein DA-Tag zieht den geplanten Dienst vom Überstundenkonto ab (genaue Uhrzeit: Tag im Dienstplan antippen).</div>`,
     v => { if (!v.from) return false; const to = v.to < v.from ? v.from : v.to;
       if (r.existing) for (let d = r.from; d <= r.to; d = addD(d, 1)) if (S.abs[d] && S.abs[d].type === r.type) delete S.abs[d];
       for (let d = v.from; d <= to; d = addD(d, 1)) {
         if (v.skipWe && !isWorkday(d)) continue;
         if (v.skipFree) { const s = S.shifts[d]; const t = s && stype(s.type); if (!t || !t.start) continue; }
-        S.abs[d] = { type: v.type, hours: v.type === 'Z' ? (+S.settings.soll || 40) / 5 : undefined };
+        S.abs[d] = { type: v.type };
       } },
     { del: r.existing ? () => { for (let d = r.from; d <= r.to; d = addD(d, 1)) if (S.abs[d] && S.abs[d].type === r.type) delete S.abs[d]; } : null });
 }
@@ -4668,6 +5475,94 @@ function ratEdit(r) {
       f.addEventListener('input', calc); calc(); } });
 }
 const areaRow = (a, i) => `<div style="display:grid;grid-template-columns:1fr 64px 74px;gap:6px;margin-bottom:6px"><input class="in" name="an${i}" placeholder="Bereich" value="${esc(a.name)}"><input class="in" name="aw${i}" placeholder="Gew." inputmode="decimal" value="${esc(a.w ?? 1)}" title="Gewichtung"><input class="in" name="ag${i}" placeholder="Note" inputmode="decimal" value="${esc(a.grade ?? '')}"></div>`;
+
+/* ---------- Zeitkonten: Überstunden, Mehrarbeit, Urlaub und Zulagen als 3D-Anzeigen (wie im Zeitportal, im Nachtglas-Stil) ---------- */
+
+/* Mehrarbeit: Tage mit „angeordnete Mehrarbeit“ zählen ihre Abweichung auf das Mehrarbeitskonto statt aufs Überstundenkonto.
+   Dienstausgleich mit Haken „von Mehrarbeit“ baut dieses Konto ab */
+function maTotal(bis, von) {
+  const st = S.settings.maStand, ab = st && st.d ? st.d : ''; let o = st && st.d && !von ? +st.h || 0 : 0;
+  for (const d in S.shifts) if (S.shifts[d].ma && d > ab && (!bis || d <= bis) && (!von || d > von)) o += dayWork(d).over;
+  for (const d in S.abs) if (S.abs[d].ma && d > ab && (!bis || d <= bis) && (!von || d > von)) o -= daStunden(d);
+  return o;
+}
+const zkMonat = (f, m) => f(`${m}-31`, addM(m, -1) + '-31');
+
+/* Tacho aus Bögen: rot, gelb, grün, gelb, rot. Drei Lagen übereinander geben dem Bogen Tiefe, die Nadel schwingt beim Öffnen ein */
+/* Konto ±50 Std.: grün bis ±20 (darüber meldet die AZV den Saldo dem Vorgesetzten), gelb bis ±40 (höchster Übertrag nach § 7 AZV), dann rot */
+const ZK_ZONEN = [[0, .1, '#ff4d6a'], [.1, .3, '#ffc845'], [.3, .7, '#3fe08a'], [.7, .9, '#ffc845'], [.9, 1, '#ff4d6a']];
+function zkTacho(wert, max, titel, i = 0) {
+  const cx = 80, cy = 84, R = 58, B = 15, f = n => n.toFixed(2), pt = (a, r) => [cx + Math.cos(a) * r, cy - Math.sin(a) * r];
+  const bog = (u0, u1, r0, r1, dy = 0) => { const a0 = Math.PI * (1 - u0), a1 = Math.PI * (1 - u1), [x0, y0] = pt(a0, r1), [x1, y1] = pt(a1, r1), [x2, y2] = pt(a1, r0), [x3, y3] = pt(a0, r0);
+    return `M${f(x0)} ${f(y0 + dy)}A${r1} ${r1} 0 0 1 ${f(x1)} ${f(y1 + dy)}L${f(x2)} ${f(y2 + dy)}A${r0} ${r0} 0 0 0 ${f(x3)} ${f(y3 + dy)}Z`; };
+  let s = '';
+  for (let k = 5; k >= 1; k--) s += ZK_ZONEN.map(([a, b, c]) => `<path d="${bog(a + .004, b - .004, R - B, R, k)}" fill="${c}" opacity="${(.16 + (5 - k) * .05).toFixed(2)}"/>`).join('');
+  s += ZK_ZONEN.map(([a, b, c], z) => `<path class="zk-zone" d="${bog(a + .004, b - .004, R - B, R)}" fill="${c}" style="--z:${z}"/><path d="${bog(a + .004, b - .004, R - B * .55, R)}" fill="url(#zkg)" opacity=".55"/>`).join('');
+  for (let k = 0; k <= 20; k++) { const a = Math.PI * (1 - k / 20), [x0, y0] = pt(a, R + 3), [x1, y1] = pt(a, R + (k % 5 ? 6 : 9)); s += `<line x1="${f(x0)}" y1="${f(y0)}" x2="${f(x1)}" y2="${f(y1)}" class="zk-tick${k % 5 ? '' : ' gross'}"/>`; }
+  const u = Math.max(0, Math.min(1, .5 + wert / (2 * max))), w = (u - .5) * 180, zone = ZK_ZONEN.find(z => u >= z[0] && u <= z[1])[2];
+  return `<div class="zk-t" style="--w:${w.toFixed(1)}deg;--zc:${zone};--i:${i}"><span class="zk-tl">${titel}</span><svg viewBox="0 0 160 100" aria-hidden="true"><defs><linearGradient id="zkg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
+    <ellipse cx="80" cy="92" rx="66" ry="6" class="zk-sch"/>${s}
+    <g class="zk-nadel"><path d="M80 ${cy - R + 4}L83.200 ${cy - 2}H76.800Z" fill="#fff"/><circle cx="80" cy="${cy - R + 6}" r="2.600" class="zk-spitze"/></g>
+    <circle cx="80" cy="${cy}" r="8" class="zk-nabe"/><circle cx="78" cy="${cy - 2}" r="2.600" fill="#fff" opacity=".7"/></svg>
+    <b class="zk-v num ${wert < 0 ? 'neg' : ''}">${hm(wert)}</b></div>`;
+}
+
+/* Urlaub als Glastank: Füllstand = noch verfügbar, die Oberfläche wogt */
+function zkTank(v) {
+  const H = v.h, f = x => H ? hm(x) : dec(x, 0) + (Math.abs(x) === 1 ? ' Tag' : ' Tage'), p = v.total > 0 ? Math.max(0, Math.min(1, v.rest / v.total)) : 0, y = 108 - p * 92;
+  const zu = +S.settings.zuTage || 0, zuG = +S.settings.zuGenommen || 0;
+  return `<div class="zk-urlaub"><div class="zk-tank" style="--p:${p.toFixed(3)}"><svg viewBox="0 0 90 124" aria-hidden="true"><defs><clipPath id="zkc"><rect x="13" y="12" width="64" height="98" rx="12"/></clipPath><linearGradient id="zkw" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="var(--amb)"/><stop offset="1" stop-color="var(--amb2)"/></linearGradient></defs>
+      <ellipse cx="45" cy="114" rx="40" ry="7" class="zk-sch"/><rect x="9" y="8" width="72" height="106" rx="15" class="zk-glas"/>
+      <g clip-path="url(#zkc)"><g class="zk-pegel" style="transform:translateY(${y.toFixed(1)}px)"><path class="zk-welle w2" d="M-60 4q15-6 30 0t30 0 30 0 30 0 30 0 30 0V140H-60z"/><path class="zk-welle" d="M-60 4q15-7 30 0t30 0 30 0 30 0 30 0 30 0V140H-60z"/></g>
+        ${Array.from({ length: 7 }, (_, k) => `<circle class="zk-blase" cx="${20 + k * 8}" cy="104" r="${1 + k % 3 * .6}" style="--k:${k}"/>`).join('')}</g>
+      <rect x="15" y="14" width="10" height="92" rx="5" class="zk-glanz"/>${[.25, .5, .75].map(q => `<line x1="66" x2="75" y1="${(108 - q * 92).toFixed(1)}" y2="${(108 - q * 92).toFixed(1)}" class="zk-tick"/>`).join('')}</svg>
+      <b class="num">${Math.round(p * 100)} %</b></div>
+    <div class="zk-uz"><div><span>Rest aus ${(UI.year || +today().slice(0, 4)) - 1}</span><b class="num">${f(v.carry)}</b></div><div><span>zustehend</span><b class="num">${f(v.total - v.carry)}</b></div><div><span>verbraucht</span><b class="num">${f(v.used)}</b></div><div class="hl"><span>noch verfügbar</span><b class="num ${v.rest < 0 ? 'neg' : ''}">${f(v.rest)}</b></div>
+      ${zu ? `<div class="zu"><span>Zusatzurlaub</span><b class="num">${zu - zuG} von ${zu} ${zu === 1 ? 'Tag' : 'Tagen'}</b></div>` : ''}</div></div>`;
+}
+
+/* Zulagen als Münzstapel: jede Münze steht für einen Teil des Betrags, sie fallen nacheinander auf den Stapel */
+function zkMuenzen(zw) {
+  const T = [['Nachtstunden', zw.eNacht, 'var(--amb)'], ['0–6 Uhr', zw.e06, 'var(--amb2)'], ['WE/Feiertag', zw.eWe, '#ffc845']], mx = Math.max(20, ...T.map(t => t[1]));
+  let s = '', k = 0;
+  T.forEach(([l, e, c], i) => { const n = e > 0 ? Math.max(1, Math.round(e / mx * 11)) : 0, x = 34 + i * 66;
+    for (let j = 0; j < n; j++, k++) { const y = 112 - j * 6.4, top = j === n - 1;
+      s += `<g class="zk-m" style="--k:${k};--c:${c}"><path d="M${x - 20} ${y}v4a20 6.500 0 0 0 40 0v-4z" class="zk-ms"/><ellipse cx="${x}" cy="${y}" rx="20" ry="6.500" class="zk-mo"/>${top ? `<text x="${x}" y="${y + 2.400}" text-anchor="middle" class="zk-me">€</text>` : ''}</g>`; }
+    s += `<text x="${x}" y="${Math.max(12, 112 - n * 6.4 - 10)}" text-anchor="middle" class="zk-mw num">${eur0(e)}</text><text x="${x}" y="136" text-anchor="middle" class="zk-ml">${l}</text>`; });
+  return `<svg class="zk-mz" viewBox="0 0 200 142" aria-hidden="true"><ellipse cx="100" cy="122" rx="96" ry="10" class="zk-sch"/>${s}</svg>`;
+}
+
+/* Die vier Anzeigen oben in „Stunden, DUZ & Urlaub“ */
+function zkKarten(m) {
+  const [y, mo] = m.split('-').map(Number), ot = overtimeTotal(), otM = zkMonat(overtimeTotal, m) ;
+  const ma = maTotal(), maM = maTotal(`${m}-31`, addM(m, -1) + '-31'), ots = S.settings.otStand, mas = S.settings.maStand, ML = MON[mo - 1].slice(0, 3) + '. ' + y;
+  const daM = sum(Object.keys(S.abs).filter(d => d.startsWith(m) && !S.abs[d].ma), d => daStunden(d));
+  let h = `<div class="zk-grid">
+    <div class="card zk"><div class="row sb"><h2 style="margin:0">Überstunden</h2><button type="button" class="ibtn" data-act="otStand" aria-label="Stand übernehmen">✎</button></div><span class="sub">Überstunden- und Gleitzeitkonto</span>
+      <div class="zk-paar">${zkTacho(otM, 20, ML, 0)}${zkTacho(ot, 50, 'Konto', 1)}</div>
+      <div class="zk-fuss"><span>DA im ${MON[mo - 1]}: <b class="neg">${daM ? '−' + hm(daM) : '0:00'}</b></span><span>${ots && ots.d ? 'Stand ' + fmtDs(ots.d) + ': ' + hm(+ots.h) : '<a href="#" data-act="otStand">Stand übernehmen</a>'}</span></div></div>
+    <div class="card zk"><div class="row sb"><h2 style="margin:0">Mehrarbeit</h2><button type="button" class="ibtn" data-act="maStand" aria-label="Stand übernehmen">✎</button></div><span class="sub">Angeordnete Mehrarbeit</span>
+      <div class="zk-paar">${zkTacho(maM, 20, ML, 2)}${zkTacho(ma, 20, 'Konto', 3)}</div>
+      <div class="zk-fuss"><span>${ma > 5 ? 'Über 5 Std.: Anspruch auf Dienstbefreiung' : 'Tag antippen: „angeordnete Mehrarbeit“'}</span><span>${mas && mas.d ? 'Stand ' + fmtDs(mas.d) + ': ' + hm(+mas.h) : '<a href="#" data-act="maStand">Stand übernehmen</a>'}</span></div></div>`;
+  const v = vacation(+(UI.year || y));
+  h += `<div class="card zk"><div class="row sb"><h2 style="margin:0">Erholungsurlaub</h2><button type="button" class="ibtn" data-act="carryEdit" data-y="${UI.year || y}" aria-label="Urlaub einstellen">✎</button></div><span class="sub">${v.h ? 'In Stunden wie im Zeitportal' : 'In Tagen. Im Stift kannst du auf Stunden umstellen'}</span>${zkTank(v)}</div>`;
+  const zw = dwzMonat(m);
+  h += `<div class="card zk"><div class="row sb"><h2 style="margin:0">Zulagen</h2><b class="num zk-sum">${eur(zw.eur)}</b></div><span class="sub">§ 17a EZulV für DwZ erfüllt? <b class="${zw.ok ? 'pos' : 'neg'}">${zw.ok ? 'ja' : 'nein'}</b></span>${zkMuenzen(zw)}
+      <div class="zk-fuss"><span>${hm(zw.bez)} h Nacht · ${hm(zw.n06)} h 0–6 Uhr · ${zw.we} WE</span><a href="#zl" data-act="zlZeig">Details</a></div></div></div>`;
+  return h;
+}
+ACT.zlZeig = () => { const z = document.querySelector('#app .zl'); if (z) z.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+ACT.maStand = () => { const o = S.settings.maStand || {}; modal('Mehrarbeit übernehmen', `<div class="sub" style="margin-bottom:10px">Trag den Stand deines Mehrarbeitszeitkontos aus dem Zeitportal ein. Die App rechnet ab dem Tag danach weiter.</div><div class="grid2">${fIn('h', 'Stand (z.B. 6:00)', o.d ? hm(+o.h) : '', 'text', 'inputmode="decimal"')}${fIn('d', 'am', o.d || today(), 'date')}</div>`, v => { const h = stdIn(String(v.h).replace('−', '-')); if (h === undefined || !v.d) { delete S.settings.maStand; return; } S.settings.maStand = { h, d: v.d }; }, { del: o.d ? () => { delete S.settings.maStand; } : null }); };
+
+/* Nadeln und Münzen starten erst, wenn die Karten zu sehen sind */
+function zkStart() {
+  const els = document.querySelectorAll('#app .zk:not(.zk-an)'); if (!els.length) return;
+  if (!('IntersectionObserver' in window) || (typeof g2Ruhig === 'function' && g2Ruhig())) { els.forEach(e => e.classList.add('zk-an')); return; }
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('zk-an'); io.unobserve(e.target); } }), { rootMargin: '0px 0px -10% 0px' });
+  els.forEach(e => io.observe(e));
+}
+
+
 
 /* ---------- Schule (Einstellung „Noch in der Ausbildung“) ----------
    Arbeit bekommt dann: Kalender (nur besondere Ereignisse statt Dienstplan), Schule (Noten, Prüfungen, Stundenplan).
@@ -4815,14 +5710,14 @@ function anInit() {
     inp.onblur = fertig; inp.onkeydown = e => { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); inp.blur(); } };
   });
 }
-(window.AFTER || (window.AFTER = {})).arbeit = anInit;
+(window.AFTER || (window.AFTER = {})).arbeit = () => { anInit(); if (typeof zkStart === 'function') zkStart(); };
 function notizKachel() {
   const o = wnOffen().sort((a, b) => a.c < b.c ? 1 : -1);
   return `<div class="tile wide an-k" data-act="zuNotizen"><span class="lbl">📝 Arbeitsnotizen</span>${o.length ? `<ul>${o.slice(0, 5).map(n => `<li>${esc(n.t)}</li>`).join('')}</ul>${o.length > 5 ? `<span class="sub">+ ${o.length - 5} weitere</span>` : ''}` : '<span class="sub" style="margin-top:4px">Keine offenen Notizen. Tippe hier, um unter Arbeit welche zu schreiben.</span>'}</div>`;
 }
 
 /* ---------- Dienstbuch-Einlegeblatt: Monatsbericht nach Toms Vorlage, druckbar ---------- */
-const DB_ABS = { U: 'EU', K: 'K', S: 'SU', D: 'DR', Z: 'FZA', L: 'LG' };
+const DB_ABS = { U: 'EU', K: 'K', S: 'SU', D: 'DR', Z: 'DA', L: 'LG' };
 const hmP = h => { if (h == null) return ''; const m = Math.round(Math.abs(h) * 60); return (h < 0 ? '-' : '') + pad(Math.floor(m / 60)) + ':' + pad(m % 60); };
 const hmS = h => (h > 0 ? '+' : '') + hmP(h);
 const zeitH = v => { if (v === '' || v == null) return null; const s = String(v).trim().replace(',', '.'); if (s.includes(':')) { const [a, b] = s.split(':').map(Number); return a + (b || 0) / 60; } return isNaN(+s) ? null : +s; };
@@ -4830,7 +5725,7 @@ function dbZeile(d) {
   const s = S.shifts[d], a = S.abs[d], t = s && stype(s.type), r = { tag: pd(d).getDate(), d };
   if (t) { r.pArt = t.code; r.pVon = t.start || ''; r.pBis = t.end || ''; }
   const planH = s && !s.extra ? spanH(shiftSpan(d, s, false)) : 0;
-  if (a) { const c = DB_ABS[a.type] || a.type; r.gArt = c; r.aArt = c; r.ges = a.type === 'Z' ? 0 : t ? planH : ((+S.settings.soll || 40) / 5); r.bem = a.type === 'Z' ? 'Freizeitausgleich' : ''; }
+  if (a) { const c = DB_ABS[a.type] || a.type; r.gArt = c; r.aArt = c; r.ges = a.type === 'Z' ? 0 : t ? planH : ((+S.settings.soll || 40) / 5); r.bem = a.type === 'Z' ? 'Dienstausgleich ' + hm(daStunden(d)) + ' h' : ''; }
   else if (t) {
     r.aArt = t.code;
     if (t.start) {
@@ -5307,7 +6202,7 @@ function rangEmblem(r, s = 64, id = '') {
 }
 ACT.rangLeiter = () => {
   const p = sportPunkte(S.workouts).p, r = rangVon(p);
-  modal('Alle Ränge', `<div class="sub" style="margin-bottom:10px">8 Ränge mit je 3 Stufen. Punkte: 1 Minute Training = 1, 1 km = 10, 1 Tonne bewegt = 10. Du hast ${dec(p, 0)} Punkte.</div>
+  modal('Alle Ränge', `${g2() && typeof feier === 'function' && !g2Ruhig() ? `<button type="button" class="btn sm sec" style="margin-bottom:10px" data-act="rangFeier">Aufstieg noch einmal ansehen</button>` : ''}<div class="sub" style="margin-bottom:10px">8 Ränge mit je 3 Stufen. Punkte: 1 Minute Training = 1, 1 km = 10, 1 Tonne bewegt = 10. Du hast ${dec(p, 0)} Punkte.</div>
     <div class="rg-leiter">${RG_STUFEN.map((x, j) => `<div class="${j === r.j ? 'akt' : j > r.j ? 'zu' : ''}" style="--rc:${x.c}">${rangEmblem(x, 64, 'l' + j)}<b>${x.n} ${['', 'I', 'II', 'III'][x.stufe]}</b><span>${j === r.j ? 'du bist hier' : dec(x.ab, 0) + ' P.'}</span></div>`).join('')}</div>`, null);
   setTimeout(() => { const a = document.querySelector('.rg-leiter .akt'); if (a) a.scrollIntoView({ block: 'center' }); }, 50);
 };
@@ -5503,7 +6398,8 @@ function woEdit(w0) {
       w.pr = hadHistory && pr.length ? pr : null;
       if (isNew) { w.id = uid(); S.workouts.push(w); } else Object.assign(w0, w);
       if (v.asTpl) S.templates.push({ id: uid(), name: w.name || 'Plan', ex: w.ex.map(e => ({ name: e.name, sets: e.sets.length, reps: e.sets[0] ? e.sets[0].r : '', kg: e.sets[0] ? e.sets[0].kg : null })) });
-      if (w.pr) setTimeout(() => toast('🏆 Neuer Rekord: ' + w.pr.join(', ')), 50); else toast('Training gespeichert');
+      if (isNew && g2() && typeof feier === 'function' && !g2Ruhig()) feier({ titel: w.pr ? 'Neuer Rekord' : 'Training gespeichert', sub: w.pr ? w.pr.join(', ') : (w.name || (lauf ? 'Lauf' : 'Training')), wert: sportPunkte([w]).p, fmt: v => '+' + dec(v, 0) + ' Punkte', c: w.pr ? '#f2c14e' : lauf ? '#6fb1ff' : '#ff9f6b', ico: w.pr ? 'f_rekord' : 'f_training' });
+      else if (w.pr) setTimeout(() => toast('🏆 Neuer Rekord: ' + w.pr.join(', ')), 50); else toast('Training gespeichert');
     },
     { del: isNew ? null : () => { S.workouts = S.workouts.filter(x => x.id !== w0.id); }, init: f => {
       const box = $('[data-k=ex]', f);
@@ -6536,6 +7432,7 @@ function tripDetail(tr) {
   const SEC = [['uebersicht', '📋 Übersicht'], ['stationen', '📍 Stationen'], ['route', '🗺️ Route'], ['wege', '🎫 Tickets & Wege'], ['hotels', '🏨 Unterkünfte'], ['plan', '🗓️ Tagesplan'], ['packen', '🧳 Packliste'], ['ausgaben', '💶 Ausgaben']], alle = !!S.settings.reiseAlle;
   if (alle) h += `<div class="seg">${SEC.map(([k, l]) => `<button data-act="tripSec" data-v="${k}" class="${sec === k ? 'on' : ''}">${l}</button>`).join('')}</div>`;
   else if (sec !== 'uebersicht') h += `<div class="sec-kopf"><button class="btn sm sec" data-act="tripSec" data-v="uebersicht">‹ Übersicht</button><h2 style="margin:0">${(SEC.find(x => x[0] === sec) || ['', ''])[1]}</h2></div>`;
+  if (sec === 'uebersicht' && g2() && typeof fbKarte === 'function') h += fbKarte(tr);
   const id = tr.id;
   const fotoK = `<div class="card erin-karte"><div class="row sb"><h2 style="margin:0">📸 Erinnerungen</h2><button type="button" class="btn sm sec" data-act="erinText" data-id="${id}">✎ ${tr.erinnerung ? 'Text' : 'Text schreiben'}</button></div>
     ${tr.erinnerung ? `<div class="erin-txt">${esc(tr.erinnerung)}</div>` : ''}${fotoStreifen(tr.fotos, `data-id="${id}"`, true)}<div class="sub" style="margin-top:6px">${tr.fotos.length ? 'Antippen zum Ansehen. Das erste Foto ist das Titelbild.' : 'Bis zu 12 Fotos für diese Reise. Sie erscheinen auch im Länder-Widget unter der Weltkarte.'}</div></div>`;
@@ -8500,13 +9397,31 @@ function dpHero(Z, V, gv, inv, teil) {
   h += '</div>';
   return h;
 }
-function dpAbzeichen(Z, V, div) {
+function dpAbzL(Z, V, div) {
   const t = today(), fb = S.depot.flatMap(p => p.buys || []).map(b => b.date).sort()[0], z = Z.z;
-  const L = [['🌱', 'Erste Position', S.depot.length > 0], ['💸', 'Erste Dividende', div.length > 0], ['🧺', '5 Positionen', S.depot.length >= 5], ['📈', 'Depot im Plus', sum(S.depot, p => dpGV(p)) > 0],
+  return [['🌱', 'Erste Position', S.depot.length > 0], ['💸', 'Erste Dividende', div.length > 0], ['🧺', '5 Positionen', S.depot.length >= 5], ['📈', 'Depot im Plus', sum(S.depot, p => dpGV(p)) > 0],
     ...[.1, .25, .5, .75, 1].map(f => [f === 1 ? '🏆' : '🎯', `${f * 100} % vom Ziel`, V >= z.target * f]), ['🗓️', '1 Jahr dabei', fb && dayDiff(fb, t) >= 365], ['☕', '100 € Dividenden', sum(div, x => x.amount) >= 100], ['🌤️', 'Vor dem Soll', Z.abw >= 0]];
+}
+function dpAbzeichen(Z, V, div) {
+  const L = dpAbzL(Z, V, div);
   const ok = L.filter(x => x[2]), nx = L.find(x => !x[2]);
+  if (g2() && typeof dpAbzMed === 'function') return dpAbzMed(dpAbzListe(L, Z, V, div));
   return `<details class="dp-badges"><summary><b>${ok.length} von ${L.length} Abzeichen</b><span class="sub">${nx ? 'Nächstes: ' + nx[0] + ' ' + nx[1] : 'Alle geschafft!'}</span><span class="dp-bp">${ok.slice(-5).map(x => x[0]).join('')}</span></summary><div class="dp-bl">${L.map(x => `<span class="${x[2] ? 'ok' : ''}"><i>${x[0]}</i>${x[1]}</span>`).join('')}</div></details>`;
 }
+/* Für die Medaillen im neuen Design: Kennung, Farbe, Fortschritt (0 bis 1) und ein erklärender Satz je Abzeichen, gleiche Reihenfolge wie L */
+function dpAbzListe(L, Z, V, div) {
+  const t = today(), fb = S.depot.flatMap(p => p.buys || []).map(b => b.date).sort()[0], z = Z.z, n = S.depot.length, ds = sum(div, x => x.amount), tage = fb ? dayDiff(fb, t) : 0;
+  const X = [['dp_start', '#5fd08d', n ? 1 : 0, 'Lege deine erste Position im Depot an.'], ['dp_div', '#f2c14e', div.length ? 1 : 0, 'Buche deine erste Dividende.'], ['dp_5', '#6fb1ff', n / 5, 'Halte fünf verschiedene Positionen.'], ['dp_plus', '#5fd08d', L[3][2] ? 1 : 0, 'Dein Depot liegt insgesamt im Gewinn.'],
+    ...[.1, .25, .5, .75, 1].map((f, i) => ['dp_z' + f * 100, ['#8fd3ff', '#6fb1ff', '#9d8cff', '#c58bff', '#f2c14e'][i], z.target ? V / (z.target * f) : 0, `Erreiche ${f * 100} % von deinem Ziel (${eur0(z.target * f)}).`]),
+    ['dp_jahr', '#ff9f6b', tage / 365, 'Seit deinem ersten Kauf ist ein Jahr vergangen.'], ['dp_100', '#ffb86b', ds / 100, 'Sammle insgesamt 100 € Dividenden.'], ['dp_soll', '#ffd166', L[11][2] ? 1 : 0, 'Dein Depot liegt über dem Soll-Pfad zu deinem Ziel.']];
+  return L.map((x, i) => ({ id: X[i][0], name: x[1], ok: !!x[2], c: X[i][1], p: Math.max(0, Math.min(1, X[i][2] || 0)), txt: X[i][3], a: [X[i][0], x[1], x[0], X[i][1]] }));
+}
+ACT.dpAbzInfo = (d, el) => {
+  const Z = dpZiel(); if (!Z) return; const V = sum(S.depot, p => p.value || 0), div = dpDivTx(), L = dpAbzL(Z, V, div);
+  const x = dpAbzListe(L, Z, V, div).find(y => y.id === d.id); if (!x) return;
+  const zeig = () => modal(x.name, `<div class="md3-b${x.ok ? ' ok' : ''}" style="--c:${x.c}">${abzMed(x.a, x.ok, x.p, 0, true)}${x.ok ? abzKonfetti(x.c) : ''}</div><div style="text-align:center;margin:10px 0 4px">${esc(x.txt)}</div><div class="sub" style="text-align:center">${x.ok ? '<span class="pos">✓ Geschafft!</span>' : `${Math.round(x.p * 100)} % geschafft`}</div>`, null);
+  if (el && el.querySelector) abzTipp(el, zeig); else zeig();
+};
 const dpGlatt = P => { if (!P.length) return ''; let d = `M${P[0][0].toFixed(1)},${P[0][1].toFixed(1)}`; for (let i = 1; i < P.length; i++) { const [x0, y0] = P[i - 1], [x1, y1] = P[i], cx = (x0 + x1) / 2; d += `C${cx.toFixed(1)},${y0.toFixed(1)} ${cx.toFixed(1)},${y1.toFixed(1)} ${x1.toFixed(1)},${y1.toFixed(1)}`; } return d; };
 /* ---------- Chart im Stil von Trade Republic: Start in der Mitte, gestrichelte Linie am Zeitraum-Beginn ---------- */
 const DP_RG = [['1t', '1T', 1], ['1w', '1W', 7], ['1m', '1M', 30], ['3m', '3M', 91], ['1j', '1J', 365], ['kauf', 'Seit Kauf', 0]];
@@ -9307,7 +10222,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 118;
+const APP_V = 119;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -9365,8 +10280,27 @@ function kursEinstSave(v, s) {
   if (s.netz === 'kurse') setTimeout(kursAutoCheck, 800);
 }
 function kursAutoCheck() {
-  const s = S.settings; if (!s || !kursOnline() || s.kursAuto === false || _kursLaeuft || document.hidden) return;
+  const s = S.settings; if (!s || !kursOnline() || document.hidden) return;
+  wetterHolen();
+  if (s.kursAuto === false || _kursLaeuft) return;
   ACT.kurseHolen(null, true);
+}
+/* Wetter für das Schloss: der Kursdienst legt das Wetter vieler großer Städte ab, die App nimmt die nächstgelegene.
+   Es geht dabei nichts raus, auch nicht der Wohnort. Gemerkt wird nur die Wetterart und die Uhrzeit */
+let _wetterAm = 0;
+async function wetterHolen() {
+  if (!kursOnline() || Date.now() - _wetterAm < 15 * 60000) return; _wetterAm = Date.now();
+  try {
+    const j = await kursDateiHol('wetter.json'), t = Date.parse(j.stand); if (!j || !j.s || isNaN(t)) return;
+    const h = tzHeim(), km = (a, b) => { const r = Math.PI / 180, x = (b[1] - h.lon) * r * Math.cos((b[0] + h.lat) / 2 * r), y = (b[0] - h.lat) * r; return Math.hypot(x, y) * 6371; };
+    let best = null, bd = 1e9; for (const k in j.s) { const e = j.s[k]; if (!Array.isArray(e) || e.length < 3) continue; const d = km(null, e); if (d < bd) { bd = d; best = e; } }
+    if (!best || bd > 400) return;
+    const art = /^(gewitter|schnee|regen|nebel|wolkig|klar)$/.test(best[2]) ? best[2] : '';
+    const alt = S.wetter || {}, neu = { art, t, vor: alt.vor, seit: alt.seit };
+    if (alt.art && alt.art !== art) { neu.vor = alt.art; neu.seit = Date.now(); }
+    S.wetter = neu; save();
+    if (UI.tab === 'heute' && typeof wxSetzen === 'function') wxSetzen();
+  } catch (e) {}
 }
 setInterval(kursAutoCheck, 5 * 60000); setTimeout(kursAutoCheck, 1500); document.addEventListener('visibilitychange', () => { if (!document.hidden) setTimeout(kursAutoCheck, 800); });
 
@@ -11056,6 +11990,12 @@ function pixelScene() {
   jatosMimik = function () { if (pxModus()) return; return _m.apply(this, arguments); }; }
 
 /* ---------- Start ---------- */
+/* Kein versehentliches Zoomen der ganzen App mit zwei Fingern oder Doppeltipp. Karten, Globus und Bilder zoomen weiter selbst */
+(() => {
+  const stopp = e => { if (e.cancelable) e.preventDefault(); };
+  for (const ev of ['gesturestart', 'gesturechange', 'gestureend']) document.addEventListener(ev, stopp, { passive: false });
+  document.addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale != null && e.scale !== 1)) stopp(e); }, { passive: false });
+})();
 load();
 autoBook();
 render();

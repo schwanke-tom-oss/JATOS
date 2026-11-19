@@ -10,6 +10,8 @@ Ausgabe (Zweig "kurse"):
   kurse.json    aktueller Kurs je ISIN in Euro, Zeitpunkt, Schlusskurs vom Vortag
   verlauf.json  Schlusskurse: täglich für die letzten Monate, wöchentlich für die Jahre davor
   ids.json      Zuordnung ISIN -> Nummer bei Lang & Schwarz (spart Suchanfragen)
+  wetter.json   aktuelles Wetter für große Städte (Open-Meteo, ohne Schlüssel). Die App nimmt die Stadt,
+                die ihrem Heimatort am nächsten liegt. So steht kein Wohnort in diesem Dienst.
 
 Nur Python-Standardbibliothek, keine Zugangsdaten.
 """
@@ -203,6 +205,57 @@ def ausduennen(reihe, heute):
     return [wochen[k] for k in sorted(wochen)] + tage
 
 
+# Große Städte in Deutschland und Nachbarländern: Name, Breite, Länge
+STAEDTE = [('Berlin', 52.52, 13.40), ('Hamburg', 53.55, 9.99), ('München', 48.14, 11.58), ('Köln', 50.94, 6.96),
+           ('Frankfurt', 50.11, 8.68), ('Stuttgart', 48.78, 9.18), ('Düsseldorf', 51.23, 6.78), ('Leipzig', 51.34, 12.37),
+           ('Dresden', 51.05, 13.74), ('Hannover', 52.37, 9.73), ('Nürnberg', 49.45, 11.08), ('Bremen', 53.08, 8.80),
+           ('Rostock', 54.09, 12.10), ('Kiel', 54.32, 10.14), ('Magdeburg', 52.13, 11.62), ('Erfurt', 50.98, 11.03),
+           ('Potsdam', 52.40, 13.07), ('Schwerin', 53.63, 11.41), ('Mainz', 50.00, 8.27), ('Saarbrücken', 49.24, 6.99),
+           ('Freiburg', 47.99, 7.85), ('Münster', 51.96, 7.63), ('Kassel', 51.31, 9.48), ('Regensburg', 49.01, 12.10),
+           ('Cottbus', 51.76, 14.33), ('Stettin', 53.43, 14.55), ('Frankfurt (Oder)', 52.35, 14.55), ('Greifswald', 54.09, 13.38),
+           ('Wien', 48.21, 16.37), ('Zürich', 47.38, 8.54), ('Amsterdam', 52.37, 4.90), ('Kopenhagen', 55.68, 12.57), ('Prag', 50.08, 14.44)]
+
+
+def wetter_art(code, wolken):
+    if code in (95, 96, 99):
+        return 'gewitter'
+    if code in (71, 73, 75, 77, 85, 86):
+        return 'schnee'
+    if code in (51, 53, 55, 56, 57, 61, 63, 65, 66, 67, 80, 81, 82):
+        return 'regen'
+    if code in (45, 48):
+        return 'nebel'
+    if code == 3 or (wolken is not None and wolken >= 80):
+        return 'wolkig'
+    return 'klar'
+
+
+def wetter(jetzt):
+    """Aktuelles Wetter aller Städte in einer Anfrage. Bei einem Fehler bleibt der letzte Stand."""
+    alt = lade(os.path.join(ALT, 'wetter.json'), {}) or {}
+    try:
+        q = urllib.parse.urlencode({'latitude': ','.join(f'{s[1]:.2f}' for s in STAEDTE),
+                                    'longitude': ','.join(f'{s[2]:.2f}' for s in STAEDTE),
+                                    'current': 'weather_code,cloud_cover,precipitation,is_day', 'timezone': 'UTC'})
+        roh = json.loads(hol('https://api.open-meteo.com/v1/forecast?' + q, versuche=2, timeout=20))
+        liste = roh if isinstance(roh, list) else [roh]
+        o = {}
+        for (name, la, lo), r in zip(STAEDTE, liste):
+            c = r.get('current') or {}
+            code = c.get('weather_code')
+            if code is None:
+                continue
+            o[name] = [la, lo, wetter_art(int(code), c.get('cloud_cover')), int(code), c.get('precipitation') or 0]
+        if o:
+            schreib('wetter.json', {'v': 1, 'stand': iso(jetzt), 's': o})
+            log(f'Wetter für {len(o)} Städte')
+            return
+    except Exception as ex:  # noqa: BLE001
+        log('Wetter nicht abrufbar:', type(ex).__name__, ex)
+    if alt:
+        schreib('wetter.json', alt)
+
+
 def main():
     jetzt = dt.datetime.now(dt.timezone.utc)
     lokal = jetzt.astimezone(BERLIN)
@@ -304,6 +357,7 @@ def main():
     schreib('kurse.json', {'v': 1, 'stand': iso(jetzt), 'k': kurse, 'n': len(kurse), 'fehler': len(fehler)})
     schreib('verlauf.json', verlauf)
     schreib('ids.json', ids)
+    wetter(jetzt)
     with open(os.path.join(AUS, 'README.md'), 'w', encoding='utf-8') as f:
         f.write('Automatisch erzeugte Kursdateien für die JATOS-App. Nicht von Hand ändern, sie werden alle paar Minuten überschrieben.\n')
     log(f'{neu} Kurse neu, {len(kurse)} in der Datei, Verlauf für {len(v_k)} Werte, {len(fehler)} Fehler')
