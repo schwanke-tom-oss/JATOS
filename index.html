@@ -8961,7 +8961,7 @@ function zeileBauen(date, betrag, voll, sicher, erste) {
   name = name.replace(/\s+AM$/, '');
   if (name.length > 48) name = name.slice(0, 48).replace(/\s\S*$/, '');
   if (!name) name = art || 'Buchung';
-  return { date, amount: Math.abs(betrag), dir: betrag < 0 ? -1 : 1, name, vz: voll.slice(0, 300), art, ciban: ib[0] || '', sicher, lastschrift: /\bMREF\b|Mandat|\bCRED\b|Gläubiger/i.test(voll) };
+  return { date, amount: Math.abs(betrag), dir: betrag < 0 ? -1 : 1, name, vz: voll.slice(0, 300), art, ciban: ib[0] || '', sicher, lastschrift: /\bMREF\b|Mandat|\bCRED\b|Gläubiger/i.test(voll) || /lastschrift|dauerauftrag/i.test(art || '') };
 }
 
 /* ---------- Depot (Bestand, Kauf/Verkauf, Dividende) aus PDF-Zeilen ---------- */
@@ -9022,7 +9022,10 @@ function auszugAusCsv(txt, fname) {
     const items = []; for (const r of body) { const isin = (r[col.isin] || '').toUpperCase(); if (!isinOk(isin)) continue; const q = col.stk != null ? zahl(r[col.stk]) : null, k = col.kurs != null ? zahl(r[col.kurs]) : null; let w = col.wert != null ? zahl(r[col.wert]) : null; if (w == null && q && k) w = q * k; items.push({ art: 'bestand', isin, name: (col.wpname != null ? r[col.wpname] : '') || isin, qty: q, kurs: k, value: w || 0, einstand: col.einstand != null ? zahl(r[col.einstand]) : null, date: today() }); }
     return [{ art: 'depot', bank, items, stand: today() }];
   }
-  const own = {}; const ownPre = ibansIn(pre)[0] || '';
+  const own = {}; const ownPre = ibansIn(pre)[0] || ibansIn(pre.replace(/(DE\d{2})((?: \d{4}){4} \d{2})/g, (m, a, b) => a + b.replace(/ /g, '')))[0] || '';
+  /* Getrennte Spalten für Zahler und Empfänger (z. B. DKB): bei Ausgaben zählt der Empfänger, bei Eingängen der Zahler */
+  const kopfZ = rows[hi].map(h => h.replace(/\s+/g, ' ').trim()), ei = kopfZ.findIndex(h => /empf(ä|ae)nger/i.test(h) && !/auftraggeber|zahlungspflicht/i.test(h)), zi = kopfZ.findIndex(h => /zahlungspflichtig|auftraggeber|absender/i.test(h) && !/empf(ä|ae)nger/i.test(h));
+  const zwei = ei >= 0 && zi >= 0 && ei !== zi ? { emp: ei, zahl: zi } : null;
   for (const r of body) {
     const d = datum(r[col.date]); if (!d) continue;
     let v = col.amount != null ? zahl(r[col.amount]) : null;
@@ -9030,7 +9033,8 @@ function auszugAusCsv(txt, fname) {
     if (v == null || !v) continue;
     if (col.sh != null && /^s/i.test(r[col.sh] || '')) v = -Math.abs(v); else if (col.sh != null && /^h/i.test(r[col.sh] || '')) v = Math.abs(v);
     const oi = col.own != null ? (r[col.own] || '').replace(/\s/g, '').toUpperCase() : ownPre; const k = ibanOk(oi) ? oi : ownPre;
-    const name = col.name != null ? r[col.name] : '', zw = col.zweck != null ? r[col.zweck] : '';
+    let name = col.name != null ? r[col.name] : ''; const zw = col.zweck != null ? r[col.zweck] : '';
+    if (zwei) { const n2 = v < 0 ? r[zwei.emp] : r[zwei.zahl]; if (n2 && n2.trim()) name = n2; }
     const z = zeileBauen(d, v, `${name} ${col.iban != null ? r[col.iban] : ''} ${zw}`, true); if (name) z.name = name.slice(0, 48); z.vz = `${name} · ${zw}`.slice(0, 300);
     if (col.iban != null && ibanOk((r[col.iban] || '').replace(/\s/g, ''))) z.ciban = r[col.iban].replace(/\s/g, '').toUpperCase();
     (own[k] = own[k] || { rows: [], saldo: null, saldoD: null }).rows.push(z);
@@ -9222,20 +9226,37 @@ function impKlassifizieren() {
   impVertraege();
 }
 const impHash = (s, z) => z.hid ? 'tr|' + z.hid : [s.iban || s.datei, z.date, z.dir * z.amount, (z.vz || '').slice(0, 60)].join('|');
+/* Wiederkehrende Zahlungen finden: gleicher Empfänger, ähnlicher Betrag, gleicher Tag im Monat. Monate ohne Auszug zählen nicht als Lücke */
+const VERTR_KARTE = /spotify|netflix|disney|dazn|audible|youtube premium|chatgpt|openai|adobe|fitx|mcfit|wellhub|urban sports|sports club/i;
+const VERTR_ABO = /spotify|netflix|disney|dazn|sky |amazon prime|icloud|youtube|audible|wow |paramount|chatgpt|openai|adobe|microsoft|google one|fitx|mcfit|urban sports|wellhub|sports club|adac|gewerkschaft|verein|beitrag|miete|abschlag|versicherung|vodafone|telekom|o2|1&1|congstar|rundfunk|beitragsservice|abo\b|monthly|monatlich|subscription/i;
+const VERTR_NICHT = /paypal|klarna|amazon(?! prime)|zalando|aldi|lidl|edeka|rewe|kaufland|penny|netto|dm.drogerie|rossmann|aral|shell|esso|total|tankstelle|mcdonald|burger king|lieferando|bargeld|geldautomat|trade republic|kartenzahlung (?!spotify)/i;
+function vertrName(z) {
+  let n = z.name.replace(/[#\d]+/g, ' ').replace(/\s+/g, ' ').trim(); const w = n.split(' '); n = w.filter((x, i) => i === 0 || lowN(x) !== lowN(w[0])).join(' ').replace(/\b(GmbH|AG|KG|SE|S\.?a\.?r\.?l\.?|Services?|Germany|Deutschland|Gruppe)\b/gi, '').replace(/\s+/g, ' ').trim() || z.name;
+  n = n.replace(/(\s+(zum|zur|am|fuer|für|nr|vom|ihr|ihre))+\s*$/i, '').replace(/[-\s]+$/, '');
+  const pr = [...z.vz.matchAll(/([A-Za-zÄÖÜäöüß-]*versicherung|Miete|Abschlag\w*|Abo|Mitgliedsbeitrag|Beitrag)\b/gi)].map(m => m[1].replace(/^[A-ZÄÖÜ]{2,}(?=[A-ZÄÖÜ][a-zäöü])/, '')).find(x => !lowN(n).includes(lowN(x).slice(0, 7)));
+  if (pr) n += ' ' + pr.charAt(0).toUpperCase() + pr.slice(1);
+  return n.slice(0, 48);
+}
 function impVertraege() {
   const alt = {}; (IMP.vertr || []).forEach(v => { alt[v.key] = v.on; });
-  const gruppen = {};
-  for (const s of IMP.q) if (s.art === 'konto') for (const z of s.rows) { if (!z.on || z.typ !== 'aus' || z.recId) continue; const k = impKey(z.name); if (!k) continue; (gruppen[k] = gruppen[k] || []).push(z); }
   const out = [];
-  for (const k in gruppen) {
-    const g = gruppen[k].sort((a, b) => a.date < b.date ? -1 : 1), hist = S.tx.filter(t => t.type === 'aus' && impKey(t.note) === k).map(t => ({ date: t.date, amount: t.amount }));
-    const all = [...hist, ...g].sort((a, b) => a.date < b.date ? -1 : 1), last = g[g.length - 1];
-    if (S.rec.some(r => impKey(r.name) === k || (r.acc === last.self && Math.abs(r.amount - last.amount) < 0.01 && r.type === 'aus'))) continue;
-    let every = 0;
-    if (all.length >= 2) { const ab = []; for (let i = 1; i < all.length; i++) ab.push(dayDiff(all[i - 1].date, all[i].date)); const m = ab.reduce((a, b) => a + b, 0) / ab.length; const gleich = all.every(x => Math.abs(x.amount - last.amount) <= last.amount * 0.1); if (gleich) every = m >= 25 && m <= 35 ? 1 : m >= 85 && m <= 95 ? 3 : m >= 175 && m <= 190 ? 6 : m >= 355 && m <= 375 ? 12 : 0; }
-    const sicher = every > 0; if (!sicher && !last.lastschrift) continue; if (!sicher) every = 1;
-    out.push({ key: k, name: last.name, amount: last.amount, every, day: +last.date.slice(8), last: last.date, acc: last.self, cat: last.cat, sicher, on: alt[k] ?? sicher });
-  }
+  for (const s of IMP.q) { if (s.art !== 'konto' || s.tr) continue;
+    const monate = new Set(s.rows.map(z => z.date.slice(0, 7))), gruppen = {};
+    for (const z of s.rows) { if (!z.on || z.typ !== 'aus' || z.recId) continue; if (VERTR_NICHT.test(z.name + ' ' + (z.art || '')) && !VERTR_ABO.test(z.name)) continue; if (nameIstIch(z.name)) continue;
+      const k = impKey(z.name); if (!k) continue; const g = gruppen[k] = gruppen[k] || [];
+      let c = g.find(c => Math.abs(c[0].amount - z.amount) <= Math.max(1, c[0].amount * .1) && !c.some(x => x.date === z.date)); if (!c) g.push(c = []); c.push(z); }
+    for (const k in gruppen) for (const c of gruppen[k]) {
+      const g = c.sort((a, b) => a.date < b.date ? -1 : 1), last = g[g.length - 1], key = k + '|' + Math.round(last.amount);
+      if (S.rec.some(r => r.type === 'aus' && (impKey(r.name) === k || r.acc === s.acc) && Math.abs(r.amount - last.amount) <= Math.max(1, last.amount * .1))) continue;
+      let every = 0, grund = '';
+      if (g.length >= 2) { const mi = d => +d.slice(0, 4) * 12 + +d.slice(5, 7), lu = []; let ok = true;
+        for (let i = 1; i < g.length; i++) { const a = mi(g[i - 1].date), b = mi(g[i].date), td = Math.abs(+g[i].date.slice(8) - +g[i - 1].date.slice(8)); let gap = b - a;
+          if (td > 6 && td < 24) ok = false; if (gap > 1) { let fehlt = 0; for (let m = a + 1; m < b; m++) { const ym = `${Math.floor((m - 1) / 12)}-${String((m - 1) % 12 + 1).padStart(2, '0')}`; if (monate.has(ym)) fehlt++; } if (!fehlt) gap = 1; } lu.push(gap); }
+        const gl = lu.every(x => x === lu[0]); if (ok && gl) every = { 1: 1, 3: 3, 6: 6, 12: 12 }[lu[0]] || 0; if (every) grund = `${g.length}× gefunden`; }
+      if (!every) { if (!(last.lastschrift || VERTR_KARTE.test(last.name))) continue; every = /jährlich|jahresbeitrag|jahresabo/i.test(last.vz) ? 12 : /vierteljähr|quartal/i.test(last.vz) ? 3 : 1; grund = last.lastschrift ? 'Lastschrift, einmal gefunden' : 'sieht nach Abo aus, einmal gefunden'; }
+      const sicher = g.length >= 2 && !!grund && !/einmal/.test(grund);
+      out.push({ key, name: vertrName(last), amount: last.amount, every, day: +last.date.slice(8), last: last.date, acc: last.self, cat: last.cat, sicher, grund, on: alt[key] ?? (sicher || !!last.lastschrift) });
+    } }
   IMP.vertr = out.sort((a, b) => b.sicher - a.sicher || b.amount - a.amount);
 }
 
@@ -9250,6 +9271,7 @@ function impMalen() {
   const b = IMP.body; if (!b) return; let h = '';
   const kto = IMP.q.filter(s => s.art === 'konto'), dep = IMP.q.filter(s => s.art === 'depot');
   if (IMP.fehler.length) h += `<div class="sub neg" style="margin-bottom:8px">Nicht lesbar: ${IMP.fehler.map(esc).join(' · ')}</div>`;
+  if (IMP.vertr.length) h += `<div class="card imp-vertr"><h3 style="margin-top:0">📌 Sind das Verträge?</h3><div class="sub" style="margin-bottom:8px">Diese Zahlungen kommen regelmäßig. Angehakte kommen in deine monatlichen Fixkosten und werden künftig automatisch geplant.</div><div class="list tight">${IMP.vertr.map((v, k) => `<label class="it"><input type="checkbox" data-k="vertr" data-v="${k}" ${v.on ? 'checked' : ''}><div class="grow" style="min-width:0"><div class="t ell">${esc(v.name)}</div><div class="s">${{ 1: 'monatlich', 3: 'vierteljährlich', 6: 'halbjährlich', 12: 'jährlich' }[v.every]} am ${v.day}. · ${esc(v.grund)}</div></div><span class="num">${eur(v.amount)}</span></label>`).join('')}</div></div>`;
   const accOptsImp = s => [...S.accounts.filter(a => s.art !== 'depot' || a.kind === 'depot' || true).map(a => [a.id, a.name + (a.iban ? ' ' + ibanKurz(a.iban) : '')]), ['neu', '➕ Neues Konto anlegen']];
   for (const s of IMP.q) {
     const n = s.art === 'konto' ? s.rows.length : s.items.length, neu = s.rows ? s.rows.filter(z => z.on).length : s.items.filter(i => i.on).length;
@@ -9269,7 +9291,6 @@ function impMalen() {
     h += `<div class="card tight list imp-list">${vis.slice(0, 400).map(([s, z, j]) => `<div class="it imp-z ${z.on ? '' : 'aus'}" data-q="${s.i}" data-j="${j}"><input type="checkbox" data-k="on" ${z.on ? 'checked' : ''} aria-label="übernehmen"><div class="grow" style="min-width:0"><div class="row sb" style="gap:8px"><span class="t ell">${esc(z.name)}</span><b class="num ${z.typ === 'umb' ? '' : z.dir < 0 ? 'neg' : 'pos'}">${z.dir < 0 ? '−' : '+'}${eur(z.amount)}</b></div>
       <div class="s ell">${fmtDs(z.date)}${kto.length > 1 ? ' · ' + esc(accNameK(s.acc === 'neu' ? 'neu:' + s.i : s.acc)) : ''}${z.flag === 'dupe' ? ' · <span class="wrn">schon vorhanden</span>' : z.flag === 'paar' ? ' · Gegenbuchung, zählt einmal' : z.flag === 'rec' ? ' · ersetzt geplante Fixkosten-Buchung' : z.flag === 'unsicher' ? ' · <span class="wrn">bitte prüfen</span>' : ''}${z.vz && z.vz !== z.name ? ' · ' + esc(z.vz.slice(0, 90)) : ''}</div>${impSelect(z)}</div></div>`).join('') || '<div class="it sub">Nichts in dieser Auswahl.</div>'}</div>`;
     if (vis.length > 400) h += `<div class="sub">… und ${vis.length - 400} weitere (werden mit übernommen)</div>`;
-    if (IMP.vertr.length) h += `<h3>📌 Erkannte Verträge → Fixkosten</h3><div class="card tight list">${IMP.vertr.map((v, k) => `<label class="it"><input type="checkbox" data-k="vertr" data-v="${k}" ${v.on ? 'checked' : ''}><div class="grow"><div class="t">${esc(v.name)}</div><div class="s">${{ 1: 'monatlich', 3: 'vierteljährlich', 6: 'halbjährlich', 12: 'jährlich' }[v.every]} am ${v.day}. · ${esc((cat(v.cat) || {}).name || '')}${v.sicher ? '' : ' · Lastschrift, einmal gesehen'}</div></div><span class="num">${eur(v.amount)}</span></label>`).join('')}</div><div class="sub" style="margin:-4px 0 10px">Angehakte Verträge erscheinen unter Fixkosten und werden künftig automatisch geplant. Liest du später einen Auszug ein, ersetzt die echte Buchung die geplante.</div>`;
   }
   for (const s of dep) {
     h += `<h3>📈 ${s.items[0] && s.items[0].art === 'trpos' ? 'Trade Republic Depot' : s.items[0] && s.items[0].art === 'bestand' ? `Depotbestand vom ${fmtDs(s.stand)}` : 'Wertpapier-Abrechnung'}</h3><div class="card tight list">${s.items.map((it, k) => `<label class="it"><input type="checkbox" data-k="dep" data-q="${s.i}" data-v="${k}" ${it.on ? 'checked' : ''}><div class="grow" style="min-width:0"><div class="t ell">${esc(it.name)}</div><div class="s">${esc(it.isin)} · ${it.art === 'bestand' ? `${it.qty ? dec(it.qty, 3) + ' Stk. · ' : ''}${it.pos ? 'aktualisiert Position' : 'neue Position'}` : it.art === 'trpos' ? (it.offen ? `${dec(it.qty, 4)} Stk. · ${it.buys.length} Käufe/Verkäufe · Einstand` : 'verkauft · wird nicht übernommen') : it.art === 'div' ? 'Dividende → Einnahme' : (it.art === 'kauf' ? 'Kauf' : 'Verkauf') + (it.qty ? ' · ' + dec(it.qty, 3) + ' Stk.' : '')} · ${fmtDs(it.date)}</div></div><span class="num">${it.art === 'trpos' && !it.offen ? '' : eur(it.art === 'bestand' || it.art === 'trpos' ? it.value : it.amount)}</span></label>`).join('')}</div>`;
@@ -10587,7 +10608,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 123;
+const APP_V = 124;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
