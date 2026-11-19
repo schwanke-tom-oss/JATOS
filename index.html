@@ -3059,6 +3059,26 @@ html.g2:not(.g2-ruhig) .tkk-liste li{animation:tkRein .45s cubic-bezier(.2,1.1,.
 @keyframes tkRein{0%{opacity:0;transform:translateX(-14px)}100%{opacity:1;transform:none}}
 html.g2:not(.g2-ruhig) .tkk-tag.arbeit .tkk-arb{background-image:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);background-size:250% 100%;background-repeat:no-repeat;animation:tkGlanz 5s ease-in-out infinite;animation-delay:calc(var(--a5,0) * .15s)}
 @keyframes tkGlanz{0%,70%{background-position:150% 0}100%{background-position:-60% 0}}
+/* ---------- Reisen: Fahrzeuge, Halte, Live-Position (Stufe 5) ---------- */
+.fk-sk path.fk-fenster{fill:rgba(14,22,40,.8);stroke:none}
+.fk-flieger.boden .fk-sk path:not(.fk-fenster){fill:#fff;stroke:#0e1622;stroke-width:.8;filter:drop-shadow(0 0 4px rgba(126,224,165,.9))}
+.fk-puls{fill:none;stroke:#7ee0a5;stroke-width:2;vector-effect:non-scaling-stroke;transform-box:fill-box;transform-origin:center;animation:fkPuls 1.8s ease-out infinite}
+.fk-puls.p2{animation-delay:.9s}
+@keyframes fkPuls{0%{transform:scale(.6);opacity:.9}100%{transform:scale(2.6);opacity:0}}
+.fk-aps .pin circle{transform-box:fill-box;transform-origin:center;animation:fkPop .55s cubic-bezier(.3,1.7,.5,1) both;animation-delay:calc(var(--n,0) * 90ms + .2s)}
+.fk-aps .pin.stopp .fk-ring{animation:fkPop .55s cubic-bezier(.3,1.7,.5,1) both,fkAtmen 2.6s ease-in-out infinite;animation-delay:calc(var(--n,0) * 90ms + .2s),calc(var(--n,0) * 90ms + .8s)}
+@keyframes fkPop{0%{transform:scale(0)}100%{transform:scale(1)}}
+@keyframes fkAtmen{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.45);opacity:.45}}
+.fk.still .fk-aps .pin circle{animation:none}
+html.g2 .fb3{position:relative}
+.fb3-live{position:absolute;left:20px;top:18px;right:20px;width:max-content;max-width:calc(100% - 40px);display:flex;align-items:center;gap:7px;font-size:12px;padding:6px 11px 6px 9px;border-radius:999px;background:rgba(8,12,24,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#e6f3ff;border:1px solid rgba(255,255,255,.14);animation:fbEin .6s cubic-bezier(.2,1.4,.4,1) both}
+.fb3-live[hidden]{display:none}
+.fb3-live i{flex:none;width:8px;height:8px;border-radius:50%;background:#46e3a4;box-shadow:0 0 0 0 rgba(70,227,164,.7);animation:fbPunkt 1.6s ease-out infinite}
+.fb3-live small{color:var(--tx3)}
+@keyframes fbPunkt{0%{box-shadow:0 0 0 0 rgba(70,227,164,.7)}100%{box-shadow:0 0 0 9px rgba(70,227,164,0)}}
+@keyframes fbEin{0%{opacity:0;transform:translateY(-8px) scale(.9)}100%{opacity:1;transform:none}}
+html.g2-ruhig .fk-puls,html.g2-ruhig .fb3-live i,html.g2-ruhig .fk-aps .pin circle{animation:none}
+@media (prefers-reduced-motion:reduce){.fk-puls,.fb3-live i,.fk-aps .pin circle{animation:none}}
 
 </style>
 </head>
@@ -4300,38 +4320,85 @@ function tzStart(neu) {
 }
 
 /* ---------- Reise öffnen: kleine Weltkugel dreht sich von zu Hause zum Ziel, ein Flugzeug fliegt den Bogen ---------- */
+/* Fahrzeuge (zeigen nach rechts, ca. 20 Einheiten lang): Umriss + dunkle Fenster. Auch für die Routenkarte */
+const FZ_FORM = {
+  flug: ['M9 0L3-1.2-1-7.5H-3L-1-1.4H-5.5L-7.5-4H-9L-8 0-9 4H-7.5L-5.5 1.4H-1L-3 7.5H-1L3 1.2Z', ''],
+  zug: ['M11 0C11-2.4 9-3.2 6-3.2H-3V3.2H6C9 3.2 11 2.4 11 0ZM-4.4-3.2H-15V3.2H-4.4Z', 'M7.4-2.2C8.6-1.7 9.2-1 9.4 0 9.2 1 8.6 1.7 7.4 2.2ZM5-1H-2V1H5ZM-5.6-1H-13.6V1H-5.6Z'],
+  bus: ['M9-3.4Q10.5-3.4 10.5-2V2Q10.5 3.4 9 3.4H-9Q-10.5 3.4-10.5 2V-2Q-10.5-3.4-9-3.4Z', 'M7.5-2.6H9.4V2.6H7.5ZM5-1H-8V1H5Z'],
+  auto: ['M6-3.3Q9-3.3 9 0 9 3.3 6 3.3H-6Q-8.5 3.3-8.5 0-8.5-3.3-6-3.3Z', 'M3.2-2.6L5.2-2.2Q5.8 0 5.2 2.2L3.2 2.6ZM-4.5-2.4L-6-2Q-6.4 0-6 2L-4.5 2.4Z'],
+  faehre: ['M12 0L6-4.6H-11V4.6H6Z', 'M3-2.4H-8V2.4H3Z'],
+  oepnv: ['M8-3H-8Q-9-3-9-2V2Q-9 3-8 3H8Q9 3 9 2V-2Q9-3 8-3Z', 'M6-1H-6V1H6Z']
+};
+const fzForm = t => FZ_FORM[t] || FZ_FORM[{ miet: 'auto', taxi: 'auto' }[t]] || FZ_FORM.flug;
+/* Weg für die Kugel: die nächste (oder gerade laufende) Reise mit allen Halten, sonst Zuhause → Ziel */
 function fbDaten(tr) {
-  const p = tripPunkt(tr); if (!p) return null; const H = tzHeim(), ll = glbXY(p), a = glbVek(H.lat, H.lon), b = glbVek(ll[1], ll[0]);
-  const om = Math.acos(Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]))); if (om < .005) return null;
-  return { H, ziel: { nm: p.nm || tr.ort || tr.name, lat: ll[1], lon: ll[0] }, a, b, om, km: om * 6371 };
+  const p = tripPunkt(tr), Hm = tzHeim(), t = today(), now = Date.now(); let N = [];
+  const J = (tr.segs || []).length ? tripJourneys(tr) : [];
+  const j = J.find(j => j.segs.some(s => { const Z = segZeit(s); return Z && now >= Z.t0 - 3 * 3600e3 && now <= Z.t1; })) || J.find(j => j.segs.some(s => !s.date || (s.arrDate || s.date) >= t)) || J[0];
+  if (j) for (const s of j.segs) {
+    const Z = segZeit(s), P = Z ? Z.P : segStops(s).map((nm, k) => ({ nm, c: ortSuche(nm), k, t: null })).filter(q => q.c);
+    P.forEach((q, i) => { const last = N[N.length - 1];
+      if (last && (last.c === q.c || (i === 0 && last.c[0] === q.c[0]))) { if (q.t) last.td = q.t; return; }
+      const ll = xyLL(q.c[2], q.c[3]); N.push({ nm: q.c[0], c: q.c, v: glbVek(ll[1], ll[0]), ta: q.t, td: q.t, typ: s.type, zeit: !!q.zeit }); });
+  }
+  let echt = N.length >= 2;
+  if (!echt) { if (!p) return null; const ll = glbXY(p); N = [{ nm: Hm.nm, v: glbVek(Hm.lat, Hm.lon) }, { nm: p.nm || tr.ort || tr.name, v: glbVek(ll[1], ll[0]), typ: 'flug' }]; }
+  const dot = (a, b) => Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]));
+  const L = []; let tot = 0;
+  for (let i = 0; i + 1 < N.length; i++) { const om = Math.acos(dot(N[i].v, N[i + 1].v)); L.push({ a: N[i], b: N[i + 1], om, c0: tot, typ: N[i + 1].typ || 'flug', bump: N[i + 1].typ === 'flug' || !echt ? .03 + .3 * om / Math.PI : 0 }); tot += om; }
+  if (tot < .0008) return null;
+  let m = [0, 0, 0]; N.forEach(n => { m[0] += n.v[0]; m[1] += n.v[1]; m[2] += n.v[2]; }); const ml = Math.hypot(...m) || 1; m = m.map(x => x / ml);
+  const weit = Math.max(...N.map(n => Math.acos(dot(m, n.v))));
+  let q = 0; N.forEach((n, i) => { n.p = i ? (q += L[i - 1].om) / tot : 0; });
+  /* Live: wo sollte das Fahrzeug laut Fahrplan jetzt sein? */
+  let live = null; const A = N[0].td, B = N[N.length - 1].ta;
+  if (echt && A && B && now >= A && now <= B) {
+    for (let i = 0; i < L.length; i++) { const a = N[i], b = N[i + 1];
+      if (a.ta && now < a.td && now >= a.ta) { live = { p: a.p, halt: a, typ: L[i].typ }; break; }
+      if (now >= a.td && now <= b.ta) { const u = b.ta > a.td ? (now - a.td) / (b.ta - a.td) : 1; live = { p: (L[i].c0 + u * L[i].om) / tot, typ: L[i].typ, halt: u >= 1 ? b : null }; break; } }
+    if (live) { live.f = (now - A) / (B - A); live.rest = Math.round((B - now) / 6e4); }
+  }
+  const typen = [...new Set(L.map(l => l.typ))];
+  return { H: Hm, N, L, tot, m, weit, km: tot * 6371, echt, live, typen, dauer: echt && A && B ? Math.round((B - A) / 6e4) : 0, ca: echt && !N[N.length - 1].zeit, start: N[0].nm, ziel: N[N.length - 1].nm };
 }
 function fbKarte(tr) {
-  const f = fbDaten(tr); if (!f) return ''; const km = f.km, std = km > 350 ? km / 820 + .6 : 0;
-  const zeit = std ? `ca. ${std < 1.5 ? dec(Math.round(std * 60 / 5) * 5, 0) + ' Min.' : dec(Math.round(std * 2) / 2, std < 10 ? 1 : 0).replace(',0', '') + ' Std.'} Flug` : 'Luftlinie';
-  return `<div class="card fb3"><canvas id="fb3" class="fb3-c" data-id="${tr.id}" aria-label="Flugbogen von ${esc(f.H.nm)} nach ${esc(f.ziel.nm)}"></canvas>
-    <div class="fb3-z"><span><em>Von</em><b>${esc(f.H.nm)}</b></span><span class="fb3-m"><b class="num">${dec(km < 100 ? Math.round(km) : Math.round(km / 10) * 10, 0)} km</b><em>${zeit}</em></span><span class="r"><em>Nach</em><b>${esc(f.ziel.nm)}</b></span></div></div>`;
+  const f = fbDaten(tr); if (!f) return ''; const km = f.km;
+  const art = f.echt ? f.typen.map(t => ({ flug: 'Flug', zug: 'Zug', bus: 'Bus', auto: 'Auto', miet: 'Auto', taxi: 'Taxi', faehre: 'Fähre', oepnv: 'Bahn' }[t] || 'Fahrt')).filter((x, i, a) => a.indexOf(x) === i).join(' + ') : 'Flug';
+  const std = f.dauer ? f.dauer / 60 : km > 350 ? km / 820 + .6 : 0;
+  const zeit = std ? `${f.dauer && !f.ca ? '' : 'ca. '}${std < 1.5 ? dec(Math.round(std * 60 / 5) * 5, 0) + ' Min.' : dec(Math.round(std * 2) / 2, std < 10 ? 1 : 0).replace(',0', '') + ' Std.'} ${art}` : 'Luftlinie';
+  const halte = f.echt ? f.N.length - 2 : 0, ic = f.echt ? f.typen.map(t => SEG_T[t] ? SEG_T[t][0] : '').join('') : '✈️';
+  return `<div class="card fb3"><canvas id="fb3" class="fb3-c" data-id="${tr.id}" aria-label="${esc(art)} von ${esc(f.start)} nach ${esc(f.ziel)}"></canvas>
+    <div class="fb3-live" ${f.live ? '' : 'hidden'}><i></i><span>${f.live ? fbLiveText(f) : ''}</span></div>
+    <div class="fb3-z"><span><em>Von</em><b>${esc(f.start)}</b></span><span class="fb3-m"><b class="num">${dec(km < 100 ? Math.round(km) : Math.round(km / 10) * 10, 0)} km</b><em>${ic} ${zeit}${halte > 0 ? ` · ${halte} ${halte === 1 ? 'Halt' : 'Halte'}` : ''}</em></span><span class="r"><em>Nach</em><b>${esc(f.ziel)}</b></span></div></div>`;
 }
+const fbLiveText = f => `${SEG_T[f.live.typ] ? SEG_T[f.live.typ][0] : ''} Jetzt ${f.live.halt ? 'in ' + esc(f.live.halt.nm) : 'unterwegs'} · ${Math.round(f.live.f * 100)} % · noch ${hmD(f.live.rest)} <small>laut Fahrplan</small>`;
 function fbStart(neu) {
   const cv = document.getElementById('fb3'); if (!cv || cv._an) return; cv._an = true;
-  const tr = S.trips.find(x => x.id === cv.dataset.id), f = tr && fbDaten(tr); if (!f) return;
+  const tr = S.trips.find(x => x.id === cv.dataset.id); let f = tr && fbDaten(tr); if (!f) return;
   const ctx = cv.getContext('2d'), ruhig = g2Ruhig(), cs = getComputedStyle(document.documentElement), AMB = cs.getPropertyValue('--amb').trim() || '#42d6ff', AMB2 = cs.getPropertyValue('--amb2').trim() || '#46e3a4';
   let W = 0, H = 0, R0 = 0, geo = null, zielLand = null;
   const mass = () => { const r = cv.getBoundingClientRect(), dpr = Math.min(2.5, devicePixelRatio || 1); W = r.width; H = r.height; cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); R0 = Math.min(W * .4, H * .43); };
-  const slerp = (a, b, t, om) => { const so = Math.sin(om) || 1e-6, k1 = Math.sin((1 - t) * om) / so, k2 = Math.sin(t * om) / so; return [a[0] * k1 + b[0] * k2, a[1] * k1 + b[1] * k2, a[2] * k1 + b[2] * k2]; };
-  const om = f.om, mitte = slerp(f.a, f.b, .5, om), bump = .03 + .3 * om / Math.PI;
-  const zEnd = Math.max(1, Math.min(6, 1.15 / Math.sin(Math.min(1.5, om / 2 + .03)))), zStart = Math.min(9, zEnd * 1.7);
-  const bog = (t, hoch = true) => { const p = slerp(f.a, f.b, t, om); return [p, hoch ? 1 + bump * Math.sin(Math.PI * t) : 1]; };
+  const dot = (a, b) => Math.max(-1, Math.min(1, a[0] * b[0] + a[1] * b[1] + a[2] * b[2]));
+  const slerp = (a, b, t, om) => { if (om < 1e-6) return a; const so = Math.sin(om), k1 = Math.sin((1 - t) * om) / so, k2 = Math.sin(t * om) / so; return [a[0] * k1 + b[0] * k2, a[1] * k1 + b[1] * k2, a[2] * k1 + b[2] * k2]; };
+  const N = f.N, LG = f.L, A0 = N[0].v, omM = Math.acos(dot(A0, f.m));
+  const zEnd = Math.max(1, Math.min(60, 1.05 / Math.sin(Math.min(1.5, f.weit + .004)))), zStart = Math.min(80, zEnd * 1.7);
+  /* Punkt auf dem Weg bei Anteil p (0 … 1): Flüge im Bogen über der Kugel, Bodenfahrten auf der Oberfläche */
+  const bog = p => { const d = Math.max(0, Math.min(1, p)) * f.tot; let i = 0; while (i < LG.length - 1 && d > LG[i].c0 + LG[i].om) i++; const l = LG[i], u = l.om ? Math.max(0, Math.min(1, (d - l.c0) / l.om)) : 1;
+    return [slerp(l.a.v, l.b.v, u, l.om), 1 + l.bump * Math.sin(Math.PI * u), l]; };
+  const PROBEN = []; LG.forEach(l => { const n = Math.max(3, Math.round(90 * l.om / f.tot)); for (let k = 0; k <= n; k++) PROBEN.push((l.c0 + l.om * k / n) / f.tot); });
   let cr = 1, sr = 0, cn = 1, sn = 0, R = R0;
   const proj = (p, hh = 1) => { const x = p[0] * cr + p[2] * sr, z1 = -p[0] * sr + p[2] * cr, y = p[1] * cn - z1 * sn, z = p[1] * sn + z1 * cn; return [W / 2 + x * R * hh, H / 2 - y * R * hh, z, Math.hypot(x, y) * hh]; };
   const sicht = q => q[2] > 0 || q[3] > 1.01;
   const ease = u => u < .5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
   const schild = (x, y, t, hell, links) => { ctx.font = '600 11px system-ui,-apple-system,"Segoe UI",sans-serif'; ctx.textBaseline = 'middle'; const s = t.length > 18 ? t.slice(0, 17) + '…' : t, w = ctx.measureText(s).width + 14;
     let bx = links ? x - 10 - w : x + 10; bx = Math.max(4, Math.min(W - w - 4, bx)); const by = Math.max(4, Math.min(H - 22, y - 9));
-    ctx.fillStyle = 'rgba(8,12,24,.84)'; ctx.strokeStyle = hell ? '#ffffffcc' : 'rgba(255,255,255,.4)'; ctx.lineWidth = 1; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(bx, by, w, 18, 9); else ctx.rect(bx, by, w, 18); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.fillText(s, bx + 7, by + 9.5); };
-  const flieger = new Path2D('M9 0L3-1.2-1-7.5H-3L-1-1.4H-5.5L-7.5-4H-9L-8 0-9 4H-7.5L-5.5 1.4H-1L-3 7.5H-1L3 1.2Z');
-  function male(t, zeit) { // t = 0 … 1 Flug, darüber Ankunft
+    ctx.fillStyle = 'rgba(8,12,24,.84)'; ctx.strokeStyle = hell ? '#ffffffcc' : 'rgba(255,255,255,.4)'; ctx.lineWidth = 1; ctx.beginPath(); if (ctx.roundRect) ctx.roundRect(bx, by, w, 18, 9); else ctx.rect(bx, by, w, 18); ctx.fill(); ctx.stroke(); ctx.fillStyle = '#fff'; ctx.fillText(s, bx + 7, by + 9.5); return [bx, by, w]; };
+  const FZ = {}; const form = t => FZ[t] || (FZ[t] = fzForm(t).map(d => d ? new Path2D(d) : null));
+  const spur = []; // Kielwasser / Kondensstreifen
+  const passiert = new Map();
+  function male(t, zeit) { // t = 0 … 1 Fahrt, darüber Ankunft
     ctx.clearRect(0, 0, W, H);
-    const kc = ease(Math.min(1, t / .7)), c = slerp(f.a, mitte, kc, om / 2), zoom = zStart + (zEnd - zStart) * ease(Math.min(1, t / .85)), rot = -Math.atan2(c[0], c[2]), neig = Math.asin(Math.max(-1, Math.min(1, c[1])));
+    const kc = ease(Math.min(1, t / .7)), c = slerp(A0, f.m, kc, omM), zoom = zStart + (zEnd - zStart) * ease(Math.min(1, t / .85)), rot = -Math.atan2(c[0], c[2]), neig = Math.asin(Math.max(-1, Math.min(1, c[1])));
     cr = Math.cos(rot); sr = Math.sin(rot); cn = Math.cos(neig); sn = Math.sin(neig); R = R0 * zoom; const cx = W / 2, cy = H / 2;
     let g = ctx.createRadialGradient(cx, cy, R * .94, cx, cy, R * 1.3); g.addColorStop(0, AMB + '66'); g.addColorStop(.3, AMB + '22'); g.addColorStop(1, AMB + '00'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R * 1.3, 0, 7); ctx.fill();
     g = ctx.createRadialGradient(cx - R * .4, cy - R * .46, R * .05, cx, cy, R); g.addColorStop(0, 'rgba(58,78,128,.98)'); g.addColorStop(.5, 'rgba(15,22,44,.98)'); g.addColorStop(1, 'rgba(4,6,13,.98)'); ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill();
@@ -4346,25 +4413,47 @@ function fbStart(neu) {
       if (zielLand) { ctx.beginPath(); for (const r of (zoom > 2 ? zielLand.fein : zielLand.grob)) { pfad(r); ctx.closePath(); } ctx.globalAlpha = .16 + .14 * Math.min(1, Math.max(0, (t - .6) / .4)); ctx.fillStyle = AMB; ctx.fill(); ctx.globalAlpha = .8; ctx.strokeStyle = AMB; ctx.lineWidth = 1; ctx.stroke(); ctx.globalAlpha = 1; }
     }
     ctx.restore();
-    const fp = Math.max(0, Math.min(1, (t - .12) / .8)), fq = ease(fp), N = 60;
-    ctx.beginPath(); let offen = false; for (let i = 0; i <= N; i++) { const [p, hh] = bog(i / N), q = proj(p, hh); if (sicht(q)) { offen ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); offen = true; } else offen = false; }
-    ctx.setLineDash([3, 5]); ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 1.2; ctx.stroke(); ctx.setLineDash([]);
-    if (fq > 0) { ctx.beginPath(); offen = false; const n = Math.max(2, Math.round(N * fq)); let q0 = null; for (let i = 0; i <= n; i++) { const [p, hh] = bog(fq * i / n), q = proj(p, hh); if (sicht(q)) { offen ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); offen = true; q0 = q0 || q; } else offen = false; }
-      const qa = proj(...bog(0)), qb = proj(...bog(fq)); g = ctx.createLinearGradient(qa[0], qa[1], qb[0], qb[1]); g.addColorStop(0, AMB2 + '30'); g.addColorStop(1, '#ffffff'); ctx.strokeStyle = g; ctx.lineWidth = 2; ctx.shadowColor = AMB; ctx.shadowBlur = 8; ctx.stroke(); ctx.shadowBlur = 0; }
-    const qh = proj(f.a); if (qh[2] > 0) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(qh[0], qh[1], 4, 0, 7); ctx.stroke(); }
-    const qz = proj(f.b), da = Math.max(0, Math.min(1, (t - .88) / .12));
+    const bis = f.live ? f.live.p : 1, fp = Math.max(0, Math.min(1, (t - .12) / .8)), fq = ease(fp) * bis;
+    const linie = (p1, dash) => { ctx.beginPath(); let offen = false; for (const p of PROBEN) { if (p > p1 + 1e-9) break; const [v, hh] = bog(p), q = proj(v, hh); if (sicht(q)) { offen ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); offen = true; } else offen = false; }
+      if (p1 < 1) { const [v, hh] = bog(p1), q = proj(v, hh); if (offen && sicht(q)) ctx.lineTo(q[0], q[1]); } };
+    linie(1); ctx.setLineDash([3, 5]); ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = 1.2; ctx.stroke(); ctx.setLineDash([]);
+    if (fq > 0) { linie(fq); const qa = proj(...bog(0)), qb = proj(...bog(fq)); g = ctx.createLinearGradient(qa[0], qa[1], qb[0], qb[1]); g.addColorStop(0, AMB2 + '30'); g.addColorStop(1, '#ffffff');
+      if (f.typen.some(x => x !== 'flug')) { ctx.strokeStyle = AMB2 + '40'; ctx.lineWidth = 5; ctx.stroke(); }
+      ctx.strokeStyle = g; ctx.lineWidth = 2; ctx.shadowColor = AMB; ctx.shadowBlur = 8; ctx.stroke(); ctx.shadowBlur = 0; }
+    /* Halte: leuchten auf, sobald das Fahrzeug vorbei ist */
+    let lx = -1e3, ly = -1e3; const vielH = N.length > 7;
+    for (let i = 1; i < N.length - 1; i++) { const n = N[i], q = proj(n.v); if (q[2] <= 0) continue; const vorbei = fq >= n.p - 1e-6 && fp > 0;
+      if (vorbei && !passiert.has(i)) passiert.set(i, zeit || 0); const alt = passiert.has(i) && zeit ? (zeit - passiert.get(i)) / 700 : 2;
+      if (alt < 1) { ctx.strokeStyle = `rgba(255,255,255,${(1 - alt).toFixed(2)})`; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(q[0], q[1], 3 + alt * 13, 0, 7); ctx.stroke(); }
+      ctx.fillStyle = vorbei ? AMB2 : 'rgba(8,12,24,.9)'; ctx.strokeStyle = vorbei ? '#fff' : 'rgba(255,255,255,.6)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(q[0], q[1], vorbei ? 3.2 : 2.6, 0, 7); ctx.fill(); ctx.stroke();
+      if (t > .85 && !vielH && Math.hypot(q[0] - lx, q[1] - ly) > 46) { ctx.globalAlpha = Math.min(1, (t - .85) / .15) * .8; ctx.font = '500 9.5px system-ui,-apple-system,"Segoe UI",sans-serif'; ctx.fillStyle = '#dfe8ff'; ctx.textBaseline = 'middle'; ctx.fillText(n.nm.length > 14 ? n.nm.slice(0, 13) + '…' : n.nm, q[0] + 6, q[1] - 7); ctx.globalAlpha = 1; lx = q[0]; ly = q[1]; } }
+    const qh = proj(N[0].v); if (qh[2] > 0) { ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(qh[0], qh[1], 4, 0, 7); ctx.stroke(); }
+    const qz = proj(N[N.length - 1].v), da = f.live ? 0 : Math.max(0, Math.min(1, (t - .88) / .12));
     if (qz[2] > 0) { if (da > 0) { const ph = ((zeit || 0) * .0009) % 1; ctx.strokeStyle = `rgba(255,255,255,${((1 - ph) * da).toFixed(2)})`; ctx.lineWidth = 1.3; ctx.beginPath(); ctx.arc(qz[0], qz[1], 4 + ph * 16, 0, 7); ctx.stroke(); }
       ctx.fillStyle = AMB; ctx.beginPath(); ctx.arc(qz[0], qz[1], 3 + 1.5 * da, 0, 7); ctx.fill(); ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(qz[0], qz[1], 1.6, 0, 7); ctx.fill(); }
-    if (fp > 0 && fp < 1) { const [p, hh] = bog(fq), q = proj(p, hh), [p2, h2] = bog(Math.min(1, fq + .01)), q2 = proj(p2, h2), w = Math.atan2(q2[1] - q[1], q2[0] - q[0]), s = .9 + .35 * Math.sin(Math.PI * fq);
-      if (sicht(q)) { ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(w); ctx.scale(s, s); ctx.shadowColor = AMB; ctx.shadowBlur = 12; ctx.fillStyle = '#fff'; ctx.fill(flieger); ctx.restore(); } }
+    /* Fahrzeug: Flugzeug, Zug, Bus, Auto oder Schiff, je nach Abschnitt */
+    const steht = f.live && fp >= 1;
+    if ((fp > 0 && fp < 1) || steht) { const [p, hh, l] = bog(fq), q = proj(p, hh), [p2, h2] = bog(Math.min(1, fq + .004)), q2 = proj(p2, h2), [p0, h0] = bog(Math.max(0, fq - .004)), q0 = proj(p0, h0);
+      const w = Math.atan2(q2[1] - q0[1], q2[0] - q0[0]), luft = l.typ === 'flug', s = luft ? .9 + .35 * Math.sin(Math.PI * Math.max(0, Math.min(1, (fq * f.tot - l.c0) / (l.om || 1)))) : 1.05;
+      if (sicht(q)) {
+        if (!steht) { spur.push([q[0], q[1], zeit || 0, w]); while (spur.length > 26) spur.shift(); }
+        if (l.typ === 'faehre') spur.forEach(([x, y, z0, w0], k) => { const a = k / spur.length * .5, d = (spur.length - k) * .9; ctx.strokeStyle = `rgba(200,235,255,${a.toFixed(2)})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x + Math.cos(w0 + 2.6) * d, y + Math.sin(w0 + 2.6) * d); ctx.lineTo(x, y); ctx.lineTo(x + Math.cos(w0 - 2.6) * d, y + Math.sin(w0 - 2.6) * d); ctx.stroke(); });
+        else if (luft && spur.length > 2) { ctx.beginPath(); spur.forEach(([x, y], k) => k ? ctx.lineTo(x, y) : ctx.moveTo(x, y)); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1.6; ctx.lineCap = 'round'; ctx.stroke(); }
+        else spur.slice(-8).forEach(([x, y], k) => { ctx.fillStyle = AMB2 + Math.round(20 + k * 14).toString(16).padStart(2, '0'); ctx.beginPath(); ctx.arc(x, y, .8 + k * .18, 0, 7); ctx.fill(); });
+        if (steht) { const ph = ((zeit || performance.now()) * .0007) % 1; ctx.strokeStyle = AMB; ctx.globalAlpha = 1 - ph; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(q[0], q[1], 8 + ph * 20, 0, 7); ctx.stroke(); ctx.globalAlpha = 1; }
+        const [umriss, fenster] = form(l.typ); ctx.save(); ctx.translate(q[0], q[1]); ctx.rotate(w); ctx.scale(s, s); ctx.shadowColor = AMB; ctx.shadowBlur = 12; ctx.fillStyle = '#fff'; ctx.fill(umriss); ctx.shadowBlur = 0;
+        if (fenster) { ctx.fillStyle = 'rgba(14,22,40,.78)'; ctx.fill(fenster); } ctx.restore(); }
+    }
     const links = qz[0] < qh[0];
-    if (qh[2] > 0 && t < .9) schild(qh[0], qh[1], f.H.nm, false, !links);
-    if (qz[2] > 0 && da > 0) { ctx.globalAlpha = da; schild(qz[0], qz[1], f.ziel.nm, true, links); ctx.globalAlpha = 1; }
+    if (qh[2] > 0 && (t < .9 || f.live)) schild(qh[0], qh[1], f.start, false, !links);
+    if (qz[2] > 0 && (da > 0 || (f.live && t > .9))) { ctx.globalAlpha = f.live ? .8 : da; schild(qz[0], qz[1], f.ziel, true, links); ctx.globalAlpha = 1; }
   }
-  const D = 3000, NACH = 2600; let t0 = 0, lauf = 0;
-  const spiel = () => { const id = ++lauf; t0 = performance.now(); const tick = z => { if (id !== lauf || !cv.isConnected) return; const e = z - t0, t = e / D; if (Math.abs(cv.clientWidth - W) > 1) mass(); male(Math.min(1.0001, t), z); if (e < D + NACH) requestAnimationFrame(tick); else male(1.0001, 0); }; requestAnimationFrame(tick); };
+  const D = 3000 + Math.min(1500, (N.length - 2) * 220), NACH = 2600; let t0 = 0, lauf = 0;
+  const pulsen = id => { if (!f.live || ruhig) return; let letzt = 0, neuB = performance.now(); const tick = z => { if (id !== lauf || !cv.isConnected) return; if (document.visibilityState === 'visible' && z - letzt > 70) { letzt = z; male(1.0001, z);
+      if (z - neuB > 30000) { neuB = z; const f2 = fbDaten(tr); if (f2 && f2.live) { f.live = f2.live; const el = cv.parentNode.querySelector('.fb3-live span'); if (el) el.innerHTML = fbLiveText(f); } } } requestAnimationFrame(tick); }; requestAnimationFrame(tick); };
+  const spiel = () => { const id = ++lauf; t0 = performance.now(); spur.length = 0; passiert.clear(); const tick = z => { if (id !== lauf || !cv.isConnected) return; const e = z - t0, t = e / D; if (Math.abs(cv.clientWidth - W) > 1) mass(); male(Math.min(1.0001, t), z); if (e < D + NACH) requestAnimationFrame(tick); else { male(1.0001, 0); pulsen(id); } }; requestAnimationFrame(tick); };
   mass(); male(ruhig || !neu ? 1.0001 : 0, 0);
-  setTimeout(() => { try { geo = glbGeo(); const a2 = tr.country; zielLand = a2 && geo.L.find(C => C.a === a2) || null; } catch (e) {} if (ruhig || !neu) male(1.0001, 0); else spiel(); }, 40);
+  setTimeout(() => { try { geo = glbGeo(); const a2 = tr.country; zielLand = a2 && geo.L.find(C => C.a === a2) || null; } catch (e) {} if (ruhig || !neu) { male(1.0001, 0); pulsen(++lauf); } else spiel(); }, 40);
   cv.addEventListener('click', () => { if (ruhig) return; spiel(); });
 }
 
@@ -7115,6 +7204,8 @@ function ortSuche(txt, a2, streng) {
   if (io && IATA[io[1]]) r = tryQ(lowN(IATA[io[1]]));
   if (!r) r = tryQ(lowN(raw));
   if (!r) { const w = lowN(raw).replace(/[^a-z0-9]+/g, ' ').split(' ').filter(Boolean); for (let n = w.length; n >= 1 && !r; n--) r = tryQ(w.slice(0, n).join(' ')); }
+  if (!r && /ue|oe|ae/.test(lowN(raw))) r = tryQ(lowN(raw).replace(/ue/g, 'u').replace(/oe/g, 'o').replace(/ae/g, 'a'));
+  if (!r) { try { r = ortExtra(raw); } catch (e) { r = null; } }
   if (!r && !streng) { const q = lowN(raw); if (q.length >= 3) for (const p of pools) { r = p.filter(c => lowN(c[0]).startsWith(q)).sort((x, y) => y[4] - x[4])[0]; if (r) break; } }
   _ortC.set(key, r || null); return r || null;
 }
@@ -7135,7 +7226,9 @@ function tripPunkt(tr) {
 const K_DEG = 1000 / 360, xyLL = (x, y) => [x / K_DEG - 180, 90 - y / K_DEG], llXY = (lo, la) => [(lo + 180) * K_DEG, (90 - la) * K_DEG];
 function km(a, b) { const [lo1, la1] = xyLL(a[0], a[1]), [lo2, la2] = xyLL(b[0], b[1]), r = Math.PI / 180, d = Math.sin((la2 - la1) * r / 2) ** 2 + Math.cos(la1 * r) * Math.cos(la2 * r) * Math.sin((lo2 - lo1) * r / 2) ** 2; return 6371 * 2 * Math.asin(Math.min(1, Math.sqrt(d))); }
 /* Großkreis-Strecke (so fliegen Flugzeuge wirklich), bei kurzen Strecken ein sanfter Bogen */
-function gcPts(a, b, n = 40) {
+const BODEN = new Set(['zug', 'bus', 'auto', 'miet', 'faehre', 'oepnv', 'taxi']);
+function gcPts(a, b, n = 40, typ) {
+  if (BODEN.has(typ)) { const out = []; for (let i = 0; i <= 12; i++) out.push([a[0] + (b[0] - a[0]) * i / 12, a[1] + (b[1] - a[1]) * i / 12]); return out; }
   const dist = km(a, b); if (dist < 900) { const c = bogen(a, b), out = []; for (let i = 0; i <= 16; i++) { const t = i / 16, u = 1 - t; out.push([u * u * a[0] + 2 * u * t * c[0] + t * t * b[0], u * u * a[1] + 2 * u * t * c[1] + t * t * b[1]]); } return out; }
   const r = Math.PI / 180, [lo1, la1] = xyLL(a[0], a[1]).map(v => v * r), [lo2, la2] = xyLL(b[0], b[1]).map(v => v * r), d = dist / 6371, out = [];
   for (let i = 0; i <= n; i++) { const f = i / n, A = Math.sin((1 - f) * d) / Math.sin(d), B = Math.sin(f * d) / Math.sin(d);
@@ -7145,19 +7238,44 @@ function gcPts(a, b, n = 40) {
 }
 const ptsD = pts => pts.map((p, i) => (i && Math.abs(p[0] - pts[i - 1][0]) > 400 ? 'M' : i ? 'L' : 'M') + p[0].toFixed(2) + ' ' + p[1].toFixed(2)).join('');
 /* Flugdauer: eigene Zeiten, bei Zeitzonen-Sprüngen geschätzt aus der Entfernung */
-function legInfo(a, b, dep, arr, tage) {
+function legInfo(a, b, dep, arr, tage, typ) {
   const xy = c => c && (typeof c[0] === 'string' ? [c[2], c[3]] : c); a = xy(a); b = xy(b);
   const k = a && b ? km(a, b) : 0; let min = 0, ca = false;
   if (dep && arr) { const [h1, m1] = dep.split(':').map(Number), [h2, m2] = arr.split(':').map(Number); min = h2 * 60 + m2 - h1 * 60 - m1 + (tage || 0) * 1440; }
   const zz = a && b ? Math.abs(xyLL(a[0], a[1])[0] - xyLL(b[0], b[1])[0]) > 22 : false;
-  if ((!min || min <= 0 || zz) && k) { min = Math.round(k / 830 * 60 + 35); ca = true; }
+  if ((!min || min <= 0 || (zz && (!typ || typ === 'flug'))) && k) { min = Math.round(typ && typ !== 'flug' ? fahrMin(k, typ) : k / 830 * 60 + 35); ca = true; }
   return { km: Math.round(k), min: min > 0 && min < 4000 ? min : 0, ca };
 }
 const hmD = m => m ? `${Math.floor(m / 60)} h${m % 60 ? ' ' + String(m % 60).padStart(2, '0') : ''}` : '';
 const kmF = k => k ? k.toLocaleString('de-DE') + ' km' : '';
 const codeVon = x => { const m = (x || '').match(/\b([A-Z]{3})\b/); return m ? m[1] : ''; };
 /* Stationen einer Verbindung, inklusive Zwischenstopps (Feld „über“) */
-function segStops(s) { return [s.from, ...(s.via || '').split(/[,;/]+|\s+[-–>]+\s+/).map(x => x.trim()).filter(Boolean), s.to]; }
+function segStops(s) { return [s.from, ...viaListe(s.via).map(x => x.nm), s.to]; }
+/* Zwischenhalte: „Hannover 01:05, Göttingen, Frankfurt 03:40“ → Name und (falls da) Uhrzeit */
+function viaListe(v) { return (v || '').split(/[,;/]+|\s+[-–>]+\s+/).map(x => x.trim()).filter(Boolean).map(x => { const m = x.match(/^(.*?)[\s(]*(?:an|ab)?\s*([01]?\d|2[0-3])[:.]([0-5]\d)\)?\s*$/i); return m && m[1].trim() ? { nm: m[1].trim(), t: m[2].padStart(2, '0') + ':' + m[3] } : { nm: x, t: '' }; }); }
+/* Fahrzeit am Boden schätzen (Umwege der Strecke eingerechnet) */
+const FAHR_V = { zug: 115, bus: 65, auto: 80, miet: 80, faehre: 28, taxi: 45, oepnv: 25 };
+const fahrMin = (k, typ) => k * (typ === 'faehre' ? 1.1 : 1.25) / (FAHR_V[typ] || 80) * 60 + (typ === 'zug' ? 8 : 5);
+/* Zeitplan einer Fahrt: Abfahrt, Ankunft und jeder Halt mit Zeitpunkt. Ohne Uhrzeit am Halt wird nach Entfernung verteilt.
+   pos(jetzt) sagt, zwischen welchen Halten das Fahrzeug gerade ist und wie weit (ganz offline) */
+function segZeit(s) {
+  if (!s || !s.date || !s.dep) return null;
+  const via = viaListe(s.via), H = [{ nm: s.from, t: s.dep }, ...via, { nm: s.to, t: s.arr || '' }].map((h, k) => ({ ...h, k, c: ortSuche(h.nm) })).filter(h => h.c);
+  if (H.length < 2) return null;
+  const t0 = new Date(s.date + 'T' + s.dep).getTime(); if (isNaN(t0)) return null;
+  const D = [0]; for (let i = 1; i < H.length; i++) D.push(D[i - 1] + km([H[i - 1].c[2], H[i - 1].c[3]], [H[i].c[2], H[i].c[3]]));
+  let t1 = s.arr ? new Date((s.arrDate || s.date) + 'T' + s.arr).getTime() : NaN;
+  if (isNaN(t1) || t1 <= t0) { if (s.arr) { t1 = new Date(s.date + 'T' + s.arr).getTime(); if (t1 <= t0) t1 += 864e5; } else t1 = t0 + legInfo(H[0].c, H[H.length - 1].c, '', '', 0, s.type).min * 6e4 * (s.type === 'flug' ? 1 : Math.max(1, D[D.length - 1] / Math.max(1, km([H[0].c[2], H[0].c[3]], [H[H.length - 1].c[2], H[H.length - 1].c[3]])) / 1.25)); }
+  if (!(t1 > t0)) return null;
+  /* Zeitpunkte an den Halten: eingetragene Uhrzeiten (über Mitternacht weitergezählt), dazwischen nach Strecke */
+  const T = H.map(() => null); T[0] = t0; T[H.length - 1] = t1; let last = t0;
+  for (let i = 1; i < H.length - 1; i++) if (H[i].t) { let x = new Date(s.date + 'T' + H[i].t).getTime(); while (x < last) x += 864e5; if (x < t1) { T[i] = x; last = x; } }
+  for (let i = 1; i < H.length - 1; i++) if (T[i] === null) { let a = i - 1; while (T[a] === null) a--; let b = i + 1; while (T[b] === null) b++; const f = D[b] - D[a] > 0 ? (D[i] - D[a]) / (D[b] - D[a]) : (i - a) / (b - a); T[i] = T[a] + (T[b] - T[a]) * f; }
+  const P = H.map((h, i) => ({ nm: h.nm, c: h.c, k: h.k, t: T[i], zeit: !!h.t || i === 0 || (i === H.length - 1 && !!s.arr) }));
+  const pos = (now = Date.now()) => { if (now < t0 || now > t1) return null; let i = 0; while (i < P.length - 2 && now >= P[i + 1].t) i++; const g = P[i + 1].t > P[i].t ? (now - P[i].t) / (P[i + 1].t - P[i].t) : 1;
+    return { i, g: Math.max(0, Math.min(1, g)), f: (now - t0) / (t1 - t0), rest: Math.round((t1 - now) / 6e4), halt: g >= 1 ? P[i + 1] : null }; };
+  return { t0, t1, P, ca: !s.arr, pos };
+}
 /* Reisen: aufeinanderfolgende Verbindungen mit Umstieg werden zu einer Reise zusammengefasst */
 function tripJourneys(tr) {
   const segs = [...tr.segs].filter(s => !LOKAL.has(s.type)).sort(segSort), J = [];
@@ -7190,7 +7308,7 @@ function geoBB() {
 }
 function routeMap(tr) {
   const { legs, dest } = tripRoute(tr), pts = [];
-  legs.forEach(l => { pts.push(l.a, l.b); l.p = gcPts(l.a, l.b); }); if (!pts.length && dest) pts.push([dest.x, dest.y, dest.nm]);
+  legs.forEach(l => { pts.push(l.a, l.b); l.p = gcPts(l.a, l.b, 40, l.typ); }); if (!pts.length && dest) pts.push([dest.x, dest.y, dest.nm]);
   if (!pts.length) return '';
   const alle = pts.concat(...legs.map(l => l.p)), xs = alle.map(p => p[0]), ys = alle.map(p => p[1]), x0 = Math.min(...xs), x1 = Math.max(...xs), y0 = Math.min(...ys), y1 = Math.max(...ys);
   let W = Math.max((x1 - x0) * 1.45 + 8, ((y1 - y0) * 1.6 + 10) * 2, 22); const H = W / 2, cx = (x0 + x1) / 2, cy = (y0 + y1) / 2 - H * .04;
@@ -7209,8 +7327,8 @@ function routeMap(tr) {
 }
 function dauer(s) {
   const st = segStops(s), co = st.map(x => ortSuche(x)); let min = 0, ca = false, k = 0;
-  if (st.length === 2) { const i = legInfo(co[0], co[1], s.dep, s.arr, s.date && s.arrDate ? dayDiff(s.date, s.arrDate) : 0); min = i.min; ca = i.ca; k = i.km; }
-  else for (let i = 0; i + 1 < co.length; i++) { const f = legInfo(co[i], co[i + 1]); min += f.min; k += f.km; ca = true; }
+  if (st.length === 2) { const i = legInfo(co[0], co[1], s.dep, s.arr, s.date && s.arrDate ? dayDiff(s.date, s.arrDate) : 0, s.type); min = i.min; ca = i.ca; k = i.km; }
+  else { for (let i = 0; i + 1 < co.length; i++) { const f = legInfo(co[i], co[i + 1], '', '', 0, s.type); min += f.min; k += f.km; ca = true; } const Z = s.arr && segZeit(s); if (Z) { min = Math.round((Z.t1 - Z.t0) / 6e4); ca = false; } }
   return [min ? (ca ? 'ca. ' : '') + hmD(min) : '', kmF(k)].filter(Boolean).join(' · ');
 }
 /* Zeitstrahl: jede Reise (Hin-, Weiter-, Rückreise) mit Stationen, Umstiegen, Flugzeit und Entfernung; dazwischen die Unterkünfte */
@@ -7224,7 +7342,7 @@ function journeyHtml(j, idx, n, tr) {
     else { const p = segs[si - 1], w = p.arr && s.dep ? (+s.dep.slice(0, 2) * 60 + +s.dep.slice(3)) - (+p.arr.slice(0, 2) * 60 + +p.arr.slice(3)) + dayDiff(p.arrDate || p.date, s.date || p.date) * 1440 : 0;
       const r = rows[rows.length - 1]; r.um = w > 0 ? hmD(w) : 'Umstieg'; r.t2 = s.dep || ''; um++; if (w > 0) minS += w; }
     for (let i = 0; i + 1 < stops.length; i++) {
-      const last = i + 2 === stops.length, inf = legInfo(co[i], co[i + 1], stops.length === 2 ? s.dep : '', stops.length === 2 ? s.arr : '', s.date && s.arrDate ? dayDiff(s.date, s.arrDate) : 0);
+      const last = i + 2 === stops.length, inf = legInfo(co[i], co[i + 1], stops.length === 2 ? s.dep : '', stops.length === 2 ? s.arr : '', s.date && s.arrDate ? dayDiff(s.date, s.arrDate) : 0, s.type);
       kmS += inf.km; minS += inf.min; ca = ca || inf.ca;
       rows.push({ leg: `${SEG_T[s.type][0]} ${[i === 0 && s.no ? esc(s.no) : '', inf.min ? (inf.ca ? 'ca. ' : '') + hmD(inf.min) : '', kmF(inf.km)].filter(Boolean).join(' · ')}` });
       rows.push({ t: last ? (s.arr || '') + (s.arrDate && s.date && s.arrDate !== s.date ? ` <sup>+${dayDiff(s.date, s.arrDate)}</sup>` : '') : '', o: stops[i + 1], c: co[i + 1], um: last ? '' : 'Zwischenstopp' });
@@ -8314,25 +8432,26 @@ function bboxWrap(pts, pad = .25, minW = 16) {
 function flugDaten(tr) {
   const t = today(), legs = [], aps = new Map();
   const ap = (txt, c) => { const k = c[0] + '|' + c[1]; if (!aps.has(k)) aps.set(k, { x: c[2], y: c[3], name: c[0], code: codeVon(txt), n: 0 }); const o = aps.get(k); if (!o.code) o.code = codeVon(txt); o.n++; return o; };
-  tripJourneys(tr).forEach((j, ji) => j.segs.forEach(s => { const st = segStops(s), co = st.map(x => ortSuche(x));
+  const uhr = t => { const d = new Date(t); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+  tripJourneys(tr).forEach((j, ji) => j.segs.forEach(s => { const st = segStops(s), co = st.map(x => ortSuche(x)), Z = st.length > 2 ? segZeit(s) : null, zt = k => { const q = Z && Z.P.find(x => x.k === k); return q ? (q.zeit ? '' : 'ca. ') + uhr(q.t) : ''; };
     for (let i = 0; i + 1 < st.length; i++) { if (!co[i] || !co[i + 1] || co[i] === co[i + 1]) continue;
-      const a = ap(st[i], co[i]), b = ap(st[i + 1], co[i + 1]), inf = legInfo(co[i], co[i + 1], st.length === 2 ? s.dep : '', st.length === 2 ? s.arr : '', s.date && s.arrDate ? dayDiff(s.date, s.arrDate) : 0);
-      legs.push({ a, b, s, j: ji, typ: s.type, p: entwrap(gcPts([a.x, a.y], [b.x, b.y], 60)), km: inf.km, min: inf.min, ca: inf.ca, war: !!s.date && (s.arrDate || s.date) < t, via: st.length > 2 }); } }));
+      const a = ap(st[i], co[i]), b = ap(st[i + 1], co[i + 1]), inf = legInfo(co[i], co[i + 1], st.length === 2 ? s.dep : '', st.length === 2 ? s.arr : '', s.date && s.arrDate ? dayDiff(s.date, s.arrDate) : 0, s.type);
+      legs.push({ a, b, s, k: i, j: ji, typ: s.type, p: entwrap(gcPts([a.x, a.y], [b.x, b.y], 60, s.type)), ta: zt(i), tb: zt(i + 1), km: inf.km, min: inf.min, ca: inf.ca, war: !!s.date && (s.arrDate || s.date) < t, via: st.length > 2 }); } }));
   legs.forEach((l, i) => { l.i = i; if (i === 0 || legs[i - 1].b !== l.a) l.a.start = true; if (i === legs.length - 1 || legs[i + 1].a !== l.b) l.b.ende = true; });
   return { legs, aps: [...aps.values()] };
 }
 /* Wo ist das Flugzeug gerade? (Schätzung aus Abflugzeit und Flugdauer, ganz offline) */
 function flugJetzt(legs) {
   const now = Date.now();
-  for (const l of legs) { if (!l.s.date || !l.s.dep || !l.min || l.via) continue; const t0 = new Date(l.s.date + 'T' + l.s.dep).getTime(), t1 = t0 + l.min * 60000;
-    if (now >= t0 && now <= t1) return { l, f: (now - t0) / (t1 - t0), rest: Math.round((t1 - now) / 60000) }; }
+  const fertig = new Set();
+  for (const l of legs) { if (fertig.has(l.s)) continue; fertig.add(l.s); const Z = segZeit(l.s), p = Z && Z.pos(now); if (!p) continue;
+    const a = Z.P[p.i], b = Z.P[p.i + 1], L = legs.find(x => x.s === l.s && x.k === a.k) || legs.find(x => x.s === l.s && x.k >= a.k && x.k < b.k) || l;
+    return { l: L, f: p.g, rest: p.rest, ges: p.f, halt: p.halt }; }
   return null;
 }
 /* Live-Fortschritt einer Fahrt: Abfahrt 18:00, Ankunft 20:00, jetzt 19:00 → 50 % */
 function liveSeg(s) {
-  if (!s.date || !s.dep) return null; const co = [ortSuche(s.from), ortSuche(s.to)], inf = legInfo(co[0], co[1], s.dep, s.arr, s.date && s.arrDate ? dayDiff(s.date, s.arrDate) : 0);
-  if (!inf.min) return null; const t0 = new Date(s.date + 'T' + s.dep).getTime(), t1 = t0 + inf.min * 60000;
-  return { t0, t1 };
+  const Z = segZeit(s); return Z ? { t0: Z.t0, t1: Z.t1 } : null;
 }
 const liveHtml = (s, kl = '') => { const L = liveSeg(s); if (!L) return ''; const now = Date.now(); if (now < L.t0 - 3 * 3600e3 || now > L.t1 + 1800e3) return '';
   return `<div class="live ${kl}" data-t0="${L.t0}" data-t1="${L.t1}" data-ic="${SEG_T[s.type][0]}"><div class="live-bar"><i></i><span class="live-fz">${SEG_T[s.type][0]}</span></div><small></small></div>`; };
@@ -8350,7 +8469,7 @@ function flugSvgInner(tr, legs, aps, voll, hit) {
       <g class="fk-land">${Object.entries(GEO.c).map(([a, d]) => `<path class="${zl.has(a) ? 'z' : ''}" d="${d}"/>`).join('')}</g>
       <g class="fk-legs">${legs.map(l => `<path ${clon ? '' : `id="fk-${tr.id}-${l.i}${uid2}"`} class="fk-leg ${l.war ? 'war' : ''} t-${l.typ}" d="${ptsD(l.p)}"/>${hit ? `<path class="fk-hit" data-leg="${l.i}" d="${ptsD(l.p)}"/>` : ''}`).join('')}</g>
       ${clon ? '' : '<g class="fk-flieger" hidden><g class="fk-sk"><path d="M9 0 L-4 -2 L-8 -9 L-10.5 -9 L-8 -1.8 L-12 -1.5 L-13.8 -4.5 L-15.6 -4.5 L-14.4 0 L-15.6 4.5 L-13.8 4.5 L-12 1.5 L-8 1.8 L-10.5 9 L-8 9 L-4 2 Z"/></g></g>'}
-      <g class="fk-aps">${aps.map((a, n) => `<g class="pin ${a.start ? 'start' : ''} ${a.ende ? 'ende' : ''} ${!a.start && !a.ende ? 'stopp' : ''}" data-ap="${n}" data-x="${a.x}" data-y="${a.y}" transform="translate(${a.x} ${a.y})"><circle class="fk-ring" r="9"/><circle class="fk-pt" r="4.6"/><text class="fk-code" y="-12" text-anchor="middle">${esc(a.code || a.name)}</text>${a.code ? `<text class="fk-stadt" y="19" text-anchor="middle">${esc(a.name)}</text>` : ''}</g>`).join('')}</g></g>`;
+      <g class="fk-aps">${aps.map((a, n) => `<g class="pin ${a.start ? 'start' : ''} ${a.ende ? 'ende' : ''} ${!a.start && !a.ende ? 'stopp' : ''}" style="--n:${n}" data-ap="${n}" data-x="${a.x}" data-y="${a.y}" transform="translate(${a.x} ${a.y})"><circle class="fk-ring" r="9"/><circle class="fk-pt" r="4.6"/><text class="fk-code" y="-12" text-anchor="middle">${esc(a.code || a.name)}</text>${a.code ? `<text class="fk-stadt" y="19" text-anchor="middle">${esc(a.name)}</text>` : ''}</g>`).join('')}</g></g>`;
   return `<rect x="-2000" y="-2000" width="6000" height="5000" fill="#101b2b"/>${inhalt(0, false)}${[-1, 1, 2].map(k => inhalt(k, true)).join('')}`.replace(/data-ovf/, '') + `<desc data-ovf="${ovf}"></desc>`;
 }
 /* Kopien der Karte ein- und ausblenden, je nachdem was im Bild ist */
@@ -8358,9 +8477,9 @@ function flugKopien(svg, v) { const ovf = +((svg.querySelector('desc[data-ovf]')
   $$('.fk-w[data-k]', svg).forEach(g => { const k = +g.dataset.k; if (!k) return; const a = k * 1000, b = k * 1000 + 1000 + (k > 0 ? 0 : ovf); g.style.display = v[0] + v[2] > a && v[0] < b ? '' : 'none'; }); }
 function flugKarteHtml(tr, voll) {
   const { legs, aps } = flugDaten(tr); if (!legs.length) return '';
-  const jetzt = flugJetzt(legs), live = jetzt ? `<div class="fk-live">${SEG_T[jetzt.l.typ][0]} Jetzt unterwegs: ${esc(jetzt.l.a.name)} → ${esc(jetzt.l.b.name)} · ${Math.round(jetzt.f * 100)} % · noch ${hmD(jetzt.rest)} <small>geschätzt</small></div>` : '';
+  const jetzt = flugJetzt(legs), live = jetzt ? `<div class="fk-live">${SEG_T[jetzt.l.typ][0]} ${jetzt.halt ? 'Jetzt in ' + esc(ortSuche(jetzt.halt.nm) ? ortSuche(jetzt.halt.nm)[0] : jetzt.halt.nm) : `Jetzt unterwegs: ${esc(jetzt.l.a.name)} → ${esc(jetzt.l.b.name)}`} · ${Math.round(jetzt.ges * 100)} % · noch ${hmD(jetzt.rest)} <small>laut Fahrplan</small></div>` : '';
   if (!voll) { /* Standbild mit der ganzen Route, Antippen öffnet die bewegliche Karte */
-    const R = .62, a = bboxWrap(legs.flatMap(l => l.p).concat(aps.map(q => [q.x, q.y])), .22, 40); let w = a[2], h = a[3]; if (h / w > R) w = h / R; h = w * R; const cx = a[0] + a[2] / 2, cy = a[1] + a[3] / 2, vb = [cx - w / 2, Math.max(FK_Y0, Math.min(FK_Y1 - h, cy - h / 2)), w, h];
+    const R = .62, a = bboxWrap(legs.flatMap(l => l.p).concat(aps.map(q => [q.x, q.y])), .22, legs.some(l => l.typ === 'flug') ? 40 : 7); let w = a[2], h = a[3]; if (h / w > R) w = h / R; h = w * R; const cx = a[0] + a[2] / 2, cy = a[1] + a[3] / 2, vb = [cx - w / 2, Math.max(FK_Y0, Math.min(FK_Y1 - h, cy - h / 2)), w, h];
     return `<div class="fk still" data-trip="${tr.id}"><div class="fk-karte" data-act="flugVoll" data-id="${tr.id}"><svg class="fk-svg fk-still" viewBox="${vb.map(q => q.toFixed(2)).join(' ')}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Reiseroute">${flugSvgInner(tr, legs, aps, false, false)}</svg>${live}<span class="wk-open">⤢ Karte öffnen</span></div><div class="fk-info">${flugInfo(tr, legs, -1).replace(/<div class="sub"[^>]*>.*?<\/div>$/, '')}</div></div>`; }
   return `<div class="fk voll" data-trip="${tr.id}"><div class="fk-karte"><svg class="fk-svg" viewBox="0 ${FK_Y0} 1000 ${FK_Y1 - FK_Y0}" preserveAspectRatio="xMidYMid slice">${flugSvgInner(tr, legs, aps, true, true)}</svg><div class="wk-btn"><button type="button" class="ibtn" data-fk="zin" aria-label="Hineinzoomen">+</button><button type="button" class="ibtn" data-fk="zout" aria-label="Herauszoomen">−</button><button type="button" class="ibtn" data-fk="alle" aria-label="Ganze Route">⤢</button></div>${live}</div>
     <div class="fk-chips"><button type="button" class="fk-chip on" data-leg="-1">Ganze Route</button>${legs.map(l => `<button type="button" class="fk-chip ${l.war ? 'war' : ''}" data-leg="${l.i}"><b>${l.i + 1}</b> ${esc(l.a.code || l.a.name)} → ${esc(l.b.code || l.b.name)}</button>`).join('')}</div>
@@ -8369,20 +8488,20 @@ function flugKarteHtml(tr, voll) {
 /* Standbild: Orte in der richtigen Größe */
 function flugStillInit(wrap) { $$('svg.fk-still', wrap).forEach(svg => { const w = svg.getBoundingClientRect().width; if (!w) return; const vb = svg.viewBox.baseVal, sc = vb.width / w; $$('.pin', svg).forEach(e => e.setAttribute('transform', `translate(${e.dataset.x} ${e.dataset.y}) scale(${sc})`)); flugKopien(svg, [vb.x, 0, vb.width]); }); }
 function flugInfo(tr, legs, i) {
-  if (i < 0) { const kmS = sum(legs.map(l => l.km)), minS = sum(legs.map(l => l.min)), st = new Set(legs.slice(1).map(l => l.a)).size;
-    return `<div class="fk-sum"><div><b>${legs.length}</b><span>${legs.length === 1 ? 'Flugabschnitt' : 'Flugabschnitte'}</span></div><div><b>${st}</b><span>${st === 1 ? 'Zwischenstopp' : 'Stopps'}</span></div><div><b>${kmS.toLocaleString('de-DE')}</b><span>km gesamt</span></div><div><b>${hmD(minS)}</b><span>in der Luft</span></div></div><div class="sub" style="margin-top:8px">Tippe auf eine Strecke oder einen Abschnitt oben, um ihn genauer anzusehen.</div>`; }
+  if (i < 0) { const kmS = sum(legs.map(l => l.km)), minS = sum([...new Set(legs.map(l => l.s))].map(s => { const Z = segZeit(s); return Z && s.type !== 'flug' ? Math.round((Z.t1 - Z.t0) / 6e4) : sum(legs.filter(l => l.s === s).map(l => l.min)); })), st = new Set(legs.slice(1).map(l => l.a)).size, nurF = legs.every(l => l.typ === 'flug');
+    return `<div class="fk-sum"><div><b>${legs.length}</b><span>${nurF ? (legs.length === 1 ? 'Flugabschnitt' : 'Flugabschnitte') : legs.length === 1 ? 'Abschnitt' : 'Abschnitte'}</span></div><div><b>${st}</b><span>${nurF ? (st === 1 ? 'Zwischenstopp' : 'Stopps') : st === 1 ? 'Halt' : 'Halte'}</span></div><div><b>${kmS.toLocaleString('de-DE')}</b><span>km gesamt</span></div><div><b>${hmD(minS)}</b><span>${nurF ? 'in der Luft' : 'unterwegs'}</span></div></div><div class="sub" style="margin-top:8px">Tippe auf eine Strecke oder einen Abschnitt oben, um ihn genauer anzusehen.</div>`; }
   const l = legs[i], s = l.s, al = s.airline || airlineVon(s.no), n = legs[i + 1], p = legs[i - 1];
   const um = n && n.a === l.b && n.s !== s && s.arr && n.s.dep ? (+n.s.dep.slice(0, 2) * 60 + +n.s.dep.slice(3)) - (+s.arr.slice(0, 2) * 60 + +s.arr.slice(3)) + dayDiff(s.arrDate || s.date, n.s.date || s.date) * 1440 : 0;
   return `<div class="fk-leg-info"><div class="row sb"><span class="sub">Abschnitt ${i + 1} von ${legs.length}${s.date ? ' · ' + fmtD(s.date) : ''}</span><span class="sub">${SEG_T[s.type][0]} ${esc([al, s.no].filter(Boolean).join(' · ') || SEG_T[s.type][1])}</span></div>
-    <div class="fk-weg"><div><b>${esc(l.a.code || l.a.name)}</b><span>${esc(l.a.name)}</span><em>${l.via ? '' : s.dep || ''}</em></div><div class="fk-mitte"><span>${l.min ? (l.ca ? 'ca. ' : '') + hmD(l.min) : ''}</span><i></i><span>${kmF(l.km)}</span></div><div class="r"><b>${esc(l.b.code || l.b.name)}</b><span>${esc(l.b.name)}</span><em>${l.via ? '' : (s.arr || '') + (s.arrDate && s.date && s.arrDate !== s.date ? ` +${dayDiff(s.date, s.arrDate)}` : '')}</em></div></div>
-    <div class="tk-fuss" style="margin-top:10px">${[s.seat && `💺 Sitz <b>${esc(s.seat)}</b>`, s.gate && `🚪 ${esc(s.gate)}`, s.ref && `🎫 <b>${esc(s.ref)}</b>`, l.via && 'Zwischenstopp ohne Umsteigen'].filter(Boolean).map(c => `<span>${c}</span>`).join('')}</div>
+    <div class="fk-weg"><div><b>${esc(l.a.code || l.a.name)}</b><span>${esc(l.a.name)}</span><em>${l.via ? l.ta || '' : s.dep || ''}</em></div><div class="fk-mitte"><span>${l.min ? (l.ca ? 'ca. ' : '') + hmD(l.min) : ''}</span><i></i><span>${kmF(l.km)}</span></div><div class="r"><b>${esc(l.b.code || l.b.name)}</b><span>${esc(l.b.name)}</span><em>${l.via ? l.tb || '' : (s.arr || '') + (s.arrDate && s.date && s.arrDate !== s.date ? ` +${dayDiff(s.date, s.arrDate)}` : '')}</em></div></div>
+    <div class="tk-fuss" style="margin-top:10px">${[s.seat && `💺 Sitz <b>${esc(s.seat)}</b>`, s.gate && `🚪 ${esc(s.gate)}`, s.ref && `🎫 <b>${esc(s.ref)}</b>`, l.via && (l.typ === 'flug' ? 'Zwischenstopp ohne Umsteigen' : 'Halt ohne Umsteigen')].filter(Boolean).map(c => `<span>${c}</span>`).join('')}</div>
     ${um > 0 ? `<div class="umstieg ${um < 60 ? 'knapp' : ''}" style="margin:10px 0 0">🔁 Danach Umstieg in ${esc(l.b.name)} · ${hmD(um)}</div>` : ''}
     <div class="row" style="gap:8px;margin-top:12px">${p ? `<button type="button" class="btn sm sec" data-leg="${i - 1}">‹ Vorheriger</button>` : ''}<div class="grow"></div>${n ? `<button type="button" class="btn sm sec" data-leg="${i + 1}">Nächster ›</button>` : ''}<button type="button" class="btn sm sec" data-act="segEdit" data-id="${tr.id}" data-s="${s.id}">✎</button></div></div>`;
 }
 function flugInit(wrap, tr) {
   const svg = $('.fk-svg', wrap); if (!svg || svg._pz) return; const { legs, aps } = flugDaten(tr); const voll = wrap.classList.contains('voll') || !!wrap.querySelector('.fk.voll');
   const pins = $$('.fk-aps .pin', svg), fl = $('.fk-flieger', svg), sk = $('.fk-sk', fl), info = $('.fk-info', wrap); let sel = -1, s0 = 1, flT = 0;
-  const alle = bboxWrap(legs.flatMap(l => l.p).concat(aps.map(q => [q.x, q.y])), .18, 14);
+  const alle = bboxWrap(legs.flatMap(l => l.p).concat(aps.map(q => [q.x, q.y])), .18, legs.some(l => l.typ === 'flug') ? 14 : 2.5);
   const pz = svg._pz = pzInit(svg, { vb: alle, fit: true, minW: 3, wrap: 1000, y0: FK_Y0, y1: FK_Y1, change: (v, s) => { s0 = s; flugKopien(svg, v); pins.forEach(e => e.setAttribute('transform', `translate(${e.dataset.x} ${e.dataset.y}) scale(${s})`)); sk.setAttribute('transform', `scale(${s})`); },
     tapSofort: t => !!(t.closest && (t.closest('[data-leg]') || t.closest('[data-ap]'))),
     tap: t => { const lg = t.closest && t.closest('[data-leg]'), a = t.closest && t.closest('[data-ap]'); if (lg) waehle(+lg.dataset.leg); else if (a) { const o = aps[+a.dataset.ap], i = legs.findIndex(l => l.a === o || l.b === o); pz.flieg(bboxWrap([[o.x, o.y]], 0, 6), 450); toast(`📍 ${o.name}${o.code ? ' (' + o.code + ')' : ''}`); } } });
@@ -8391,8 +8510,8 @@ function flugInit(wrap, tr) {
   const tick = setInterval(() => { if (!document.body.contains(svg)) return clearInterval(tick); const j = flugJetzt(legs); if (j || jetzt) { jetzt = j; if (sel < 0 || (j && sel === j.l.i)) animier(sel); } }, 30000);
   const FLUGZEUG = sk.innerHTML;
   const animier = i => { cancelAnimationFrame(flT); const l = legs[i < 0 ? (jetzt ? jetzt.l.i : 0) : i]; if (!l) return; fl.hidden = false; const t0 = performance.now(), dur = 2600 + l.p.length * 40, flug = l.typ === 'flug';
-    sk.innerHTML = flug ? FLUGZEUG : `<circle class="fk-fz" r="12"/><text y="5" font-size="14" text-anchor="middle">${SEG_T[l.typ][0]}</text>`; fl.classList.toggle('boden', !flug);
-    const pos = f => { f = Math.max(0, Math.min(.9999, f || 0)); const k = f * (l.p.length - 1), a = Math.floor(k), b = Math.min(l.p.length - 1, a + 1), u = k - a, p = l.p[a], q = l.p[b], x = p[0] + (q[0] - p[0]) * u, y = p[1] + (q[1] - p[1]) * u, w = Math.atan2(q[1] - p[1], q[0] - p[0]) * 180 / Math.PI; fl.setAttribute('transform', `translate(${x} ${y})${flug ? ` rotate(${w})` : ''}`); };
+    const fz = fzForm(l.typ), lv = jetzt && jetzt.l === l; sk.innerHTML = (lv ? '<circle class="fk-puls" r="10"/><circle class="fk-puls p2" r="10"/>' : '') + (flug ? FLUGZEUG : `<g transform="scale(1.25)"><path d="${fz[0]}"/><path class="fk-fenster" d="${fz[1]}"/></g>`); fl.classList.toggle('boden', !flug); fl.classList.toggle('live', !!lv);
+    const pos = f => { f = Math.max(0, Math.min(.9999, f || 0)); const k = f * (l.p.length - 1), a = Math.floor(k), b = Math.min(l.p.length - 1, a + 1), u = k - a, p = l.p[a], q = l.p[b], x = p[0] + (q[0] - p[0]) * u, y = p[1] + (q[1] - p[1]) * u, w = Math.atan2(q[1] - p[1], q[0] - p[0]) * 180 / Math.PI; fl.setAttribute('transform', `translate(${x} ${y}) rotate(${w})`); };
     if (jetzt && jetzt.l === l) { pos(Math.min(.999, jetzt.f)); return; }
     const step = now => { pos(((now - t0) % dur) / dur); flT = requestAnimationFrame(step); }; flT = requestAnimationFrame(step); };
   const waehle = i => { sel = i; $$('.fk-leg', svg).forEach((p, k) => p.classList.toggle('sel', k % legs.length === i)); svg.classList.toggle('hat-sel', i >= 0);
@@ -8405,7 +8524,7 @@ function flugInit(wrap, tr) {
   const stopAll = () => cancelAnimationFrame(flT); wrap._stop = stopAll;
 }
 ACT.flugVoll = d => { const tr = trp(d); if (!tr) return; const m = document.createElement('div'); m.className = 'fk-overlay';
-  m.innerHTML = `<div class="fk-kopf"><div><b>${tripFlaggen(tr)} ${esc(tr.name)}</b><span class="sub">Flugroute</span></div><button type="button" class="ibtn" data-zu aria-label="Schließen">✕</button></div>${flugKarteHtml(tr, true)}`;
+  m.innerHTML = `<div class="fk-kopf"><div><b>${tripFlaggen(tr)} ${esc(tr.name)}</b><span class="sub">${flugDaten(tr).legs.every(l => l.typ === 'flug') ? 'Flugroute' : 'Route mit Halten'}</span></div><button type="button" class="ibtn" data-zu aria-label="Schließen">✕</button></div>${flugKarteHtml(tr, true)}`;
   document.body.appendChild(m); document.body.classList.add('fk-offen'); flugInit(m, tr);
   const zu = () => { m._stop && m._stop(); m.remove(); document.body.classList.remove('fk-offen'); document.removeEventListener('keydown', esc2); }, esc2 = e => { if (e.key === 'Escape' && !$('.modal')) zu(); }; document.addEventListener('keydown', esc2);
   m.addEventListener('click', e => { if (e.target.closest('[data-zu]')) zu(); }); };
@@ -8438,8 +8557,9 @@ function docDatum(s, ref) {
 }
 const RX_ZUG = /\b(ICE|IC|EC|RJX|RJ|TGV|NJ|EN|FLX|ES|EST|RE|RB|IRE|TER|S)\s?(\d{1,5})\b/;
 function docParse(text) {
-  const T = (text || '').replace(/ /g, ' '), L = T.split(/\n+/).map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean), low = T.toLowerCase(), r = { roh: T };
+  const T = (text || '').replace(/ /g, ' ').replace(/(\p{L}) ([äöüß]) ?(?=\p{Ll})/gu, '$1$2').replace(/(\p{L}) ([äöüß])(?=[\s.,;:)]|$)/gmu, '$1$2').replace(/([ÄÖÜ]) (?=\p{Ll})/gu, '$1'), L = T.split(/\n+/).map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean), low = T.toLowerCase(), r = { roh: T };
   const fang = (re, g = 1) => { const m = T.match(re); return m ? m[g].trim() : ''; };
+  try { const db = dbTicket(T, L); if (db && db.legs.length) return db; } catch (e) {}
   r.ref = fang(/(?:Auftragsnummer|Buchungsnummer|Buchungscode|Reservierungsnummer|Bestätigungsnummer|Buchungsreferenz|Booking (?:reference|code|number|ID)|Reservation (?:number|code)|Confirmation (?:number|code)|PNR|Ticketnummer|Ticket-Nr\.?)[:\s#.]*([A-Z0-9][A-Z0-9.\-]{4,}[A-Z0-9])/i);
   const pr = fang(/(?:Gesamt(?:preis|betrag|summe)?|Summe|Total(?: price)?|Endpreis|Preis|Betrag)[^\d\n]{0,25}(\d{1,5}(?:[.,]\d{3})*[.,]\d{2})/i) || fang(/(\d{1,5}[.,]\d{2})\s?(?:€|EUR)/) || fang(/(?:€|EUR)\s?(\d{1,5}[.,]\d{2})/);
   r.cost = pr ? num(pr.replace(/\.(?=\d{3}\b)/g, '')) : 0;
@@ -8456,6 +8576,7 @@ function docParse(text) {
     const c = r.addr && ortSuche(r.addr.replace(/.*\b\d{4,5}\s+/, ''), '', true); r.place = c ? c[0] : '';
     return r;
   }
+  try { const ho = hotelAusVomBis(T, L); if (ho && (ho.name || ho.in) && !RX_ZUG.test(T) && !/boarding|flugnummer|flight\s?(no|number)/i.test(T)) return ho; } catch (e) {}
   /* Fahrten: jede Zeile mit Uhrzeit ist ein Halt (Ort + Zeit); daraus werden Abschnitte */
   r.kind = RX_ZUG.test(T) || /\bbahn\b|db fernverkehr|sbb|öbb|wagen|gleis/i.test(T) ? 'zug' : /\bbus\b|flixbus/i.test(T) && !/flug|flight/i.test(T) ? 'bus' : 'flug';
   const nos = []; const reN = new RegExp(RX_ZUG.source, 'g'); let m; if (r.kind === 'zug') while ((m = reN.exec(T))) nos.push(m[1] + ' ' + m[2]);
@@ -8472,7 +8593,8 @@ function docParse(text) {
     stops.push({ nm, c, t: tm[0].padStart(5, '0'), d: datumZ });
   }
   const st = stops.filter((s, i) => !(i && s.c === stops[i - 1].c && s.t === stops[i - 1].t));
-  const legs = []; for (let i = 0; i + 1 < st.length; i += 2) { const a = st[i], b = st[i + 1]; if (a.c === b.c) { i--; continue; } legs.push({ from: a.nm, to: b.nm, date: a.d, dep: a.t, arrDate: b.d || a.d, arr: b.t }); }
+  const rp = r.kind !== 'flug' ? reiseplanLeg(st, [...new Set(nos)]) : null;
+  const legs = rp ? [rp] : []; if (!rp) for (let i = 0; i + 1 < st.length; i += 2) { const a = st[i], b = st[i + 1]; if (a.c === b.c) { i--; continue; } legs.push({ from: a.nm, to: b.nm, date: a.d, dep: a.t, arrDate: b.d || a.d, arr: b.t }); }
   const sitze = []; const reS = /Wagen\s*(\d+)[^\n\d]{0,14}(?:Pl(?:atz|ätze|\.)|Sitz)\s*([\d ,\/]+\d)/gi, reF = /(?:Sitz(?:platz)?|Seat)[:\s]*(\d{1,2}[A-K])\b/gi;
   while ((m = reS.exec(T))) sitze.push(`Wagen ${m[1]}, Platz ${m[2].replace(/\s+/g, ' ').trim()}`); while ((m = reF.exec(T))) sitze.push(m[1]);
   const gate = fang(/\b(Gleis\s*\d+\w?|Gate\s*[A-Z]?\d+\w?|Terminal\s*\w+)\b/i);
@@ -8492,7 +8614,7 @@ ACT.docText = d => { const tr = trp(d); modal('📋 Buchungstext einfügen', `<d
 function docUebernehmen(tr, meta, text, bild) {
   tripFix(tr); (tr.docs = tr.docs || []).push(meta); save();
   const p = text && text.trim().length > 20 ? docParse(text) : null;
-  if (p && p.kind === 'hotel' && (p.in || p.name)) { meta.kind = 'hotel'; save(); hotEdit(tr, { in: p.in || tr.from || '', inTime: p.inTime, out: p.out || tr.to || '', outTime: p.outTime, name: p.name, place: p.place || tr.ort || '', addr: p.addr, ref: p.ref, phone: p.phone, cost: p.cost || '', doc: meta.id, _neu: true }); toast('🏨 Hotelbuchung erkannt. Bitte kurz prüfen und speichern.'); return; }
+  if (p && p.kind === 'hotel' && (p.in || p.name)) { meta.kind = 'hotel'; save(); hotEdit(tr, { in: p.in || tr.from || '', inTime: p.inTime, out: p.out || tr.to || '', outTime: p.outTime, name: p.name, place: p.place || tr.ort || '', addr: p.addr, ref: p.ref, phone: p.phone, cost: p.cost || '', note: p.note || '', doc: meta.id, _neu: true }); toast('🏨 Hotelbuchung erkannt. Bitte kurz prüfen und speichern.'); return; }
   if (p && p.legs && p.legs.length === 1) { meta.kind = p.kind; save(); segEdit(tr, Object.assign({ doc: meta.id, _neu: true }, p.legs[0])); toast(`${SEG_T[p.kind][0]} ${p.kind === 'zug' ? 'Zugticket' : p.kind === 'bus' ? 'Busticket' : 'Flugticket'} erkannt. Bitte kurz prüfen und speichern.`); return; }
   if (p && p.legs && p.legs.length > 1) { meta.kind = p.kind; p.legs.forEach(l => tr.segs.push(Object.assign({ id: uid(), doc: meta.id, note: '', cost: 0 }, l, { cost: l.cost || 0 }))); save(); UI.tripSec = 'wege'; render(); toast(`✨ ${p.legs.length} Fahrten aus dem Dokument übernommen. Tippe sie an, um sie zu prüfen.`); jatosAktion(`Ich habe ${p.legs.length} Verbindungen aus deinem Ticket gezaubert! 🪄`); return; }
   UI.tripSec = 'wege'; render();
@@ -8517,6 +8639,81 @@ const docListe = tr => (tr.docs || []).length ? `<div class="doc-grid">${tr.docs
 ACT.rueckreise = d => { const tr = trp(d), J = tripJourneys(tr); if (!J.length) return; const hin = J[0].segs, dat = tr.to || '';
   const neu = hin.slice().reverse().map(s => ({ id: uid(), type: s.type, airline: s.airline || '', from: s.to, to: s.from, via: segStops(s).slice(1, -1).reverse().join(', '), date: dat, dep: '', arrDate: dat, arr: '', no: '', seat: '', gate: '', ref: s.ref || '', cost: 0, note: '' }));
   tr.segs.push(...neu); save(); UI.tripSec = 'wege'; render(); toast(`↩ Rückreise angelegt (${neu.length} ${neu.length === 1 ? 'Fahrt' : 'Fahrten'}, ${dat ? fmtD(dat) : 'Datum offen'}). Trag noch Zeiten und Nummern ein.`); };
+
+/* ---------- Bahn: Wegekürzel auf Fahrkarten, kleine Bahnhöfe, DB-Tickets und Reisepläne auslesen (ganz offline) ---------- */
+
+/* Kürzel aus der „Via“-Zeile der DB-Fahrkarte (Wegekennzeichnung) → Stadt */
+const DBK = {
+  A: 'Augsburg', AC: 'Aachen', B: 'Berlin', BA: 'Bamberg', BAS: 'Basel', BI: 'Bielefeld', BN: 'Bonn', BO: 'Bochum', BS: 'Braunschweig', BTF: 'Bitterfeld', CB: 'Cottbus', D: 'Düsseldorf', DA: 'Darmstadt',
+  DD: 'Dresden', DO: 'Dortmund', DU: 'Duisburg', E: 'Essen', EF: 'Erfurt', F: 'Frankfurt am Main', FD: 'Fulda', FFO: 'Frankfurt (Oder)', FR: 'Freiburg im Breisgau', G: 'Gera', GE: 'Gelsenkirchen',
+  GI: 'Gießen', GOE: 'Göttingen', GÖ: 'Göttingen', H: 'Hannover', HA: 'Hagen', HAL: 'Halle (Saale)', HB: 'Bremen', HD: 'Heidelberg', HH: 'Hamburg', HL: 'Lübeck', HM: 'Hamm', HO: 'Hof', HU: 'Hanau',
+  IN: 'Ingolstadt', J: 'Jena', K: 'Köln', KA: 'Karlsruhe', KI: 'Kiel', KO: 'Koblenz', KS: 'Kassel', L: 'Leipzig', LWB: 'Lutherstadt Wittenberg', M: 'München', MA: 'Mannheim', MD: 'Magdeburg', MS: 'Münster',
+  MZ: 'Mainz', N: 'Nürnberg', OB: 'Oberhausen', OG: 'Offenburg', OS: 'Osnabrück', PA: 'Passau', PB: 'Paderborn', R: 'Regensburg', RO: 'Rosenheim', ROS: 'Rostock', S: 'Stuttgart', SB: 'Saarbrücken',
+  SDL: 'Stendal', SI: 'Siegen', TR: 'Trier', UL: 'Ulm', W: 'Wuppertal', WI: 'Wiesbaden', WOB: 'Wolfsburg', WÜ: 'Würzburg', WUE: 'Würzburg', LG: 'Lüneburg', UE: 'Uelzen', CE: 'Celle', HI: 'Hildesheim',
+  NMS: 'Neumünster', FL: 'Flensburg', SN: 'Schwerin', WM: 'Wismar', HST: 'Stralsund', PRZ: 'Prenzlau', ANG: 'Angermünde', EW: 'Eberswalde', SZ: 'Szczecin', WIEN: 'Wien', SBG: 'Salzburg', LZ: 'Linz'
+};
+/* Kleine Bahnhöfe, die die eingebaute Städteliste nicht kennt: [Name, Land, Breite, Länge] */
+const ORT_EXTRA = [['Frick', 'CH', 47.508, 8.014], ['Olten', 'CH', 47.350, 7.903], ['Brugg', 'CH', 47.481, 8.208], ['Aarau', 'CH', 47.392, 8.044], ['Arth-Goldau', 'CH', 47.049, 8.548],
+  ['Landquart', 'CH', 46.967, 9.555], ['Montabaur', 'DE', 50.445, 7.826], ['Siegburg', 'DE', 50.794, 7.204], ['Lutherstadt Wittenberg', 'DE', 51.867, 12.662], ['Bitterfeld', 'DE', 51.623, 12.317],
+  ['Angermünde', 'DE', 53.016, 13.997], ['Prenzlau', 'DE', 53.316, 13.863], ['Pasewalk', 'DE', 53.506, 13.990], ['Uelzen', 'DE', 52.966, 10.558], ['Allersberg', 'DE', 49.250, 11.236], ['Vaihingen an der Enz', 'DE', 48.933, 8.956],
+  ['Spiez', 'CH', 46.686, 7.680], ['Visp', 'CH', 46.294, 7.882], ['Kufstein', 'AT', 47.583, 12.166], ['Wörgl', 'AT', 47.489, 12.064], ['Rzepin', 'PL', 52.350, 14.830], ['Kostrzyn', 'PL', 52.588, 14.649]]
+  .map(([n, a, la, lo]) => { const [x, y] = llXY(lo, la); return [n, a, x, y, 1]; });
+Object.assign(ORT_ALIAS, { stettin: 'Szczecin', zuerich: 'Zürich', zurich: 'Zürich', muenchen: 'München', koeln: 'Köln', nuernberg: 'Nürnberg', goettingen: 'Göttingen', wuerzburg: 'Würzburg', 'frankfurt (oder)': 'Frankfurt (Oder)', 'frankfurt oder': 'Frankfurt (Oder)', danzig: 'Gdańsk', breslau: 'Wrocław', posen: 'Poznań', prag: 'Prag', mailand: 'Mailand' });
+function ortExtra(raw) { const q = lowN(raw).replace(/\b(hbf|hb|bf|bahnhof|sbb|bad bf|centralny|glowny|główny)\b/g, '').trim(); return ORT_EXTRA.find(x => lowN(x[0]) === q || q.startsWith(lowN(x[0]) + ' ')) || null; }
+
+/* Via-Zeile übersetzen: „<1080>(L*FD/SDL*H*GOE*GI)*F*KA*BAS<1185>Basel*(Frick/Olten)“
+   Klammern mit „/“ sind Wahlwege, genommen wird der erste. Kürzel werden zu Städten */
+function viaDekodieren(v) {
+  if (!v) return [];
+  let s = v.replace(/<\d+>/g, '*').replace(/\s+/g, '');
+  s = s.replace(/\(([^()]*)\)/g, (_, g) => g.split('/')[0]);
+  const out = [];
+  for (const t0 of s.split(/[*]+/)) { const t = t0.trim(); if (!t) continue; const nm = DBK[t.toUpperCase()] || (/^[A-ZÄÖÜ]{1,4}$/.test(t) ? '' : t); if (!nm) continue;
+    const c = ortSuche(nm); if (!c) continue; if (out.length && ortSuche(out[out.length - 1]) === c) continue; out.push(c[0] === 'Frankfurt am Main' ? 'Frankfurt (Main)' : nm); }
+  return out;
+}
+
+/* DB-Fahrkarte (App, Online-Ticket, kopierter Text): Strecke „A - B“, „ICE 273, 23:21 Uhr am 27.12.2026“, Via-Zeile, Wagen und Plätze */
+function dbTicket(T, L) {
+  const zug = T.match(/\b(ICE|IC|EC|ECE|RJX|RJ|TGV|NJ|EN|FLX|IRE|RE|RB)\s?(\d{1,5}),?\s+(?:ab\s+)?([01]?\d|2[0-3]):([0-5]\d)\s*(?:Uhr)?\s*(?:am|,)?\s*(\d{1,2}\.\d{1,2}\.(?:\d{4}|\d{2})?)/i);
+  if (!zug) return null;
+  let von = '', nach = '';
+  for (const l of L) { const m = l.match(/^(.{3,40}?)\s+[-–→>]+\s+(.{3,40})$/); if (!m || /\d{1,2}:\d{2}/.test(l)) continue; const a = ortSuche(m[1]) || ortExtra(m[1]), b = ortSuche(m[2]) || ortExtra(m[2]); if (a && b && a !== b) { von = m[1].trim(); nach = m[2].trim(); break; } }
+  if (!von) return null;
+  const vm = T.match(/Via:?\s*([\s\S]{0,200}?)(?:\n\s*\n|\n(?=[A-ZÄÖÜ][a-zäöü]+(?:details|ungen|ionen|preis)\b)|Buchungsdetails|Reservierung|Konditionen|$)/i);
+  const via = vm ? viaDekodieren(vm[1].replace(/\n/g, '')) : [];
+  const viaF = via.filter(x => { const c = ortSuche(x); return c && c !== ortSuche(von) && c !== ortSuche(nach); });
+  const date = docDatum(zug[5]), sitz = T.match(/(?:Wagen|Wg\.?)\s*(\d+)\s*,?\s*(?:Pl(?:atz|ätze|\.)?|Sitz(?:e|platz)?)\s*([\d ,\/]+\d)/i);
+  const ref = (T.match(/(?:Auftrags-?(?:nummer|nr\.?)|Auftrag)[:\s#]*([A-Z0-9]{6,})/i) || [])[1] || '';
+  const pr = T.match(/(?:Gesamtpreis|Gesamtbetrag|Summe)[^\d\n]{0,25}(\d{1,5}(?:[.,]\d{3})*[.,]\d{2})/i);
+  return { kind: 'zug', ref, cost: pr ? num(pr[1].replace(/\.(?=\d{3}\b)/g, '')) : 0, roh: T,
+    legs: [{ type: 'zug', no: zug[1].toUpperCase() + ' ' + zug[2], from: von, to: nach, via: viaF.join(', '), date, dep: zug[3].padStart(2, '0') + ':' + zug[4], arrDate: date, arr: '', seat: sitz ? `Wagen ${sitz[1]}, Platz ${sitz[2].replace(/\s+/g, ' ').trim()}` : '', gate: '', ref, airline: '', cost: pr ? num(pr[1].replace(/\.(?=\d{3}\b)/g, '')) : 0, _ca: true }] };
+}
+
+/* Reiseplan mit Zwischenhalten (ein Zug, viele Zeilen mit Uhrzeit): eine Fahrt mit Halten und ihren Zeiten */
+function reiseplanLeg(stops, nos) {
+  if (stops.length < 3 || nos.length > 1) return null;
+  const a = stops[0], b = stops[stops.length - 1];
+  return { from: a.nm, to: b.nm, date: a.d, dep: a.t, arrDate: b.d || a.d, arr: b.t, via: stops.slice(1, -1).map(s => `${s.nm} ${s.t}`).join(', ') };
+}
+
+/* Pauschalreise/Hotel aus Reiseunterlagen: „Hotelaufenthalte … Crowne Plaza Zürich by IHG (Zurich) vom 28.12.2026 … bis 02.01.2027 (5 Nächte)“ */
+function hotelAusVomBis(T, L) {
+  if (!/hotel|übernachtung|unterkunft|zimmer|nächte|naechte|nights/i.test(T)) return null;
+  const i = L.findIndex(l => /\bvom\s+\d{1,2}\.\d{1,2}\.\d{2,4}/i.test(l)); if (i < 0) return null;
+  const bisL = L.slice(i, i + 4).find(l => /\bbis\s+\d{1,2}\.\d{1,2}\.\d{2,4}/i.test(l)); if (!bisL) return null;
+  const vom = docDatum(L[i].match(/\bvom\s+(\d{1,2}\.\d{1,2}\.\d{2,4})/i)[1]), bis = docDatum(bisL.match(/\bbis\s+(\d{1,2}\.\d{1,2}\.\d{2,4})/i)[1], vom);
+  let name = L[i].replace(/\bvom\s+\d{1,2}\.\d{1,2}\.\d{2,4}.*$/i, '').replace(/^\s*\d+\s+\d+\s+/, '').trim();
+  if (name.length < 3) { name = '';
+    for (let k = i - 1; k >= Math.max(0, i - 14) && !name; k--) { const l = L[k]; if (/^\(|verpflegung|zimmer|datum|reisende|leistung|^pos\.?$|^anz/i.test(l) || l.length < 4 || l.length > 80) continue;
+      if (/\b(hotel|hostel|inn|resort|plaza|suites?|residen[cz]e?|pension|gasthof|gasthaus|lodge|apartments?|ferienwohnung|ihg|marriott|hilton|hyatt|ibis|novotel|mercure|motel one|radisson|sheraton|westin|meli[aá]|riu|iberostar)\b/i.test(l) || /\([A-Za-zÄÖÜäöüéè .\-]{3,}\)$/.test(l)) name = l; } }
+  name = name.replace(/^(\d+\s+)+/, ''); const ortM = name.match(/\(([^)]+)\)\s*$/), ort = ortM ? ortM[1] : name, c = ortSuche(ort, '', true) || ortSuche(name.replace(/\(.*\)/, ''), '', false);
+  name = name.replace(/^(\d+\s+)+/, '').replace(/\s*\([^)]*\)\s*$/, '').trim();
+  const pr = T.match(/(?:Gesamtbetrag|Gesamtpreis|Endbetrag|Reisepreis gesamt)[^\d]{0,40}(\d{1,5}(?:[.,]\d{3})*[.,]\d{2})/i);
+  const ref = (T.match(/(\d{6,})\s*\n?\s*Vorgangsnummer/i) || T.match(/(?:Vorgangsnummer|Buchungsnummer|Rechnungsnummer)[:\s]*([A-Z0-9]{6,})/i) || [])[1] || '';
+  const verpf = (T.match(/Verpflegung:\s*([^\n]{3,40})/i) || [])[1] || '';
+  return { kind: 'hotel', in: vom, out: bis, inTime: '', outTime: '', name, place: c ? c[0] : '', addr: '', phone: '', ref, cost: pr ? num(pr[1].replace(/\.(?=\d{3}\b)/g, '')) : 0, note: verpf ? 'Verpflegung: ' + verpf.replace(/\s+/g, ' ').trim() : '', roh: T };
+}
 
 /* ---------- Auszug einlesen (PDF/CSV) – alles offline auf dem Gerät ---------- */
 const IMP_BANKEN = [['targobank', 'Targobank'], ['sparkasse', 'Sparkasse'], ['\\bING\\b|ing-diba', 'ING'], ['\\bDKB\\b|deutsche kreditbank', 'DKB'], ['comdirect', 'comdirect'], ['consorsbank', 'Consorsbank'], ['commerzbank', 'Commerzbank'], ['deutsche bank', 'Deutsche Bank'], ['postbank', 'Postbank'], ['volksbank|raiffeisen', 'Volksbank'], ['\\bN26\\b', 'N26'], ['trade republic', 'Trade Republic'], ['scalable', 'Scalable Capital'], ['\\bC24\\b', 'C24'], ['revolut', 'Revolut'], ['hanseatic', 'Hanseatic Bank'], ['psd bank', 'PSD Bank'], ['sparda', 'Sparda-Bank'], ['flatex', 'flatex'], ['onvista', 'onvista'], ['santander', 'Santander'], ['\\bBBBank\\b', 'BBBank']];
@@ -10300,7 +10497,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 120;
+const APP_V = 121;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
