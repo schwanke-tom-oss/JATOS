@@ -145,6 +145,9 @@ svg text{font-family:inherit}
 /* ---------- Depot-Stil ---------- */
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:11;background:var(--bg)}
 body{overflow-x:clip}
+/* iPhone: Safari ignoriert clip am body, darum auch am Inhalt selbst. Sonst laesst sich die Seite seitlich wegwischen */
+html,body{overscroll-behavior-x:none}
+#app,nav.tabs{overflow-x:clip;max-width:100vw}
 body.buehne::before{background:transparent}
 nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:10;padding-block:10px 8px;padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px));pointer-events:none}
 /* Glas-Optik wie bei Apple */
@@ -2086,8 +2089,9 @@ body.fk-offen{overflow:hidden}
 .sp-ziel{all:unset;cursor:pointer;font-size:11px;font-weight:600;color:var(--tx3);padding:3px 8px;border-radius:7px;background:rgba(255,255,255,.05)}
 
 /* iPhone: Abstand zur Statusleiste, wenn die Reiter unten sind; Schloss nicht nach oben schieben */
-body.bar-unten #app{padding-top:calc(6px + var(--safe-t))}
-body.bar-unten .szene,body.bar-unten .pxszene{margin-top:calc(-6px - var(--safe-t))}
+/* 19.11.: iOS legt unter die Statusleiste eine weiche Unschärfe, die etwas tiefer reicht. Darum beginnt der Inhalt jetzt tiefer */
+body.bar-unten #app{padding-top:calc(30px + var(--safe-t))}
+body.bar-unten .szene,body.bar-unten .pxszene{margin-top:calc(-30px - var(--safe-t))}
 body::before{content:"";position:fixed;inset:0 0 auto;height:var(--safe-t);background:linear-gradient(var(--bg) 75%,rgba(11,11,12,0));z-index:40;pointer-events:none;opacity:0;transition:opacity .2s}
 body.gescrollt::before{opacity:1}
 .dp-psoll{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin:2px 0 6px;padding:6px 10px;border-radius:10px;background:color-mix(in srgb,#ff5d6c 8%,transparent);border:1px solid color-mix(in srgb,#ff5d6c 25%,transparent);font-size:13px}
@@ -2156,6 +2160,25 @@ body:not(.bar-unten).gescrollt nav.tabs{background:linear-gradient(var(--bg) 0,v
 .ks-z small{font-size:11.5px;color:var(--tx2)}.ks-z small.neg{color:var(--bad,#ff5d6c)}.ks-z small.wrn{color:var(--warn)}
 .ks-k{display:flex;flex-direction:column;align-items:flex-end;flex:none}.ks-k b{font-size:13.5px}
 .kurs-schl{margin:4px 0 6px;border-top:1px solid var(--line);padding-top:8px}.kurs-schl>summary{cursor:pointer;font-size:13.5px;color:var(--tx2);padding:4px 0}
+/* Jahrestage (Einstellungen) und Reiter-Wahl in Planung, 19.11. */
+.jt-liste{display:grid;gap:6px}
+.jt-z{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);cursor:pointer}
+.jt-z.fest{background:linear-gradient(120deg,rgba(122,168,255,.14),rgba(255,209,102,.08));border-color:rgba(122,168,255,.35)}
+.jt-e{font-size:22px;line-height:1}
+.jt-n{display:grid;gap:1px;flex:1;min-width:0}
+.jt-n b{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.jt-n small{color:var(--tx3);font-size:12px}
+.jt-z em{font-style:normal;font-size:11px;color:#9cc0ff;white-space:nowrap}
+.jt-z i{font-style:normal;color:var(--tx3);font-size:18px}
+.jt-emo{display:flex;flex-wrap:wrap;gap:6px}
+.jt-emo label{cursor:pointer}.jt-emo input{position:absolute;opacity:0;pointer-events:none}
+.jt-emo span{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;font-size:20px;border:1px solid var(--line);background:rgba(255,255,255,.04)}
+.jt-emo input:checked+span{border-color:#c58cff;background:rgba(197,140,255,.18);box-shadow:0 0 0 2px rgba(197,140,255,.35)}
+.pla-wahl{display:grid;gap:4px}
+.pla-fest{opacity:.75}.pla-fest em{font-style:normal;font-size:11px;color:var(--tx3);margin-left:6px}
+.seg-zr{position:relative}
+.seg-zr .seg{padding-right:60px}
+.seg-zr>.ibtn{position:absolute;right:-4px;top:0;z-index:2;background:rgba(24,20,40,.94);box-shadow:-16px 0 16px -4px rgba(10,8,20,.9)}
 
 
 /* =====================================================================
@@ -2929,6 +2952,11 @@ html[data-wx-ph=nacht]:is([data-wx~=regen],[data-wx~=gewitter],[data-wx~=schnee]
 html[data-wx-ph=nacht][data-wx~=wolkig] #himmel .st{opacity:.4}
 /* Karten am hellen Himmel etwas dunkler, damit Schrift gut lesbar bleibt */
 html.g2[data-wx-ph]:not([data-wx-ph=nacht]){--card:rgba(8,12,24,.52);--card2:rgba(12,18,34,.62)}
+/* Toms Hinweis 19.11.: bei Regen/Wolken am Tag waren die Glas-Karten grau auf grau. Jetzt dunkles, fast deckendes Glas, Regen dahinter verschwimmt */
+html.g2[data-wx-ph]:not([data-wx-ph=nacht]){--glas:radial-gradient(130% 70% at 0 0,color-mix(in srgb,var(--amb) 10%,transparent),transparent 62%),linear-gradient(160deg,rgba(16,21,36,.9),rgba(9,13,25,.86) 46%,rgba(12,17,30,.88));--mulde:rgba(0,0,0,.28)}
+html.g2[data-wx-ph]:not([data-wx-ph=nacht]) #app :is(.card,.tile,.stat,.mini){-webkit-backdrop-filter:blur(16px) saturate(140%);backdrop-filter:blur(16px) saturate(140%);border-color:rgba(255,255,255,.12)}
+html.g2[data-wx-ph]:not([data-wx-ph=nacht]) #app .muted{color:rgba(222,230,244,.66)}
+html.g2[data-wx-ph]:not([data-wx-ph=nacht]) #app .sample{background:rgba(10,14,26,.7);color:#dfe6f2}
 html.g2[data-wx-ph]:not([data-wx-ph=nacht]) #app h1,html.g2[data-wx-ph]:not([data-wx-ph=nacht]) #app .kopf .sub{text-shadow:0 1px 14px rgba(0,10,30,.45)}
 
 /* Sonne oben rechts: weiche Scheibe, Strahlenkranz dreht sich langsam */
@@ -3100,6 +3128,8 @@ html.g2-ruhig .fk-puls,html.g2-ruhig .fb3-live i,html.g2-ruhig .fk-aps .pin circ
 .ein-wahl small{color:var(--tx3);margin-left:6px;font-weight:400}
 html.g2-ruhig .ein-ic b,html.g2-ruhig .ein-ic i,html.g2-ruhig .ein-chips span{animation:none}
 @media (prefers-reduced-motion:reduce){.ein-ic b,.ein-ic i,.ein-chips span{animation:none}}
+/* Heller Himmel: Unterzeile unter der Begrüßung gut lesbar */
+html.g2[data-wx-ph]:not([data-wx-ph=nacht]) #app .kopf .take{color:rgba(255,255,255,.94);text-shadow:0 1px 2px rgba(0,10,30,.55),0 1px 14px rgba(0,10,30,.55)}
 
 </style>
 </head>
@@ -3245,7 +3275,7 @@ function defaults() {
       { id: 'geb', name: 'Geburtstag', color: '#ff6b9a' }, { id: uid(), name: 'Sport', color: '#ff8a4c' }, { id: uid(), name: 'Arzt', color: '#4fd1c5' },
       { id: uid(), name: 'Familie & Freunde', color: '#b07cff' }, { id: uid(), name: 'Freizeit', color: '#ffd166' }, { id: uid(), name: 'Sonstiges', color: '#9aa3b5' }
     ],
-    bdays: [], shop: [], shopHist: [], chores: [], meals: {}, habits: [], trips: [], notes: [], projects: [],
+    bdays: [], jahrestage: [], shop: [], shopHist: [], chores: [], meals: {}, habits: [], trips: [], notes: [], projects: [],
     templates: [], workouts: [], body: [], sgoals: [], wmap: { c: {}, r: {}, t: {} }, game: { hi: 0, runs: 0 },
     ueb: { from: 'auto', to: 'en-GB', pto: 'de', ton: 'neutral', q: 'quick', auto: true, speak: true, hist: [], fav: [], pc: {}, rec: [] }
   };
@@ -3479,6 +3509,7 @@ function dayItems(d) {
   for (const e of S.events) if (evOccurs(e, d)) { const c = ecat(e.cat); out.push({ k: 'ev', t: e.title, time: e.time, end: e.endTime, c: c.color, id: e.id, cat: c.name }); }
   const md = d.slice(5);
   for (const b of S.bdays) if (b.date && b.date.slice(5) === md) { const age = b.date.slice(0, 4) > '1800' ? (+d.slice(0, 4) - +b.date.slice(0, 4)) : null; out.push({ k: 'bday', t: `🎂 ${b.name}${age ? ' (' + age + ')' : ''}`, c: '#ff6b9a', id: b.id }); }
+  out.push(...jtTage(d));
   for (const e of S.sEv || []) if (d >= e.date && d <= (e.to || e.date)) { const k = SK[e.cat] || SK.sonst; out.push({ k: 'sev', t: k[2] + ' ' + (e.title || k[0]), time: e.time, end: e.endTime, c: k[1], id: e.id, cat: 'Schule' }); }
   for (const t of S.wtasks) if (t.date === d) out.push({ k: 'wtask', t: t.title, time: t.time, c: '#4f8cff', id: t.id, done: t.done });
   for (const r of S.rec) if (recDates(r, d, d).length) out.push({ k: 'rec', t: `${r.name} ${eur(r.amount)}`, c: r.type === 'ein' ? '#2ecc8f' : '#9aa3b5' });
@@ -4659,7 +4690,7 @@ VIEWS.heute = () => {
 
   // Termine heute & morgen
   const its = dayItems(t).filter(i => !['shift', 'abs', 'hol'].includes(i.k));
-  const itsT = dayItems(tm).filter(i => ['ev', 'bday', 'wtask'].includes(i.k));
+  const itsT = dayItems(tm).filter(i => ['ev', 'bday', 'jt', 'wtask'].includes(i.k));
   const evRow = i => `<div class="ev ${i.done ? 'done' : ''}"><i class="dot" style="background:${i.c}"></i><span class="num sub" style="width:42px">${i.time || ''}</span><span class="t grow">${esc(i.t)}</span></div>`;
   h += `<div class="card"><div class="row sb"><h2 style="margin:0">📅 Termine</h2><button class="btn sm sec" data-act="evNew" data-date="${t}">+ Termin</button></div><div style="margin-top:8px">${its.length ? its.map(evRow).join('') : '<div class="sub">Heute keine Termine.</div>'}</div>
     ${itsT.length ? `<h3>Morgen</h3>${itsT.map(evRow).join('')}` : ''}</div>`;
@@ -4697,6 +4728,10 @@ ACT.settings = () => {
     ${fSel('mainAcc', 'Hauptkonto für „Bis zum Gehalt“', [['', '– erstes Konto –'], ...S.accounts.map(a => [a.id, a.name])], s.mainAcc || '')}
     <div class="grid2">${fIn('soll', 'Wochenstunden (Soll)', s.soll, 'number')}${fIn('urlaub', 'Urlaubstage pro Jahr', s.urlaub, 'number')}</div>
     ${fSel('otModus', 'Überstunden rechnen', [['soll', 'Ist minus Soll (Wochenstunden)'], ['plan', 'Nur Abweichung vom Dienstplan']], s.otModus === 'plan' ? 'plan' : 'soll')}
+    <h3>💞 Jahrestage</h3>
+    <div class="sub" style="margin:-4px 0 8px">Stehen jedes Jahr im Kalender, mit der Zahl der Jahre.</div>
+    <div class="jt-liste" id="jtListe">${jtListeHtml()}</div>
+    <button type="button" class="btn sec sm" data-act="jtNeu" style="margin:6px 0 12px">+ Jahrestag</button>
     <h3>🎓 Ausbildung</h3>
     ${fChk('schule', 'Ich bin noch in der Schule / Ausbildung', s.schule)}
     <div class="sub" style="margin:-4px 0 10px">Dann bekommt „Arbeit“ einen Reiter Schule (Noten, Prüfungen, Stundenplan). Statt Dienstplan gibt es einen Kalender nur für besondere Ereignisse. Beurteilung und Stunden & DUZ werden ausgeblendet, deine Daten bleiben gespeichert.</div>
@@ -4719,7 +4754,7 @@ ACT.settings = () => {
     <h3>Daten</h3>
     <div class="sub" style="margin-bottom:8px">Alle Daten liegen nur auf diesem Gerät. Zum Übertragen auf ein anderes Gerät: Sichern, Datei per AirDrop/WhatsApp schicken und dort importieren.</div>
     <div class="row wrap"><button type="button" class="btn sec sm" data-act="export">Sicherung exportieren</button><button type="button" class="btn sec sm" data-act="import">Sicherung importieren</button><button type="button" class="btn bad sm" data-act="wipe">Alles löschen</button></div>
-    <div class="sub" style="margin-top:12px">Version 65 · ${kursOnline() ? 'nur Finanzkurse online, alles andere gesperrt' : '100 % offline · kein Internetzugriff'}</div>`,
+    <div class="sub" style="margin-top:12px">Version ${typeof APP_V !== 'undefined' ? APP_V : ''} · ${kursOnline() ? 'nur Finanzkurse online, alles andere gesperrt' : '100 % offline · kein Internetzugriff'}</div>`,
     v => { Object.assign(s, { name: v.name.trim(), nachname: v.nachname.trim(), dienstbez: v.dienstbez.trim(), kennnr: v.kennnr.trim(), land: v.land, eigNamen: (v.eigNamen || '').trim(), mainAcc: v.mainAcc || null, soll: numIn(v.soll), otModus: v.otModus === 'plan' ? 'plan' : 'soll', urlaub: numIn(v.urlaub) });
       s.duz = { nacht: num(v.nacht), samstag: num(v.samstag), sonntag: num(v.sonntag), feiertag: num(v.feiertag) };
       s.schule = !!v.schule; s.jatos = v.jatos; s.outfit = v.outfit; s.jstil = v.jstil === 'klassisch' ? 'klassisch' : 'pixel'; s.burgFliegt = !!v.burgFliegt; s.bar = v.bar === 'unten' ? 'unten' : 'oben'; s.design = v.design === 'klassisch' ? 'klassisch' : 'neu'; s.ruhig = !v.bewegung;
@@ -5984,14 +6019,14 @@ ACT.dbOpen = () => {
 
 /* ---------- Planung ---------- */
 VIEWS.planung = () => {
-  const _t = today(), _ev = dayItems(_t).filter(i => ['ev', 'bday', 'wtask'].includes(i.k)), _shop = S.shop.filter(x => !x.done).length;
+  const _t = today(), _ev = dayItems(_t).filter(i => ['ev', 'bday', 'jt', 'wtask'].includes(i.k)), _shop = S.shop.filter(x => !x.done).length;
   let h = header('Planung', '', `${_ev.length ? `Heute ${_ev.length} ${_ev.length === 1 ? 'Termin' : 'Termine'}, als Nächstes: <b>${esc(_ev[0].t)}</b>${_ev[0].time ? ' um ' + _ev[0].time : ''}.` : 'Heute keine Termine.'} ${_shop ? `${_shop} Sachen auf der Einkaufsliste.` : ''}`);
-  h += seg('planung', [['kalender', '📅 Kalender'], ['einkauf', '🛒 Einkauf'], ['geburtstage', '🎂 Geburtstage'], ['haushalt', '🧹 Haushalt'], ['essen', '🍝 Essensplan'], ['gewohnheiten', '🔁 Gewohnheiten'], ['notizen', '📝 Notizen'], ['projekte', '🛠️ Projekte']]);
-  if (!PLA[UI.sub.planung]) UI.sub.planung = 'kalender';
+  const _r = plaReiter(); if (!PLA[UI.sub.planung] || !_r.some(([k]) => k === UI.sub.planung)) UI.sub.planung = 'kalender';
+  h += `<div class="seg-zr">${seg('planung', _r)}<button class="ibtn" data-act="plaReiter" title="Reiter wählen" aria-label="Reiter wählen">⚙︎</button></div>`;
   return h + PLA[UI.sub.planung]();
 };
 const PLA = {};
-const itemLine = i => `<div class="ev ${i.done ? 'done' : ''}" ${i.k === 'ev' ? `data-act="evEdit" data-id="${i.id}" style="cursor:pointer"` : i.k === 'wtask' ? `data-act="wtEdit" data-id="${i.id}" style="cursor:pointer"` : i.k === 'bday' ? `data-act="bdEdit" data-id="${i.id}" style="cursor:pointer"` : ''}>${i.code ? `<span class="chip" style="background:${i.c};height:18px;min-width:22px">${esc(i.code)}</span>` : `<i class="dot" style="background:${i.c}"></i>`}<span class="num sub" style="min-width:38px">${i.time || ''}</span><span class="t grow">${esc(i.t)}</span>${i.cat ? `<span class="tag">${esc(i.cat)}</span>` : ''}</div>`;
+const itemLine = i => `<div class="ev ${i.done ? 'done' : ''}" ${i.k === 'ev' ? `data-act="evEdit" data-id="${i.id}" style="cursor:pointer"` : i.k === 'wtask' ? `data-act="wtEdit" data-id="${i.id}" style="cursor:pointer"` : i.k === 'bday' ? `data-act="bdEdit" data-id="${i.id}" style="cursor:pointer"` : i.k === 'jt' ? `data-act="${i.id === 'jatos' ? 'jtJatos' : 'jtEdit'}" data-id="${i.id}" style="cursor:pointer"` : ''}>${i.code ? `<span class="chip" style="background:${i.c};height:18px;min-width:22px">${esc(i.code)}</span>` : `<i class="dot" style="background:${i.c}"></i>`}<span class="num sub" style="min-width:38px">${i.time || ''}</span><span class="t grow">${esc(i.t)}</span>${i.cat ? `<span class="tag">${esc(i.cat)}</span>` : ''}</div>`;
 PLA.kalender = () => {
   const v = UI.calView, d = UI.calDate;
   let h = `<div class="seg" style="margin-bottom:8px">${[['tag', 'Tag'], ['woche', 'Woche'], ['monat', 'Monat'], ['jahr', 'Jahr']].map(([k, l]) => `<button class="${v === k ? 'on' : ''}" data-act="calView" data-v="${k}">${l}</button>`).join('')}</div>`;
@@ -6037,7 +6072,7 @@ function tkKalender(d) {
     <div class="tkk-grid">${g}</div>
     <div class="tkk-leg">${leg.map(([c, n]) => c === 'frei' ? `<span class="tkk-lf">${esc(n)}</span>` : `<span style="--c:${c}">${esc(n)}</span>`).join('')}<button type="button" data-act="ecatEdit">Kategorien</button></div>
     <div class="tkk-det"><div class="row sb"><b>${wd}</b><button class="btn sm" data-act="evNew" data-date="${d}">+ Termin</button></div>
-    ${tag.length ? `<ul class="tkk-liste">${tag.map((i, n) => `<li ${i.k === 'ev' ? `data-act="evEdit" data-id="${i.id}"` : i.k === 'wtask' ? `data-act="wtEdit" data-id="${i.id}"` : i.k === 'bday' ? `data-act="bdEdit" data-id="${i.id}"` : ''} style="--c:${i.k === 'shift' ? '#4f8cff' : i.c};--n:${n}" class="${i.done ? 'done' : ''}"><span class="txt">${i.code ? `<i class="chip" style="background:${i.c}">${esc(i.code)}</i> ` : ''}${esc(i.t)}</span><span class="meta">${[i.time ? i.time + (i.end ? '–' + i.end : '') + ' Uhr' : '', i.cat || ''].filter(Boolean).join(' · ')}</span></li>`).join('')}</ul>` : '<div class="leer">Nichts eingetragen. Tipp auf „+ Termin“.</div>'}</div></div>`;
+    ${tag.length ? `<ul class="tkk-liste">${tag.map((i, n) => `<li ${i.k === 'ev' ? `data-act="evEdit" data-id="${i.id}"` : i.k === 'wtask' ? `data-act="wtEdit" data-id="${i.id}"` : i.k === 'bday' ? `data-act="bdEdit" data-id="${i.id}"` : i.k === 'jt' ? (i.id === 'jatos' ? 'data-act="jtJatos"' : `data-act="jtEdit" data-id="${i.id}"`) : ''} style="--c:${i.k === 'shift' ? '#4f8cff' : i.c};--n:${n}" class="${i.done ? 'done' : ''}"><span class="txt">${i.code ? `<i class="chip" style="background:${i.c}">${esc(i.code)}</i> ` : ''}${esc(i.t)}</span><span class="meta">${[i.time ? i.time + (i.end ? '–' + i.end : '') + ' Uhr' : '', i.cat || ''].filter(Boolean).join(' · ')}</span></li>`).join('')}</ul>` : '<div class="leer">Nichts eingetragen. Tipp auf „+ Termin“.</div>'}</div></div>`;
 }
 function calLegend() {
   return `<div class="legend" style="margin-bottom:12px">${S.shiftTypes.filter(t => Object.values(S.shifts).some(s => s.type === t.id)).map(t => `<span><i class="chip" style="background:${t.color};height:16px;min-width:20px">${esc(t.code)}</i>${esc(t.name)}</span>`).join('')}${S.ecats.map(c => `<span><i class="dot" style="background:${c.color}"></i>${esc(c.name)}</span>`).join('')}<span><i class="dot" style="background:#4f8cff"></i>Arbeit</span><span><i class="dot" style="background:#9aa3b5"></i>Zahlung</span><span><i class="dot" style="background:#ff8a4c"></i>Training</span><button class="btn sm sec" data-act="ecatEdit" style="padding:2px 8px">Kategorien</button></div>`;
@@ -6186,6 +6221,69 @@ function projEdit(p) {
   modal(isNew ? 'Neues Projekt' : 'Projekt', `${fIn('name', 'Name', p.name || '')}<div class="grid2">${fIn('due', 'Zieldatum', p.due || '', 'date')}${fMoney('budget', 'Budget (€)', p.budget || '')}</div>${fTxt('note', 'Notizen', p.note || '')}`,
     v => { if (!v.name.trim()) return false; const o = Object.assign(isNew ? { id: uid(), tasks: [] } : p, { name: v.name.trim(), due: v.due, budget: num(v.budget), note: v.note }); if (isNew) S.projects.push(o); },
     { del: isNew ? null : () => { S.projects = S.projects.filter(x => x !== p); } });
+}
+
+/* ---------- Planung: Reiter wählen (Zahnrad) ---------- */
+const PLA_REITER = [['kalender', '📅 Kalender'], ['einkauf', '🛒 Einkauf'], ['geburtstage', '🎂 Geburtstage'], ['haushalt', '🧹 Haushalt'], ['essen', '🍝 Essensplan'], ['gewohnheiten', '🔁 Gewohnheiten'], ['notizen', '📝 Notizen'], ['projekte', '🛠️ Projekte']];
+const plaReiter = () => { const aus = S.settings.plaAus || []; return PLA_REITER.filter(([k]) => k === 'kalender' || !aus.includes(k)); };
+ACT.plaReiter = () => {
+  const aus = S.settings.plaAus || [];
+  modal('Reiter in Planung', `<div class="sub" style="margin-bottom:10px">Haken weg, und der Reiter verschwindet. Deine Einträge bleiben gespeichert und sind wieder da, sobald du ihn zurückholst.</div>
+    <div class="pla-wahl">${PLA_REITER.map(([k, l]) => k === 'kalender'
+      ? `<label class="chk pla-fest"><input type="checkbox" checked disabled><span>${l} <em>bleibt immer</em></span></label>`
+      : fChk('r_' + k, l, !aus.includes(k))).join('')}</div>`,
+    v => { S.settings.plaAus = PLA_REITER.map(([k]) => k).filter(k => k !== 'kalender' && !v['r_' + k]); if (S.settings.plaAus.includes(UI.sub.planung)) UI.sub.planung = 'kalender'; },
+    { still: true });
+};
+
+/* ---------- Jahrestage ---------- */
+/* JATOS ist am 30.10.2026 in dieser App zur Welt gekommen (Toms erster Wunsch nach dem Zauberer). Steht bei allen im Kalender */
+const JATOS_GEBURT = { id: 'jatos', name: 'JATOS hat Geburtstag', date: '2026-10-30', emoji: '🧙', fest: true };
+const jtListe = () => [JATOS_GEBURT, ...(S.jahrestage || [])];
+function jtText(j, d) {
+  const n = +d.slice(0, 4) - +j.date.slice(0, 4);
+  if (j.fest) return `${j.emoji} ${j.name}${n > 0 ? ` (wird ${n})` : ' (Geburtsstunde)'}`;
+  return `${j.emoji || '💞'} ${j.name}${n > 0 ? ` (${n}. Jahrestag)` : ''}`;
+}
+function jtTage(d) {
+  const md = d.slice(5), out = [];
+  for (const j of jtListe()) {
+    if (!j.date || d < j.date) continue;
+    /* 29. Februar: in anderen Jahren am 28. */
+    const tag = j.date.slice(5) === '02-29' && !(new Date(+d.slice(0, 4), 1, 29).getMonth() === 1) ? '02-28' : j.date.slice(5);
+    if (tag === md) out.push({ k: 'jt', t: jtText(j, d), c: j.fest ? '#7aa8ff' : '#c58cff', id: j.id });
+  }
+  return out;
+}
+const JT_EMOJI = ['💞', '💍', '🏡', '🐾', '🎓', '🚓', '🥂', '⭐'];
+function jtListeHtml() {
+  const l = jtListe(), t = today();
+  return l.map(j => { let n = t.slice(0, 4) + j.date.slice(4); if (n < t) n = (+t.slice(0, 4) + 1) + j.date.slice(4); if (n < j.date) n = j.date;
+    return `<button type="button" class="jt-z${j.fest ? ' fest' : ''}" ${j.fest ? 'data-act="jtJatos"' : `data-act="jtEdit" data-id="${j.id}"`}><span class="jt-e">${j.emoji || '💞'}</span><span class="jt-n"><b>${esc(j.name)}</b><small>seit ${fmtD(j.date)} · nächstes Mal ${fmtD(n)}</small></span>${j.fest ? '<em>immer dabei</em>' : '<i>›</i>'}</button>`; }).join('');
+}
+function jtAuffrischen() { const el = document.getElementById('jtListe'); if (el) el.innerHTML = jtListeHtml(); }
+ACT.jtNeu = () => jtForm();
+ACT.jtEdit = d => jtForm(byId(S.jahrestage || [], d.id));
+ACT.jtJatos = () => { toast('🧙 JATOS ist am 30.10.2026 in dieser App zur Welt gekommen. Sein Geburtstag steht bei allen im Kalender.'); if (typeof jatosAktion === 'function') jatosAktion('Vergiss meinen Geburtstag nicht! 🎂'); };
+function jtForm(j) {
+  const neu = !j; j = j || { emoji: '💞', name: '', date: '' };
+  modal(neu ? 'Jahrestag eintragen' : 'Jahrestag', `
+    ${fIn('name', 'Was?', j.name, 'text', 'placeholder="z.B. Jahrestag mit Lisa, Hochzeitstag, Einzug"')}
+    ${fIn('date', 'Seit wann? (Tag des ersten Mals)', j.date, 'date')}
+    <div class="f"><span>Zeichen</span><div class="jt-emo">${JT_EMOJI.map(e => `<label><input type="radio" name="emoji" value="${e}" ${e === (j.emoji || '💞') ? 'checked' : ''}><span>${e}</span></label>`).join('')}</div></div>
+    <div class="sub">Steht dann jedes Jahr an dem Tag im Kalender, mit der Zahl der Jahre.</div>`,
+    v => { if (!v.name.trim() || !v.date) { toast('Bitte Name und Datum eintragen.'); return false; }
+      if (!S.jahrestage) S.jahrestage = [];
+      Object.assign(j, { name: v.name.trim(), date: v.date, emoji: v.emoji || '💞' }); if (neu) { j.id = uid(); S.jahrestage.push(j); }
+      setTimeout(jtAuffrischen, 0); },
+    { still: true, del: neu ? null : () => { S.jahrestage = S.jahrestage.filter(x => x !== j); setTimeout(jtAuffrischen, 0); } });
+}
+/* Gimmick: an JATOS' Geburtstag sagt er es beim ersten Öffnen selbst */
+function jtJatosGruss() {
+  const t = today(); if (t.slice(5) !== JATOS_GEBURT.date.slice(5) || t <= JATOS_GEBURT.date || S.settings.jatosGruss === t || S.settings.jatos === false) return;
+  S.settings.jatosGruss = t; save();
+  const n = +t.slice(0, 4) - +JATOS_GEBURT.date.slice(0, 4);
+  setTimeout(() => { if (typeof jatosAktion === 'function') jatosAktion(`🎂 Heute ist mein Geburtstag! Ich werde ${n}. Danke, dass ich bei dir wohnen darf! 🎉`); }, 2500);
 }
 
 /* ---------- Muskeln: Körperbild, Übungs-Datenbank, Belastung ---------- */
@@ -10608,7 +10706,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 124;
+const APP_V = 125;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -12510,6 +12608,7 @@ load();
 autoBook();
 render();
 hlLaden();
+try { jtJatosGruss(); } catch (e) {}
 let _sy = 0;
 addEventListener('scroll', () => { const y = scrollY, b = document.body; b.classList.toggle('gescrollt', y > 8);
   // Leiste oben beim Runterscrollen ausblenden, beim Hochscrollen wieder zeigen
