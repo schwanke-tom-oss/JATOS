@@ -8620,7 +8620,7 @@ function docParse(text) {
   const st = stops.filter((s, i) => !(i && s.c === stops[i - 1].c && s.t === stops[i - 1].t));
   const rp = r.kind !== 'flug' ? reiseplanLeg(st, [...new Set(nos)]) : null;
   const legs = rp ? [rp] : []; if (!rp) for (let i = 0; i + 1 < st.length; i += 2) { const a = st[i], b = st[i + 1]; if (a.c === b.c) { i--; continue; } legs.push({ from: a.nm, to: b.nm, date: a.d, dep: a.t, arrDate: b.d || a.d, arr: b.t }); }
-  const sitze = []; const reS = /Wagen\s*(\d+)[^\n\d]{0,14}(?:Pl(?:atz|ätze|\.)|Sitz)\s*([\d ,\/]+\d)/gi, reF = /(?:Sitz(?:platz)?|Seat)[:\s]*(\d{1,2}[A-K])\b/gi;
+  const sitze = []; const reS = /(?:Wagen|Wg\.?)\s*(\d+)[^\n\d]{0,14}(?:P[lI1|](?:atz|ätze|\.)|Sitz)\s*([\d ,\/]+\d)/gi, reF = /(?:Sitz(?:platz)?|Seat)[:\s]*(\d{1,2}[A-K])\b/gi;
   while ((m = reS.exec(T))) sitze.push(`Wagen ${m[1]}, Platz ${m[2].replace(/\s+/g, ' ').trim()}`); while ((m = reF.exec(T))) sitze.push(m[1]);
   const gate = fang(/\b(Gleis\s*\d+\w?|Gate\s*[A-Z]?\d+\w?|Terminal\s*\w+)\b/i);
   legs.forEach((l, i) => { l.type = r.kind; l.no = nos[i] || ''; l.seat = sitze[i] || ''; l.gate = i === 0 ? gate : ''; l.ref = r.ref; l.airline = airlineVon(l.no); l.cost = i === 0 ? r.cost : 0; });
@@ -8640,6 +8640,10 @@ ACT.docText = d => { const tr = trp(d); modal('📋 Buchungstext einfügen', `<d
 function docUebernehmen(tr, meta, text, bild) {
   tripFix(tr); (tr.docs = tr.docs || []).push(meta); save();
   const p = text && text.trim().length > 20 ? docParse(text) : null;
+  /* Gibt es die Fahrt oder Unterkunft schon? Dann diese ergänzen statt eine zweite anzulegen */
+  const schon = p && (p.kind === 'hotel' ? (p.in || p.name) && tr.hotels.find(x => x.doc === meta.id || (x.in && x.in === p.in)) : p.legs && p.legs.length === 1 && tr.segs.find(x => (!p.legs[0].date || x.date === p.legs[0].date) && _gleichOrt(x.from, p.legs[0].from) && _gleichOrt(x.to, p.legs[0].to)));
+  if (schon) { const r = docAbgleich(tr, meta, p); save(); UI.tripSec = p.kind === 'hotel' ? UI.tripSec : 'wege'; render(); if (p.kind === 'hotel') hotEdit(tr, schon); else segEdit(tr, schon);
+    toast(r ? `✨ Schon eingetragen. ${r.charAt(0).toUpperCase() + r.slice(1)}. Bitte kurz prüfen.` : '📎 Diese Fahrt ist schon eingetragen und vollständig. Das Dokument hängt jetzt daran.'); return; }
   if (p && p.kind === 'hotel' && (p.in || p.name)) { meta.kind = 'hotel'; save(); hotEdit(tr, { in: p.in || tr.from || '', inTime: p.inTime, out: p.out || tr.to || '', outTime: p.outTime, name: p.name, place: p.place || tr.ort || '', addr: p.addr, ref: p.ref, phone: p.phone, cost: p.cost || '', note: p.note || '', doc: meta.id, _neu: true }); toast('🏨 Hotelbuchung erkannt. Bitte kurz prüfen und speichern.'); return; }
   if (p && p.legs && p.legs.length === 1) { meta.kind = p.kind; save(); segEdit(tr, Object.assign({ doc: meta.id, _neu: true }, p.legs[0])); toast(`${SEG_T[p.kind][0]} ${p.kind === 'zug' ? 'Zugticket' : p.kind === 'bus' ? 'Busticket' : 'Flugticket'} erkannt. Bitte kurz prüfen und speichern.`); return; }
   if (p && p.legs && p.legs.length > 1) { meta.kind = p.kind; p.legs.forEach(l => tr.segs.push(Object.assign({ id: uid(), doc: meta.id, note: '', cost: 0 }, l, { cost: l.cost || 0 }))); save(); UI.tripSec = 'wege'; render(); toast(`✨ ${p.legs.length} Fahrten aus dem Dokument übernommen. Tippe sie an, um sie zu prüfen.`); jatosAktion(`Ich habe ${p.legs.length} Verbindungen aus deinem Ticket gezaubert! 🪄`); return; }
@@ -8709,11 +8713,11 @@ function dbTicket(T, L) {
   const vm = T.match(/Via:?\s*([\s\S]{0,200}?)(?:\n\s*\n|\n(?=[A-ZÄÖÜ][a-zäöü]+(?:details|ungen|ionen|preis)\b)|Buchungsdetails|Reservierung|Konditionen|$)/i);
   const via = vm ? viaDekodieren(vm[1].replace(/\n/g, '')) : [];
   const viaF = via.filter(x => { const c = ortSuche(x); return c && c !== ortSuche(von) && c !== ortSuche(nach); });
-  const date = docDatum(zug[5]), sitz = T.match(/(?:Wagen|Wg\.?)\s*(\d+)\s*,?\s*(?:Pl(?:atz|ätze|\.)?|Sitz(?:e|platz)?)\s*([\d ,\/]+\d)/i);
+  const date = docDatum(zug[5]), sitz = T.match(/(?:Wagen|Wg\.?)\s*(\d+)\s*,?\s*(?:P[lI1|](?:atz|ätze|\.)?|Sitz(?:e|platz)?)\s*([\d ,\/]+\d)(?:\s*,\s*((?:Handy|Ruhe|Familien|Kleinkind)\w*|Abteil|Großraum\w*|Fenster|Gang))?/i);
   const ref = (T.match(/(?:Auftrags-?(?:nummer|nr\.?)|Auftrag)[:\s#]*([A-Z0-9]{6,})/i) || [])[1] || '';
   const pr = T.match(/(?:Gesamtpreis|Gesamtbetrag|Summe)[^\d\n]{0,25}(\d{1,5}(?:[.,]\d{3})*[.,]\d{2})/i);
   return { kind: 'zug', ref, cost: pr ? num(pr[1].replace(/\.(?=\d{3}\b)/g, '')) : 0, roh: T,
-    legs: [{ type: 'zug', no: zug[1].toUpperCase() + ' ' + zug[2], from: von, to: nach, via: viaF.join(', '), date, dep: zug[3].padStart(2, '0') + ':' + zug[4], arrDate: date, arr: '', seat: sitz ? `Wagen ${sitz[1]}, Platz ${sitz[2].replace(/\s+/g, ' ').trim()}` : '', gate: '', ref, airline: '', cost: pr ? num(pr[1].replace(/\.(?=\d{3}\b)/g, '')) : 0, _ca: true }] };
+    legs: [{ type: 'zug', no: zug[1].toUpperCase() + ' ' + zug[2], from: von, to: nach, via: viaF.join(', '), date, dep: zug[3].padStart(2, '0') + ':' + zug[4], arrDate: date, arr: '', seat: sitz ? `Wagen ${sitz[1]}, Platz ${sitz[2].replace(/\s+/g, ' ').trim()}${sitz[3] ? ' (' + sitz[3] + ')' : ''}` : '', gate: '', ref, airline: '', cost: pr ? num(pr[1].replace(/\.(?=\d{3}\b)/g, '')) : 0, _ca: true }] };
 }
 
 /* Reiseplan mit Zwischenhalten (ein Zug, viele Zeilen mit Uhrzeit): eine Fahrt mit Halten und ihren Zeiten */
@@ -8747,7 +8751,17 @@ async function ocrText(buf, mime, fort) {
   const b = new URL('./ocr/', location.href).href;
   const w = await Tesseract.createWorker('deu', 1, { workerPath: b + 'worker.min.js', corePath: b + 'tesseract-core-simd-lstm.js', langPath: b.replace(/\/$/, ''), workerBlobURL: false, gzip: true, cacheMethod: 'none',
     logger: m => { if (fort && m.status === 'recognizing text') fort(m.progress); } });
-  try { const { data } = await w.recognize(new Blob([buf], { type: mime || 'image/png' })); return data && data.text || ''; } finally { try { await w.terminate(); } catch (e) {} }
+  try { const { data } = await w.recognize(await ocrVorbereiten(new Blob([buf], { type: mime || 'image/png' }))); return data && data.text || ''; } finally { try { await w.terminate(); } catch (e) {} }
+}
+/* Dunkle Screenshots (z. B. Trade Republic, Dunkelmodus): umkehren und in Graustufen, damit auch graue Beschriftungen gelesen werden */
+async function ocrVorbereiten(blob) {
+  try { const bmp = await createImageBitmap(blob), sc = Math.min(1, 2400 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas'); c.width = Math.round(bmp.width * sc); c.height = Math.round(bmp.height * sc);
+    const x = c.getContext('2d'); x.drawImage(bmp, 0, 0, c.width, c.height); const im = x.getImageData(0, 0, c.width, c.height), d = im.data; let su = 0;
+    for (let i = 0; i < d.length; i += 16) su += .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2];
+    const dunkel = su / (d.length / 16) < 110;
+    for (let i = 0; i < d.length; i += 4) { let v = .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2]; if (dunkel) v = 255 - v; v = v > 215 ? 255 : v * .8; d[i] = d[i + 1] = d[i + 2] = v; }
+    x.putImageData(im, 0, 0); return await new Promise(r => c.toBlob(b => r(b || blob), 'image/png'));
+  } catch (e) { return blob; }
 }
 async function docLesen(rec, fort) {
   if (!rec) return '';
@@ -8758,24 +8772,27 @@ async function docLesen(rec, fort) {
 /* ---------- Nach einem Update: gespeicherte Dokumente neu lesen und fehlende Angaben ergänzen ---------- */
 const _gleichOrt = (a, b) => { const x = ortSuche(a), y = ortSuche(b); return !!x && x === y || lowN(a) === lowN(b); };
 function docAbgleich(tr, meta, p) {
-  if (!p) return ''; tripFix(tr); const neu = [];
-  const fuell = (o, q, keys) => { let n = 0; for (const k of keys) if (q[k] && (o[k] == null || o[k] === '' || o[k] === 0)) { o[k] = q[k]; n++; } return n; };
+  docAbgleich.treffer = null; if (!p) return ''; tripFix(tr); const neu = [], korr = [];
+  const NAMEN = { via: 'Halte', seat: 'Sitzplatz', no: 'Zugnummer', gate: 'Gleis', ref: 'Buchungsnummer', dep: 'Abfahrt', date: 'Datum', arr: 'Ankunft', name: 'Name', place: 'Ort', addr: 'Adresse', in: 'Anreise', out: 'Abreise', inTime: 'Check-in', outTime: 'Check-out', phone: 'Telefon', note: 'Verpflegung', cost: 'Preis' };
+  const fuell = (o, q, keys) => { const f = []; for (const k of keys) if (q[k] && (o[k] == null || o[k] === '' || o[k] === 0)) { o[k] = q[k]; f.push(NAMEN[k] || k); } return f; };
   if (p.kind === 'hotel' && (p.in || p.name)) {
     let h = tr.hotels.find(x => x.doc === meta.id) || tr.hotels.find(x => x.in && x.in === p.in && (!p.name || !x.name || lowN(x.name).slice(0, 6) === lowN(p.name).slice(0, 6)));
     if (!h) { h = { id: uid(), doc: meta.id, name: p.name || 'Unterkunft', place: p.place || tr.ort || '', addr: p.addr || '', in: p.in || tr.from || '', inTime: p.inTime || '', out: p.out || tr.to || '', outTime: p.outTime || '', ref: p.ref || '', phone: p.phone || '', cost: p.cost || 0, note: p.note || '' }; tr.hotels.push(h); neu.push('Unterkunft angelegt'); }
-    else { if (!h.doc) h.doc = meta.id; if (fuell(h, p, ['name', 'place', 'addr', 'in', 'out', 'inTime', 'outTime', 'ref', 'phone', 'note', 'cost'])) neu.push('Unterkunft ergänzt'); }
+    else { if (!h.doc) h.doc = meta.id; neu.push(...fuell(h, p, ['name', 'place', 'addr', 'in', 'out', 'inTime', 'outTime', 'ref', 'phone', 'note', 'cost'])); docAbgleich.treffer = h; }
     meta.kind = 'hotel';
   } else if (p.legs && p.legs.length) {
     for (const l of p.legs) {
       let s = tr.segs.find(x => x.doc === meta.id && _gleichOrt(x.from, l.from) && _gleichOrt(x.to, l.to)) || tr.segs.find(x => (!l.date || x.date === l.date) && _gleichOrt(x.from, l.from) && _gleichOrt(x.to, l.to));
       if (!s) { tr.segs.push(Object.assign({ id: uid(), doc: meta.id, note: '' }, l, { cost: l.cost || 0 })); delete tr.segs[tr.segs.length - 1]._ca; neu.push(`${SEG_T[l.type] ? SEG_T[l.type][1] : 'Fahrt'} ${l.from} → ${l.to} angelegt`); continue; }
-      if (!s.doc) s.doc = meta.id; const vorher = !!s.via;
-      const n = fuell(s, l, ['via', 'seat', 'no', 'gate', 'ref', 'dep', 'date']) + (!s.arr && l.arr ? (s.arr = l.arr, s.arrDate = l.arrDate || s.arrDate, 1) : 0);
-      if (n) neu.push(!vorher && s.via ? 'Halte ergänzt' : 'Angaben ergänzt');
+      if (!s.doc) s.doc = meta.id; docAbgleich.treffer = docAbgleich.treffer || s;
+      neu.push(...fuell(s, l, ['via', 'seat', 'no', 'gate', 'ref', 'dep', 'date']));
+      if (l.dep && s.dep && s.dep !== l.dep && p.kind !== 'flug') { korr.push(`Abfahrt ${s.dep} → ${l.dep}`); s.dep = l.dep; }
+      if (l.no && s.no && lowN(s.no).replace(/\s/g, '') !== lowN(l.no).replace(/\s/g, '')) { korr.push(`Zug ${s.no} → ${l.no}`); s.no = l.no; } if (!s.arr && l.arr) { s.arr = l.arr; s.arrDate = l.arrDate || s.arrDate; neu.push('Ankunft'); }
     }
     meta.kind = p.kind;
   }
-  return [...new Set(neu)].join(', ');
+  const u = [...new Set(neu)], ang = u.filter(x => !/angelegt/.test(x)), an = u.filter(x => /angelegt/.test(x));
+  return [...an, ang.length ? ang.join(', ') + ' ergänzt' : '', korr.length ? 'korrigiert: ' + korr.join(', ') : ''].filter(Boolean).join(', ');
 }
 async function docNeuLesen(still) {
   const v = typeof APP_V === 'number' ? APP_V : 0; if (!S.settings || (S.settings.docLeseV || 0) >= v) return;
@@ -10570,7 +10587,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 122;
+const APP_V = 123;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -10892,10 +10909,10 @@ function spielInit() {
 }
 
 /* ---------- Dokument-Eingang auf Heute: eine Datei oder ein Foto einwerfen, die App erkennt die Art und sortiert sie ein (alles offline) ---------- */
-const EIN_ARTEN = { reise: ['✈️', 'Reisen', 'Ticket oder Hotel'], konto: ['💶', 'Finanzen', 'Kontoauszug oder Depot'], dienst: ['🚓', 'Arbeit', 'Dienstplan'], health: ['🏃', 'Sport', 'Health-Export'] };
+const EIN_ARTEN = { reise: ['✈️', 'Reisen', 'Ticket oder Hotel'], konto: ['💶', 'Finanzen', 'Kontoauszug oder Depot'], beleg: ['📈', 'Depot', 'Kauf, Verkauf oder Dividende'], dienst: ['🚓', 'Arbeit', 'Dienstplan'], health: ['🏃', 'Sport', 'Health-Export'] };
 function einKarte() {
-  return `<div class="card ein-k" data-ein-drop><button type="button" class="ein-btn" data-act="einDatei"><span class="ein-ic" aria-hidden="true"><i></i><b>📥</b></span><span class="ein-t"><b>Dokument einwerfen</b><span class="sub">Ticket, Hotel, Kontoauszug, Dienstplan oder Health-Export. Ich erkenne es und sortiere es ein.</span></span></button>
-    <div class="ein-chips">${Object.values(EIN_ARTEN).map(([i, n]) => `<span>${i} ${n}</span>`).join('')}<button type="button" class="ein-txt" data-act="einText">📋 Text einfügen</button></div></div>`;
+  return `<div class="card ein-k" data-ein-drop><button type="button" class="ein-btn" data-act="einDatei"><span class="ein-ic" aria-hidden="true"><i></i><b>📥</b></span><span class="ein-t"><b>Dokument einwerfen</b><span class="sub">Ticket, Hotel, Kontoauszug, Depot-Beleg, Dienstplan oder Health-Export. Ich erkenne es und sortiere es ein.</span></span></button>
+    <div class="ein-chips">${Object.entries(EIN_ARTEN).filter(([k]) => k !== 'beleg').map(([, v]) => v).map(([i, n]) => `<span>${i} ${n}</span>`).join('')}<button type="button" class="ein-txt" data-act="einText">📋 Text einfügen</button></div></div>`;
 }
 ACT.einDatei = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.pdf,.csv,.txt,.xlsx,.zip,.xml,application/pdf,text/csv,text/plain,image/*,application/zip,text/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'; i.style.display = 'none';
   i.onchange = () => { const f = i.files[0]; i.remove(); if (f) einDatei(f); }; document.body.appendChild(i); i.click(); };
@@ -10912,6 +10929,7 @@ function einArt(name, mime, text) {
   if (bank >= 2 && mime === 'application/pdf') return 'konto';
   let p = null; try { p = T.trim().length > 20 ? docParse(T) : null; } catch (e) {}
   if (p && ((p.kind === 'hotel' && (p.in || p.name)) || (p.legs && p.legs.length))) return 'reise';
+  if (trBeleg(T)) return 'beleg';
   return '';
 }
 async function einDatei(f) {
@@ -10924,6 +10942,8 @@ async function einDatei(f) {
   if (!art) return;
   const [ic, ziel, was] = EIN_ARTEN[art]; toast(`${ic} Erkannt: ${was} → ${ziel}`);
   if (art === 'health') return hlImportDatei(f);
+  if (art === 'beleg') { if (!text) { buf = buf || await f.arrayBuffer(); text = await docLesen({ buf, mime }); } const b = trBeleg(text, f.lastModified ? new Date(f.lastModified - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10) : '');
+    if (!b) return ask('Den Beleg konnte ich nicht lesen. Trag den Kauf oder Verkauf bitte im Depot selbst ein.', 'OK', 'Schließen'); UI.tab = 'finanzen'; render(); return trBelegFenster(b); }
   if (art === 'konto') { if (/^image\//.test(mime)) return ask('Kontoauszüge kann ich nur als PDF oder CSV aus dem Online-Banking einlesen, nicht als Foto.', 'OK', 'Schließen'); return impDateien([f]); }
   if (art === 'dienst') { try { const r = await dpDateiLesen(f); if (!r.gl.length) throw new Error('Ich habe keine Tage mit Kürzeln gefunden.'); dpAssistent(r, f.name); } catch (e) { ask(`Den Dienstplan konnte ich nicht lesen.\n\n${e.message || e}`, 'OK', 'Schließen'); } return; }
   /* Reise: passende Reise über das Datum finden, sonst fragen oder neu anlegen */
@@ -10959,6 +10979,58 @@ async function einReise(p) {
 document.addEventListener('dragover', e => { const k = e.target.closest && e.target.closest('[data-ein-drop]'); if (k) { e.preventDefault(); k.classList.add('ueber'); } });
 document.addEventListener('dragleave', e => { const k = e.target.closest && e.target.closest('[data-ein-drop]'); if (k) k.classList.remove('ueber'); });
 document.addEventListener('drop', e => { const k = e.target.closest && e.target.closest('[data-ein-drop]'); if (!k) return; e.preventDefault(); k.classList.remove('ueber'); const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) einDatei(f); });
+
+/* ---------- Trade-Republic-Beleg (Screenshot einer Order oder Dividende) ---------- */
+const MON_KURZ = { jan: 1, feb: 2, mär: 3, mar: 3, apr: 4, mai: 5, jun: 6, jul: 7, aug: 8, sep: 9, okt: 10, nov: 11, dez: 12 };
+function trBeleg(T, bezug) {
+  if (!T || !/(verkaufen|kaufen|sparplan|dividende|ausschüttung|du hast [\d.,]+ ?€ (erhalten|investiert|gezahlt))/i.test(T) || !/(summe|gesamt|betrag|du hast)/i.test(T)) return null;
+  if (/kontoauszug|buchungstag|wertstellung/i.test(T)) return null;
+  const geld = s => s ? num(s.replace(/\.(?=\d{3}\b)/g, '')) : 0, L = T.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const feld = re => { for (const l of L) { const m = l.match(re); if (m) return m; } return null; };
+  const art = /dividende|ausschüttung|ausschuettung/i.test(T) ? 'div' : /verkaufen|verkauf\b/i.test(T) ? 'verk' : /kaufen|kauf\b|sparplan|investiert/i.test(T) ? 'kauf' : '';
+  if (!art) return null;
+  let name = (feld(/^(?:Asset|Wertpapier|Titel)\s*[:>]?\s*(.{2,40})$/i) || [])[1] || '';
+  if (!name) { const i = L.findIndex(l => /^(verkaufen|kaufen|sparplan|dividende)/i.test(l)); if (i >= 0 && L[i + 1] && !/[\d€]/.test(L[i + 1])) name = L[i + 1]; }
+  const tx = feld(/(\d+(?:[.,]\d+)?)\s*[>»]?\s*[x×X]\s*([\d.]+,\d{2})\s*€/), sum = feld(/^(?:Summe|Gesamt|Gesamtbetrag)\b[^\d]*([\d.]+,\d{2})/i) || T.match(/Du hast ([\d.]+,\d{2}) ?€/i);
+  const geb = feld(/^Geb(?:ü|u)hr\b[^\d]*([\d.]+,\d{2})/i), st = feld(/^Steuer\b[^\d]*([\d.]+,\d{2})/i);
+  /* Datum: „Heute“, „Gestern“, „18. Nov.“ oder „18.11.2026“, bezogen auf den Tag des Screenshots */
+  const ref = bezug || today(); let date = '';
+  const dz = T.match(/\b(\d{1,2})\.(\d{1,2})\.(\d{2,4})\b/), dm = T.match(/\b(\d{1,2})\.?\s*(Jan|Feb|Mär|Mar|Apr|Mai|Jun|Jul|Aug|Sep|Okt|Nov|Dez)[a-zä]*\.?(?:\s+(\d{4}))?/i);
+  if (/\bheute\b/i.test(T)) date = ref; else if (/\bgestern\b/i.test(T)) date = addD(ref, -1);
+  else if (dz) date = docDatum(dz[0]); else if (dm) { const j = dm[3] ? +dm[3] : +ref.slice(0, 4), mo = MON_KURZ[dm[2].toLowerCase().slice(0, 3)]; let d = `${j}-${String(mo).padStart(2, '0')}-${dm[1].padStart(2, '0')}`; if (!dm[3] && d > ref) d = `${j - 1}${d.slice(4)}`; date = d; }
+  const r = { art, name: name.replace(/[>»]+$/, '').trim(), qty: tx ? num(tx[1]) : 0, kurs: tx ? geld(tx[2]) : 0, gebuehr: geb ? geld(geb[1]) : 0, steuer: st ? geld(st[1]) : 0, summe: sum ? geld(sum[1]) : 0, date: date || ref };
+  if (!r.summe && r.qty && r.kurs) r.summe = Math.round((r.qty * r.kurs + (art === 'kauf' ? r.gebuehr : -r.gebuehr)) * 100) / 100;
+  return r.summe || r.qty ? r : null;
+}
+const trPosFinden = name => { const n = lowN(name).replace(/[^a-z0-9]+/g, ' ').trim(); if (!n) return null; const w = n.split(' ')[0];
+  return S.depot.find(p => lowN(p.name).replace(/[^a-z0-9]+/g, ' ').trim() === n) || S.depot.find(p => lowN(p.name).replace(/[^a-z0-9]+/g, ' ').includes(n)) || (w.length >= 4 ? S.depot.find(p => lowN(p.name).replace(/[^a-z0-9]+/g, ' ').split(' ')[0] === w) : null); };
+function trBelegFenster(b) {
+  const p = trPosFinden(b.name), depA = S.accounts.find(a => a.kind === 'depot'), cash = S.accounts.find(a => a.kind !== 'depot' && (a.bank === 'Trade Republic' || /trade ?republi/i.test(a.name)));
+  const T = { verk: ['📉 Verkauf', 'Verkauf im Depot verbuchen'], kauf: ['📈 Kauf', 'Kauf im Depot verbuchen'], div: ['💶 Dividende', 'Dividende buchen'] }[b.art];
+  const accOpts = [['', '– kein Konto –'], ...S.accounts.filter(a => a.kind !== 'depot').map(a => [a.id, a.name])];
+  modal(`${T[0]} erkannt`, `<div class="sub" style="margin-bottom:10px">Aus dem Trade-Republic-Beleg gelesen. Bitte kurz prüfen.</div>
+    ${fSel('pos', 'Wertpapier', [...S.depot.map(x => [x.id, x.name]), ...(b.art === 'kauf' ? [['neu', '＋ Neu: ' + (b.name || 'Wertpapier')]] : [])], p ? p.id : b.art === 'kauf' ? 'neu' : (S.depot[0] || {}).id)}
+    <div class="grid2">${fIn('date', 'Datum', b.date, 'date')}${b.art === 'div' ? '' : fIn('qty', 'Stück', String(b.qty || '').replace('.', ','), 'text', 'inputmode="decimal"')}</div>
+    ${b.art === 'div' ? '' : `<div class="grid2">${fMoney('kurs', 'Kurs je Stück (€)', b.kurs)}${fMoney('geb', 'Gebühr (€)', b.gebuehr)}</div>`}
+    ${fMoney('summe', b.art === 'kauf' ? 'Summe bezahlt (€)' : 'Summe erhalten (€)', b.summe)}${fSel('acc', b.art === 'kauf' ? 'Bezahlt von' : 'Gutschrift auf', accOpts, cash ? cash.id : '')}`,
+    v => { const pos = v.pos === 'neu' ? null : S.depot.find(x => x.id === v.pos), qty = num(v.qty || '0'), sm = num(v.summe), d = v.date || today();
+      if (b.art !== 'div' && !qty) { toast('Bitte die Stückzahl angeben.'); return false; }
+      const imp = `trbeleg|${b.art}|${d}|${lowN(pos ? pos.name : b.name)}|${sm}`; if (S.tx.some(t => t.imp === imp)) { toast('Dieser Beleg ist schon verbucht.'); return false; }
+      let msg = '';
+      if (b.art === 'verk') { if (!pos) { toast('Bitte das Wertpapier wählen.'); return false; }
+        const q = dpQty(pos), a = Math.min(qty, q || qty), inv = dpInv(pos); let abg = q > 0 ? inv * Math.min(1, a / q) : 0; const rest = Math.round((q - a) * 1e6) / 1e6;
+        if (rest < 1e-6) abg = inv; (pos.buys = pos.buys || []).push({ date: d, amount: -Math.round(abg * 100) / 100, qty: -a, erloes: sm }); pos.buys.sort((x, y) => x.date < y.date ? -1 : 1);
+        if (pos.qty) pos.qty = rest; if (pos.value && q) pos.value = Math.round(pos.value * rest / q * 100) / 100;
+        const gv = Math.round((sm - abg) * 100) / 100; msg = `${dec(a, a % 1 ? 4 : 0)} × ${pos.name} verkauft, ${gv >= 0 ? 'Gewinn' : 'Verlust'} ${eur(gv)}`;
+        if (rest < 1e-6) { S.depot = S.depot.filter(x => x !== pos); S.tx.forEach(t => { if (t.pos === pos.id) delete t.pos; }); msg += '. Die Position ist damit komplett verkauft und aus dem Depot raus'; } }
+      else if (b.art === 'kauf') { let ps = pos; if (!ps) { ps = { id: uid(), name: b.name || 'Wertpapier', isin: '', buys: [], value: 0, valueDate: d }; S.depot.push(ps); }
+        (ps.buys = ps.buys || []).push({ date: d, amount: sm, qty }); ps.buys.sort((x, y) => x.date < y.date ? -1 : 1); if (ps.qty) ps.qty = Math.round((ps.qty + qty) * 1e6) / 1e6; ps.value = Math.round(((ps.value || 0) + qty * num(v.kurs || '0')) * 100) / 100;
+        msg = `${dec(qty, qty % 1 ? 4 : 0)} × ${ps.name} gekauft für ${eur(sm)}`; }
+      if (b.art === 'div') { const c = katName('Dividenden'); if (v.acc) S.tx.push({ id: uid(), date: d, type: 'ein', amount: sm, acc: v.acc, cat: c && c.id, note: 'Dividende ' + (pos ? pos.name : b.name), pos: pos ? pos.id : undefined, imp }); msg = `Dividende ${eur(sm)} gebucht`; }
+      else if (v.acc && depA) S.tx.push({ id: uid(), date: d, type: 'umb', amount: sm, acc: b.art === 'verk' ? depA.id : v.acc, to: b.art === 'verk' ? v.acc : depA.id, note: `${b.art === 'verk' ? 'Verkauf' : 'Kauf'} ${pos ? pos.name : b.name}`, imp });
+      else if (v.acc) S.tx.push({ id: uid(), date: d, type: b.art === 'verk' ? 'ein' : 'aus', amount: sm, acc: v.acc, note: `${b.art === 'verk' ? 'Verkauf' : 'Kauf'} ${pos ? pos.name : b.name}`, imp });
+      setTimeout(() => { toast('✓ ' + msg + '.'); if (typeof jatosAktion === 'function') jatosAktion('Beleg verbucht! 📈'); }, 60); }, { still: true, saveLabel: T[1] });
+}
 
 /* ---------- JATOS, der Zauberer ---------- */
 const OUTFITS = {
