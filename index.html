@@ -3022,6 +3022,43 @@ html.g2:not(.g2-ruhig) .a5-welle .d,html.g2:not(.g2-ruhig) .a5-welle.tkk-grid>*{
 .a5-p{left:-2.5px;top:-2.5px;width:5px;height:5px;border-radius:50%;background:var(--c);box-shadow:0 0 6px var(--c);animation:a5Funke .65s cubic-bezier(.2,.8,.3,1) both}
 @keyframes a5Ring{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.9);opacity:0}}
 @keyframes a5Funke{0%{transform:rotate(var(--w)) translateX(4px) scale(1);opacity:1}100%{transform:rotate(var(--w)) translateX(var(--r)) scale(.2);opacity:0}}
+/* Monats-Soll oben rechts in der Überstunden-Karte */
+.zk-soll{display:inline-flex;align-items:baseline;gap:6px;height:36px;padding:0 12px;border-radius:18px;border:1px solid var(--line);background:color-mix(in srgb,var(--amb) 12%,transparent);color:inherit;font:inherit;font-size:12px;cursor:pointer;white-space:nowrap;line-height:36px}
+.zk-soll span{color:var(--tx2,#aaa)}
+.zk-soll b{font-size:14px}
+.zk-soll i{font-style:normal;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--amb)}
+html:not(.g2) .zk-soll{background:rgba(255,255,255,.06)}
+
+/* ---------- Planung: Monatskalender mit Arbeit als Fläche, freie Tage mit Doppelring (tkk) ---------- */
+.tkk-tag{position:relative;--arb:#4f8cff;--abw:#2ecc8f}
+.tkk-tag.arbeit{background:linear-gradient(180deg,color-mix(in srgb,var(--arb) 30%,transparent),color-mix(in srgb,var(--arb) 14%,transparent));border-color:color-mix(in srgb,var(--arb) 45%,transparent)}
+.tkk-tag.abw{background:color-mix(in srgb,var(--abw) 14%,transparent);border-color:color-mix(in srgb,var(--abw) 35%,transparent)}
+.tkk-arb{font-size:10.5px;font-weight:700;letter-spacing:.04em;line-height:1.3;padding:1px 5px;border-radius:4px;align-self:flex-start;background:color-mix(in srgb,var(--arb) 55%,transparent);color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.tkk-tag.abw .tkk-arb{background:color-mix(in srgb,var(--abw) 55%,transparent)}
+/* Freier Tag: zwei feine Ringe um die Zahl */
+.tkk-tag.frei .tkk-nr{position:relative;box-shadow:0 0 0 1.5px color-mix(in srgb,var(--tx) 55%,transparent),0 0 0 3.5px var(--bg2,#111),0 0 0 5px color-mix(in srgb,var(--tx) 28%,transparent)}
+.tkk-tag.frei.heute .tkk-nr{box-shadow:0 0 0 2px var(--bg2,#111),0 0 0 3.5px color-mix(in srgb,var(--tx) 70%,transparent)}
+.tkk-lf::before{background:none!important;border-radius:50%!important;box-shadow:0 0 0 1.5px var(--tx2),0 0 0 3px var(--bg2,#111),0 0 0 4px var(--tx3,#777);width:7px!important;height:7px!important;margin-right:8px!important}
+/* Nachtdienst: kleiner Mond in der Ecke */
+.tkk-tag.nacht::after{content:"";position:absolute;right:5px;top:5px;width:8px;height:8px;border-radius:50%;box-shadow:inset -2.5px 1px 0 0 #ffe9a8;transform:rotate(-20deg);opacity:.9}
+@media (max-width:560px){
+  .tkk-tag{justify-content:flex-start}
+  .tkk-arb{font-size:9px;padding:0 3px;align-self:center;letter-spacing:0}
+  .tkk-tag.frei .tkk-nr{margin-top:3px}
+}
+/* Nachtglas: Arbeitstage glühen leicht, freie Ringe leuchten in der Bereichsfarbe */
+html.g2 .tkk-tag.arbeit{box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 0 18px -8px var(--arb)}
+html.g2 .tkk-tag.frei .tkk-nr{box-shadow:0 0 0 1.5px color-mix(in srgb,var(--amb) 80%,#fff),0 0 0 3.5px #0b1020,0 0 0 5px color-mix(in srgb,var(--amb) 40%,transparent),0 0 12px -2px var(--amb)}
+html.g2 .tkk-tag.frei.heute .tkk-nr{box-shadow:0 0 0 2px #0b1020,0 0 0 3.5px color-mix(in srgb,var(--amb) 80%,#fff),0 0 14px -1px var(--amb)}
+/* Bewegung: gewählter Tag federt, Ringe atmen, Einträge darunter gleiten nacheinander herein */
+html.g2:not(.g2-ruhig) .tkk-tag.gewaehlt{animation:tkPop .5s cubic-bezier(.3,1.6,.5,1)}
+@keyframes tkPop{0%{transform:scale(.88)}100%{transform:none}}
+html.g2:not(.g2-ruhig) .tkk-tag.frei:not(.fremd) .tkk-nr::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:1px solid color-mix(in srgb,var(--amb) 50%,transparent);animation:tkRing 3.6s ease-out infinite;animation-delay:calc(var(--a5,0) * -.37s)}
+@keyframes tkRing{0%{transform:scale(.85);opacity:.9}70%,100%{transform:scale(1.5);opacity:0}}
+html.g2:not(.g2-ruhig) .tkk-liste li{animation:tkRein .45s cubic-bezier(.2,1.1,.4,1) calc(var(--n) * .06s) both}
+@keyframes tkRein{0%{opacity:0;transform:translateX(-14px)}100%{opacity:1;transform:none}}
+html.g2:not(.g2-ruhig) .tkk-tag.arbeit .tkk-arb{background-image:linear-gradient(100deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);background-size:250% 100%;background-repeat:no-repeat;animation:tkGlanz 5s ease-in-out infinite;animation-delay:calc(var(--a5,0) * .15s)}
+@keyframes tkGlanz{0%,70%{background-position:150% 0}100%{background-position:-60% 0}}
 
 </style>
 </head>
@@ -3181,6 +3218,7 @@ function load() {
   /* Früher vorgegebene Schichtarten entfernen, wenn unverändert und nie benutzt */
   /* Nur noch EU und DA als Abwesenheit (Toms Wunsch 19.11.2026), Zulagen-Sätze aus der Tabelle ab 04/2025 */
   if (!S.settings.absMig) { S.settings.absAktiv = ['U', 'Z']; S.settings.absMig = 1; }
+  if (!S.settings.landMig) { if (!S.settings.land) S.settings.land = 'BE'; S.settings.landMig = 1; }
   if (!S.settings.duzMig) { const z = S.settings.duz || {}; if (!z.nacht && !z.samstag && !z.sonntag && !z.feiertag) S.settings.duz = { nacht: 3.06, samstag: 1.53, sonntag: 6.50, feiertag: 6.50 }; S.settings.duzMig = 1; }
   if (!S.settings.stMig) { const alt = ['F|Früh|06:00|18:00', 'N|Nacht|18:00|06:00', 'X|Frei||']; S.shiftTypes = (S.shiftTypes || []).filter(t => !alt.includes([t.code, t.name, t.start, t.end].join('|')) || Object.values(S.shifts || {}).some(x => x.type === t.id)); S.settings.stMig = 1; }
   // Einstand korrigieren: Verkäufe buchen den anteiligen Einstand aus, nicht den Erlös (wie Trade Republic „seit Kauf“)
@@ -3324,10 +3362,41 @@ function dwzMonat(ym) {
   r.eNacht = Math.round(bez * DWZ.std * 100) / 100; r.e06 = r.ok ? Math.round(r.n06 * DWZ.n06 * 100) / 100 : 0; r.eWe = r.ok && r.we >= 3 ? DWZ.we : 0;
   r.eur = r.eNacht + r.e06 + r.eWe; return r;
 }
-function overtimeTotal(bis) {
-  const st = S.settings.otStand, ab = st && st.d ? st.d : ''; let o = st && st.d ? +st.h || 0 : 0;
-  for (const d in S.shifts) if (!S.shifts[d].ma && d > ab && (!bis || d <= bis)) o += dayWork(d).over;
-  for (const d in S.abs) if (!S.abs[d].ma && d > ab && (!bis || d <= bis)) o -= daStunden(d);
+/* Überstunden: Standard ist Ist minus Soll. Soll je Werktag (Mo–Fr, ohne Feiertage) = Wochenstunden / 5.
+   Wochenenden und Feiertage haben kein Soll, Dienste dort zählen ganz als Überstunden.
+   Urlaub, Krank, Sonderurlaub, Dienstreise und Lehrgang werden mit dem Soll angerechnet.
+   Dienstausgleich (DA) zieht seine Stunden ab. Angeordnete Mehrarbeit läuft getrennt (Mehrarbeitskonto).
+   Alternativ (Einstellung otModus = 'plan'): nur Abweichung vom Dienstplan wie früher. */
+const otPlanModus = () => S.settings.otModus === 'plan';
+function sollBasis(d) { const wd = pd(d).getDay(); if (wd === 0 || wd === 6 || holidays(+d.slice(0, 4))[d]) return 0; return (+S.settings.soll || 0) / 5; }
+/* Monats-Soll: automatisch aus den Wochenstunden (Werktage × Wochenstunden / 5) oder selbst eingetragen (S.indSoll, wie im Dienstbuch) */
+function sollAuto(m) { const [y, mo] = m.split('-').map(Number); let h = 0; for (let i = 1; i <= dim(y, mo); i++) h += sollBasis(`${m}-${pad(i)}`); return h; }
+const sollEigen = m => S.indSoll && S.indSoll[m] !== undefined && S.indSoll[m] !== null ? +S.indSoll[m] : null;
+function sollMonat(m) { const e = sollEigen(m); return e !== null ? e : sollAuto(m); }
+/* Soll eines Tages: eingetragenes Monats-Soll wird gleichmäßig auf die Werktage verteilt */
+function sollTag(d) { const b = sollBasis(d); if (!b) return 0; const m = d.slice(0, 7), e = sollEigen(m); if (e === null) return b; const a = sollAuto(m); return a > 0 ? b * e / a : 0; }
+function otTag(d) {
+  const s = S.shifts[d], a = S.abs[d];
+  if (otPlanModus()) { let o = 0; if (s && !s.ma) o += dayWork(d).over; if (a && !a.ma) o -= daStunden(d); return o; }
+  const w = s ? dayWork(d) : { plan: 0, ist: 0 }, ist = s ? (s.ma ? w.plan : w.ist) : 0, soll = sollTag(d);
+  if (a && a.type === 'Z') { if (a.ma) return ist - soll + Math.max(0, soll - ist); const da = daStunden(d); return s ? Math.max(0, ist - da) - soll : -da; }
+  if (a && ABS[a.type]) return Math.max(ist, soll) - soll;
+  return ist - soll;
+}
+/* Ab wann gerechnet wird: Tag nach dem übernommenen Stand, sonst ab dem ersten eingetragenen Tag. Gerechnet wird höchstens bis heute */
+function otStart() {
+  const st = S.settings.otStand; if (st && st.d) return addD(st.d, 1);
+  let m = ''; for (const d in S.shifts) if (!m || d < m) m = d; for (const d in S.abs) if (!m || d < m) m = d; return m;
+}
+function overtimeTotal(bis, von) {
+  const st = S.settings.otStand; let o = st && st.d && !von ? +st.h || 0 : 0;
+  if (otPlanModus()) { const ab = st && st.d ? st.d : '';
+    for (const d in S.shifts) if (!S.shifts[d].ma && d > ab && (!bis || d <= bis) && (!von || d > von)) o += dayWork(d).over;
+    for (const d in S.abs) if (!S.abs[d].ma && d > ab && (!bis || d <= bis) && (!von || d > von)) o -= daStunden(d);
+    return o; }
+  let a = otStart(); if (!a) return o; if (von && von.slice(0, 7) + '-01' > a) a = von.slice(0, 7) + '-01';
+  const t = today(), e = bis && bis < t ? bis : t;
+  for (let d = a; d <= e; d = addD(d, 1)) if (!von || d > von) o += otTag(d);
   return o;
 }
 function vacation(y) {
@@ -4513,6 +4582,7 @@ ACT.settings = () => {
     ${fIn('eigNamen', 'Weitere eigene Namen (für Umbuchungen beim Auszug-Einlesen, mit Komma)', s.eigNamen || '')}
     ${fSel('mainAcc', 'Hauptkonto für „Bis zum Gehalt“', [['', '– erstes Konto –'], ...S.accounts.map(a => [a.id, a.name])], s.mainAcc || '')}
     <div class="grid2">${fIn('soll', 'Wochenstunden (Soll)', s.soll, 'number')}${fIn('urlaub', 'Urlaubstage pro Jahr', s.urlaub, 'number')}</div>
+    ${fSel('otModus', 'Überstunden rechnen', [['soll', 'Ist minus Soll (Wochenstunden)'], ['plan', 'Nur Abweichung vom Dienstplan']], s.otModus === 'plan' ? 'plan' : 'soll')}
     <h3>🎓 Ausbildung</h3>
     ${fChk('schule', 'Ich bin noch in der Schule / Ausbildung', s.schule)}
     <div class="sub" style="margin:-4px 0 10px">Dann bekommt „Arbeit“ einen Reiter Schule (Noten, Prüfungen, Stundenplan). Statt Dienstplan gibt es einen Kalender nur für besondere Ereignisse. Beurteilung und Stunden & DUZ werden ausgeblendet, deine Daten bleiben gespeichert.</div>
@@ -4536,7 +4606,7 @@ ACT.settings = () => {
     <div class="sub" style="margin-bottom:8px">Alle Daten liegen nur auf diesem Gerät. Zum Übertragen auf ein anderes Gerät: Sichern, Datei per AirDrop/WhatsApp schicken und dort importieren.</div>
     <div class="row wrap"><button type="button" class="btn sec sm" data-act="export">Sicherung exportieren</button><button type="button" class="btn sec sm" data-act="import">Sicherung importieren</button><button type="button" class="btn bad sm" data-act="wipe">Alles löschen</button></div>
     <div class="sub" style="margin-top:12px">Version 65 · ${kursOnline() ? 'nur Finanzkurse online, alles andere gesperrt' : '100 % offline · kein Internetzugriff'}</div>`,
-    v => { Object.assign(s, { name: v.name.trim(), nachname: v.nachname.trim(), dienstbez: v.dienstbez.trim(), kennnr: v.kennnr.trim(), land: v.land, eigNamen: (v.eigNamen || '').trim(), mainAcc: v.mainAcc || null, soll: numIn(v.soll), urlaub: numIn(v.urlaub) });
+    v => { Object.assign(s, { name: v.name.trim(), nachname: v.nachname.trim(), dienstbez: v.dienstbez.trim(), kennnr: v.kennnr.trim(), land: v.land, eigNamen: (v.eigNamen || '').trim(), mainAcc: v.mainAcc || null, soll: numIn(v.soll), otModus: v.otModus === 'plan' ? 'plan' : 'soll', urlaub: numIn(v.urlaub) });
       s.duz = { nacht: num(v.nacht), samstag: num(v.samstag), sonntag: num(v.sonntag), feiertag: num(v.feiertag) };
       s.schule = !!v.schule; s.jatos = v.jatos; s.outfit = v.outfit; s.jstil = v.jstil === 'klassisch' ? 'klassisch' : 'pixel'; s.burgFliegt = !!v.burgFliegt; s.bar = v.bar === 'unten' ? 'unten' : 'oben'; s.design = v.design === 'klassisch' ? 'klassisch' : 'neu'; s.ruhig = !v.bewegung;
       if (v.scP || v.scS || v.scW) { const n = sceneInfo(); UI.sceneOverride = Object.assign(n, { phase: v.scP || n.phase, season: v.scS || n.season, phaseManuell: !!v.scP, wetter: v.scW || '' }); if (v.scS === 'herbst') UI.sceneOverride.halloween = true; if (v.scS === 'winter') UI.sceneOverride.advent = true; } else UI.sceneOverride = null;
@@ -5269,7 +5339,8 @@ ARB.dienstplan = () => {
   h += `<div class="legend">${S.shiftTypes.map(t => `<span><i class="chip" style="background:${t.color};height:16px;min-width:20px">${esc(t.code)}</i>${esc(t.name)}${t.start ? ' ' + t.start + '–' + t.end : ''}</span>`).join('')}${absAktiv().map(k => `<span><i class="chip" style="background:${ABS[k].c};height:16px;min-width:20px">${absKz(k)}</i>${ABS[k].n}${k === 'Z' ? ' (zieht vom Überstundenkonto ab)' : ''}</span>`).join('')}<span><b class="pos">+</b> = zusätzlicher Dienst</span></div>`;
   // Monatssumme
   let plan = 0, ist = 0, cnt = 0; for (const d in S.shifts) if (d.startsWith(m)) { const w = dayWork(d); plan += w.plan; ist += w.ist; if (w.ist) cnt++; }
-  h += `<div class="grid3" style="margin-top:12px"><div class="stat"><div class="l">Dienste</div><div class="v">${cnt}</div></div><div class="stat"><div class="l">Stunden</div><div class="v">${hm(ist)}</div></div><div class="stat"><div class="l">Überstunden</div><div class="v ${ist - plan < 0 ? 'neg' : 'pos'}">${hm(ist - plan)}</div></div></div>`;
+  const uM = overtimeTotal(`${m}-31`, addM(m, -1) + '-31');
+  h += `<div class="grid3" style="margin-top:12px"><div class="stat"><div class="l">Dienste</div><div class="v">${cnt}</div></div><div class="stat"><div class="l">Stunden</div><div class="v">${hm(ist)}</div></div><div class="stat"><div class="l">Überstunden</div><div class="v ${uM < 0 ? 'neg' : 'pos'}">${hm(uM)}</div></div></div>`;
   h += arbNotizen();
   return h;
 };
@@ -5346,15 +5417,15 @@ ARB.stunden = () => {
   h += zkKarten(m);
   // Wochen
   const first = `${m}-01`, last = `${m}-${pad(dim(y, mo))}`; let wk = mondayOf(first);
-  let rows = '', P = 0, I = 0;
+  let rows = '', P = 0, I = 0, U = 0; const otS = otStart();
   while (wk <= last) {
-    let p = 0, i = 0; for (let k = 0; k < 7; k++) { const d = addD(wk, k); const w = dayWork(d); p += w.plan; i += w.ist; if (d.startsWith(m)) { P += w.plan; I += w.ist; } }
-    rows += `<tr><td>KW ${kw(wk)} <span class="muted">${fmtDs(wk)}</span></td><td>${hm(p)}</td><td>${hm(i)}</td><td class="${i - p < 0 ? 'neg' : i - p > 0 ? 'pos' : ''}">${hm(i - p)}</td></tr>`;
+    let p = 0, i = 0, u = 0; for (let k = 0; k < 7; k++) { const d = addD(wk, k); const w = dayWork(d), pp = otPlanModus() ? w.plan : sollTag(d), uu = d <= today() && (!otS || d >= otS) ? (otPlanModus() ? w.ist - w.plan : otTag(d)) : 0; p += pp; i += w.ist; u += uu; if (d.startsWith(m)) { P += pp; I += w.ist; U += uu; } }
+    rows += `<tr><td>KW ${kw(wk)} <span class="muted">${fmtDs(wk)}</span></td><td>${hm(p)}</td><td>${hm(i)}</td><td class="${u < -.004 ? 'neg' : u > .004 ? 'pos' : ''}">${hm(u)}</td></tr>`;
     wk = addD(wk, 7);
   }
   const soll = +S.settings.soll || 0;
-  h += `<div class="card"><h2>Wochen</h2><table class="t"><tr><th>Woche</th><th>Plan</th><th>Ist</th><th>Über</th></tr>${rows}<tr><td><b>${MON[mo - 1]}</b></td><td><b>${hm(P)}</b></td><td><b>${hm(I)}</b></td><td class="${I - P < 0 ? 'neg' : 'pos'}"><b>${hm(I - P)}</b></td></tr></table>
-    ${soll ? `<div class="sub" style="margin-top:8px">Zum Vergleich: ${dec(soll, 1)} h Soll pro Woche ≈ ${hm(soll * dim(y, mo) / 7)} h in diesem Monat.</div>` : ''}</div>`;
+  h += `<div class="card"><h2>Wochen</h2><table class="t"><tr><th>Woche</th><th>${otPlanModus() ? 'Plan' : 'Soll'}</th><th>Ist</th><th>Über</th></tr>${rows}<tr><td><b>${MON[mo - 1]}</b></td><td><b>${hm(P)}</b></td><td><b>${hm(I)}</b></td><td class="${U < 0 ? 'neg' : 'pos'}"><b>${hm(U)}</b></td></tr></table>
+    <div class="sub" style="margin-top:8px">${otPlanModus() ? `Überstunden = Abweichung vom Dienstplan.${soll ? ` Zum Vergleich: ${dec(soll, 1)} h Soll pro Woche.` : ''}` : `Überstunden = Ist minus Soll. Soll: ${dec(soll, 1)} h pro Woche, also ${hm(soll / 5)} an jedem Werktag, Feiertage (${esc(LAENDER[S.settings.land] || 'bundesweit')}) frei. Urlaub zählt wie ein Soll-Tag, DA zieht ab. Umstellen in den Einstellungen.`}</div></div>`;
   // Zulagen wie im Zeitportal (§ 17a/17b EZulV), dazu Sonn-, Feiertags- und Samstagszulage (§ 4 EZulV)
   const zw = dwzMonat(m), z = duzMonth(m), r = S.settings.duz, nachtDuz = zw.ok ? 0 : z.nacht * (r.nacht || 0), duzEur = nachtDuz + z.samstag * (r.samstag || 0) + z.sonntag * (r.sonntag || 0) + z.feiertag * (r.feiertag || 0);
   h += `<div class="card zl" id="zl"><div class="row sb"><h2 style="margin:0">Zulagen ${MON[mo - 1]}</h2><b class="num" style="font-size:20px">${eur(zw.eur)}</b></div>
@@ -5538,7 +5609,7 @@ function zkKarten(m) {
   const ma = maTotal(), maM = maTotal(`${m}-31`, addM(m, -1) + '-31'), ots = S.settings.otStand, mas = S.settings.maStand, ML = MON[mo - 1].slice(0, 3) + '. ' + y;
   const daM = sum(Object.keys(S.abs).filter(d => d.startsWith(m) && !S.abs[d].ma), d => daStunden(d));
   let h = `<div class="zk-grid">
-    <div class="card zk"><div class="row sb"><h2 style="margin:0">Überstunden</h2><button type="button" class="ibtn" data-act="otStand" aria-label="Stand übernehmen">✎</button></div><span class="sub">Überstunden- und Gleitzeitkonto</span>
+    <div class="card zk"><div class="row sb"><h2 style="margin:0">Überstunden</h2><div class="row" style="gap:6px">${otPlanModus() ? '' : `<button type="button" class="zk-soll" data-act="sollMonat" data-m="${m}"><span>Soll ${MON[mo - 1].slice(0, 3)}.</span><b class="num">${hm(sollMonat(m))}</b>${sollEigen(m) !== null ? '<i>eigen</i>' : ''}</button>`}<button type="button" class="ibtn" data-act="otStand" aria-label="Stand übernehmen">✎</button></div></div><span class="sub">Überstunden- und Gleitzeitkonto</span>
       <div class="zk-paar">${zkTacho(otM, 20, ML, 0)}${zkTacho(ot, 50, 'Konto', 1)}</div>
       <div class="zk-fuss"><span>DA im ${MON[mo - 1]}: <b class="neg">${daM ? '−' + hm(daM) : '0:00'}</b></span><span>${ots && ots.d ? 'Stand ' + fmtDs(ots.d) + ': ' + hm(+ots.h) : '<a href="#" data-act="otStand">Stand übernehmen</a>'}</span></div></div>
     <div class="card zk"><div class="row sb"><h2 style="margin:0">Mehrarbeit</h2><button type="button" class="ibtn" data-act="maStand" aria-label="Stand übernehmen">✎</button></div><span class="sub">Angeordnete Mehrarbeit</span>
@@ -5563,6 +5634,11 @@ function zkStart() {
 }
 
 
+
+/* Monats-Soll eintragen: leer lassen = automatisch aus den Wochenstunden */
+ACT.sollMonat = d => { const m = d.m || UI.month, [y, mo] = m.split('-').map(Number), e = sollEigen(m), a = sollAuto(m);
+  modal(`Soll ${MON[mo - 1]} ${y}`, `${fIn('soll', 'Stunden (z.B. 164:00)', e !== null ? hm(e) : '', 'text', 'inputmode="decimal"')}<div class="sub">Leer lassen = automatisch aus ${dec(+S.settings.soll || 0, 1)} h pro Woche: <b>${hm(a)}</b> (Werktage ohne Feiertage). Das eingetragene Soll wird gleichmäßig auf die Werktage verteilt und gilt auch im Dienstbuch.</div>`,
+    v => { S.indSoll = S.indSoll || {}; const h = stdIn(String(v.soll || '').trim()); if (h === undefined || String(v.soll || '').trim() === '') delete S.indSoll[m]; else S.indSoll[m] = h; }, { del: e !== null ? () => { delete S.indSoll[m]; } : null }); };
 
 /* ---------- Schule (Einstellung „Noch in der Ausbildung“) ----------
    Arbeit bekommt dann: Kalender (nur besondere Ereignisse statt Dienstplan), Schule (Noten, Prüfungen, Stundenplan).
@@ -5744,7 +5820,7 @@ function dbBericht(m) {
   for (let i = 1; i <= n; i++) Z.push(dbZeile(`${m}-${pad(i)}`));
   const summe = Z.reduce((x, r) => x + (r.ges || 0), 0);
   let planSoll = 0; for (let i = 1; i <= n; i++) { const d = `${m}-${pad(i)}`, s = S.shifts[d]; if (s && !s.extra) planSoll += spanH(shiftSpan(d, s, false)); }
-  const ind = S.indSoll && S.indSoll[m] !== undefined ? +S.indSoll[m] : planSoll;
+  const ind = S.indSoll && S.indSoll[m] !== undefined ? +S.indSoll[m] : otPlanModus() ? planSoll : sollAuto(m);
   return { y, mo, Z, summe, planSoll, ind, diff: summe - ind };
 }
 function dbBlatt(m) {
@@ -5786,7 +5862,7 @@ ACT.dbOpen = () => {
     const x = e.target.closest('[data-x]');
     if (x && x.dataset.x === 'zu') { ov.remove(); window.removeEventListener('resize', skala); render(); return; }
     if (x && x.dataset.x === 'druck') { try { window.print(); } catch (er) { toast('Drucken ist hier nicht möglich.'); } return; }
-    if (x && x.dataset.x === 'soll') { const b = dbBericht(m); modal('Monatliches ind. Stundensoll', fIn('soll', 'Stunden (z.B. 165:30)', S.indSoll && S.indSoll[m] !== undefined ? hmP(S.indSoll[m]) : '') + `<div class="sub">Leer lassen = wie Dienstplan (${hmP(b.planSoll)}).</div>`, v => { S.indSoll = S.indSoll || {}; const h = zeitH(v.soll); if (h === null) delete S.indSoll[m]; else S.indSoll[m] = h; setTimeout(zeig, 50); }); return; }
+    if (x && x.dataset.x === 'soll') { const b = dbBericht(m); modal('Monatliches ind. Stundensoll', fIn('soll', 'Stunden (z.B. 165:30)', S.indSoll && S.indSoll[m] !== undefined ? hmP(S.indSoll[m]) : '') + `<div class="sub">Leer lassen = ${otPlanModus() ? `wie Dienstplan (${hmP(b.planSoll)})` : `automatisch aus ${dec(+S.settings.soll || 0, 1)} h pro Woche (${hmP(sollAuto(m))})`}.</div>`, v => { S.indSoll = S.indSoll || {}; const h = zeitH(v.soll); if (h === null) delete S.indSoll[m]; else S.indSoll[m] = h; setTimeout(zeig, 50); }); return; }
     const tr = e.target.closest('tr[data-d]'); if (tr) { dayEdit(tr.dataset.d); const iv = setInterval(() => { if (!_modalStack.length) { clearInterval(iv); zeig(); } }, 300); }
   };
   document.body.appendChild(ov); zeig(); window.addEventListener('resize', skala);
@@ -5831,21 +5907,23 @@ PLA.kalender = () => {
 /* Monatskalender im Design von Toms Depot-Dashboard (Leben-Kalender) */
 function tkKalender(d) {
   const m = d.slice(0, 7), [y, mo] = m.split('-').map(Number), t = today(), first = mondayOf(m + '-01');
-  const kl = i => i.k === 'hol' ? 'frei' : '';
+  const planM = new Set(Object.keys(S.shifts).map(k => k.slice(0, 7))); // nur Monate mit Dienstplan kennzeichnen freie Tage
   let g = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(w => `<div class="tkk-wt">${w}</div>`).join('');
   for (let k = 0; k < 42; k++) {
     const x = addD(first, k); if (k === 35 && !x.startsWith(m)) break;
-    const it = dayItems(x), sh = it.find(i => i.k === 'shift' || i.k === 'abs'), rest = it.filter(i => i !== sh && i.k !== 'hol'), hol = it.find(i => i.k === 'hol');
-    const zeig = (sh ? [sh] : []).concat(rest);
-    g += `<button type="button" class="tkk-tag${x.startsWith(m) ? '' : ' fremd'}${x === t ? ' heute' : ''}${x === d ? ' gewaehlt' : ''}${hol ? ' feiertag' : ''}" data-act="calPick" data-d="${x}" aria-label="${fmtD(x)}${it.length ? ', ' + it.length + ' Einträge' : ''}"><span class="tkk-nr">${pd(x).getDate()}</span><span class="tkk-punkte">${zeig.slice(0, 3).map(i => `<span class="tkk-e" style="--c:${i.c}">${esc(i.code ? i.code + ' ' + (i.k === 'shift' ? i.t.split(' ')[0] : i.t) : i.t)}</span>`).join('')}${zeig.length > 3 ? `<span class="tkk-e mehr">+${zeig.length - 3}</span>` : ''}</span></button>`;
+    const it = dayItems(x), hol = it.find(i => i.k === 'hol'), rest = it.filter(i => i.k !== 'shift' && i.k !== 'abs' && i.k !== 'hol');
+    /* Dienst einheitlich als „Arbeit“: die ganze Kachel leuchtet in der Arbeitsfarbe. Freie Tage bekommen einen doppelten Ring um die Zahl, Urlaub/DA einen grünen */
+    const sx = S.shifts[x], st = sx && stype(sx.type), ab = S.abs[x], arbeit = !!((st && st.start) || (sx && sx.aStart)) && !(ab && ab.type !== 'Z'), nacht = arbeit && st && g2() && typeof kl3Nacht === 'function' && kl3Nacht(st);
+    const art = arbeit ? ' arbeit' + (nacht ? ' nacht' : '') : ab && ABS[ab.type] ? ' abw' : planM.has(x.slice(0, 7)) ? ' frei' : '';
+    g += `<button type="button" class="tkk-tag${art}${x.startsWith(m) ? '' : ' fremd'}${x === t ? ' heute' : ''}${x === d ? ' gewaehlt' : ''}${hol ? ' feiertag' : ''}" data-act="calPick" data-d="${x}" aria-label="${fmtD(x)}${arbeit ? ', Dienst' : art === ' abw' ? ', ' + ABS[ab.type].n : art ? ', frei' : ''}${rest.length ? ', ' + rest.length + ' Einträge' : ''}"><span class="tkk-nr">${pd(x).getDate()}</span>${arbeit ? `<span class="tkk-arb">${esc(st ? st.code : 'Dienst')}</span>` : art === ' abw' ? `<span class="tkk-arb">${esc(absKz(ab.type))}</span>` : ''}<span class="tkk-punkte">${rest.slice(0, 3).map(i => `<span class="tkk-e" style="--c:${i.c}">${esc(i.t)}</span>`).join('')}${rest.length > 3 ? `<span class="tkk-e mehr">+${rest.length - 3}</span>` : ''}</span></button>`;
   }
   const tag = dayItems(d), wd = pd(d).toLocaleDateString('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
-  const leg = [['#4f8cff', 'Arbeit'], ['#ff8a4c', 'Training'], ['#9aa3b5', 'Zahlung'], ['#47b8ff', 'Reise'], ...S.ecats.map(c => [c.color, c.name])];
+  const leg = [['#4f8cff', 'Arbeit'], ['frei', 'Frei'], ['#2ecc8f', 'Urlaub/DA'], ['#ff8a4c', 'Training'], ['#9aa3b5', 'Zahlung'], ['#47b8ff', 'Reise'], ...S.ecats.map(c => [c.color, c.name])];
   return `<div class="tkk"><div class="tkk-kopf"><b>${fmtYM(m)}</b><button type="button" data-act="calToday">Heute</button><button type="button" data-act="calNav" data-v="-1" aria-label="Voriger Monat">‹</button><button type="button" data-act="calNav" data-v="1" aria-label="Nächster Monat">›</button></div>
     <div class="tkk-grid">${g}</div>
-    <div class="tkk-leg">${leg.map(([c, n]) => `<span style="--c:${c}">${esc(n)}</span>`).join('')}<button type="button" data-act="ecatEdit">Kategorien</button></div>
+    <div class="tkk-leg">${leg.map(([c, n]) => c === 'frei' ? `<span class="tkk-lf">${esc(n)}</span>` : `<span style="--c:${c}">${esc(n)}</span>`).join('')}<button type="button" data-act="ecatEdit">Kategorien</button></div>
     <div class="tkk-det"><div class="row sb"><b>${wd}</b><button class="btn sm" data-act="evNew" data-date="${d}">+ Termin</button></div>
-    ${tag.length ? `<ul>${tag.map(i => `<li ${i.k === 'ev' ? `data-act="evEdit" data-id="${i.id}"` : i.k === 'wtask' ? `data-act="wtEdit" data-id="${i.id}"` : i.k === 'bday' ? `data-act="bdEdit" data-id="${i.id}"` : ''} style="--c:${i.c}" class="${i.done ? 'done' : ''}"><span class="txt">${i.code ? `<i class="chip" style="background:${i.c}">${esc(i.code)}</i> ` : ''}${esc(i.t)}</span><span class="meta">${[i.time ? i.time + (i.end ? '–' + i.end : '') + ' Uhr' : '', i.cat || ''].filter(Boolean).join(' · ')}</span></li>`).join('')}</ul>` : '<div class="leer">Nichts eingetragen. Tipp auf „+ Termin“.</div>'}</div></div>`;
+    ${tag.length ? `<ul class="tkk-liste">${tag.map((i, n) => `<li ${i.k === 'ev' ? `data-act="evEdit" data-id="${i.id}"` : i.k === 'wtask' ? `data-act="wtEdit" data-id="${i.id}"` : i.k === 'bday' ? `data-act="bdEdit" data-id="${i.id}"` : ''} style="--c:${i.k === 'shift' ? '#4f8cff' : i.c};--n:${n}" class="${i.done ? 'done' : ''}"><span class="txt">${i.code ? `<i class="chip" style="background:${i.c}">${esc(i.code)}</i> ` : ''}${esc(i.t)}</span><span class="meta">${[i.time ? i.time + (i.end ? '–' + i.end : '') + ' Uhr' : '', i.cat || ''].filter(Boolean).join(' · ')}</span></li>`).join('')}</ul>` : '<div class="leer">Nichts eingetragen. Tipp auf „+ Termin“.</div>'}</div></div>`;
 }
 function calLegend() {
   return `<div class="legend" style="margin-bottom:12px">${S.shiftTypes.filter(t => Object.values(S.shifts).some(s => s.type === t.id)).map(t => `<span><i class="chip" style="background:${t.color};height:16px;min-width:20px">${esc(t.code)}</i>${esc(t.name)}</span>`).join('')}${S.ecats.map(c => `<span><i class="dot" style="background:${c.color}"></i>${esc(c.name)}</span>`).join('')}<span><i class="dot" style="background:#4f8cff"></i>Arbeit</span><span><i class="dot" style="background:#9aa3b5"></i>Zahlung</span><span><i class="dot" style="background:#ff8a4c"></i>Training</span><button class="btn sm sec" data-act="ecatEdit" style="padding:2px 8px">Kategorien</button></div>`;
@@ -10222,7 +10300,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 119;
+const APP_V = 120;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
