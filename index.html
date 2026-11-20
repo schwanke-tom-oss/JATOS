@@ -10847,9 +10847,38 @@ function csvZeilen(txt) {
   if (f || row.length) { row.push(f); rows.push(row); }
   return rows.map(r => r.map(x => x.trim()));
 }
+/* C24-Export „Transaktionen.csv“: Hauptkonto und Pockets stehen gemischt drin, getrennt über die Kontonummer.
+   Das Hauptkonto wird über die Kontonummer erkannt (Ende der IBAN). Alle Pockets zusammen werden ein Sparkonto „C24 Pockets“:
+   Sparen/Pocket-Umbuchungen sind Umbuchungen dorthin, auf der Pocket-Seite zählen nur Zinsen und echte Abbuchungen
+   (die Gegenbuchungen der Umbuchungen stehen schon beim Hauptkonto). */
+function c24AusCsv(rows) {
+  const h = rows[0], c = n => h.indexOf(n), body = rows.slice(1).filter(r => r.length > 5);
+  const anz = {}; for (const r of body) anz[r[c('Kontonummer')]] = (anz[r[c('Kontonummer')]] || 0) + 1;
+  const haupt = Object.entries(anz).sort((a, b) => b[1] - a[1])[0]; if (!haupt) throw new Error('Keine Buchungen gefunden.');
+  const nr = haupt[0], a = S.accounts.find(x => x.iban && x.iban.replace(/\s/g, '').endsWith(nr.padStart(10, '0')));
+  const main = [], pock = []; let pocket = 0;
+  for (const r of body) {
+    const typ = r[c('Transaktionstyp')] || '', zw = r[c('Verwendungszweck')] || '', name = r[c('Zahlungsempfänger')] || '';
+    const d = datum(r[c('Buchungsdatum')]), v = zahl(r[c('Betrag')]); if (!d || !v) continue;
+    const umb = /^(sparen|pocket-umbuchung)$/i.test(typ), istHaupt = r[c('Kontonummer')] === nr;
+    if (!istHaupt && umb) continue;
+    const ib = (r[c('IBAN')] || '').replace(/\s/g, '').toUpperCase(), tr = /^TRBK/i.test(r[c('BIC')] || '');
+    const zins = /zins/i.test(typ), nm = zins ? (istHaupt ? 'Zinsen C24' : 'Zinsen C24 Pocket') : umb ? 'Pocket ' + (name || r[c('Kontoname')] || '') : name;
+    const z = zeileBauen(d, v, `${typ} ${nm} ${zw}`, true); if (nm) z.name = nm.trim().slice(0, 48);
+    z.vz = [typ, name, zw, r[c('Beschreibung')], tr ? 'Trade Republic' : ''].filter(Boolean).join(' · ').slice(0, 300);
+    if (ibanOk(ib)) z.ciban = ib;
+    z.c24 = true;
+    if (umb) { z.pocketUmb = true; pocket++; }
+    (istHaupt ? main : pock).push(z);
+  }
+  const q = [{ art: 'konto', bank: 'C24', iban: a ? a.iban : '', kopf: 'C24 ' + (body[0][c('Kontoname')] || ''), rows: main, ende: null, endeD: null, kind: 'giro', pocket, typ: 'Girokonto' }];
+  if (pocket || pock.length) q.push({ art: 'konto', bank: 'C24', iban: '', kopf: 'C24 Pockets', rows: pock, ende: null, endeD: null, kind: 'tg', typ: 'Pockets', c24Pockets: true });
+  return q;
+}
 function auszugAusCsv(txt, fname) {
   const rows = csvZeilen(txt), bank = impBank(txt.slice(0, 3000) + ' ' + fname);
   if (rows[0] && ['transaction_id', 'category', 'type', 'amount'].every(h => rows[0].includes(h))) return trAusCsv(rows);
+  if (rows[0] && ['Transaktionstyp', 'Kontonummer', 'Kontoname', 'Betrag'].every(h => rows[0].includes(h))) return c24AusCsv(rows);
   const H = { date: /^(buchungs?tag|buchungsdatum|datum|booking ?date|date|wertstellung|valuta(datum)?|transaktionsdatum)$/i, amount: /^(betrag|umsatz|amount|betrag \(eur\)|betrag \(€\)|betrag in eur|umsatz in eur|wert)$/i, soll: /^(soll|ausgang|belastung|debit)$/i, haben: /^(haben|eingang|gutschrift|credit)$/i, sh: /^(s\/h|soll\/haben|vorzeichen)$/i, name: /(empfänger|empfaenger|auftraggeber|zahlungspflichtig|begünstigt|beguenstigt|gegenpartei|zahlungsempfänger|payee|counterparty|^name$|partner)/i, zweck: /(verwendungszweck|zweck|beschreibung|buchungstext|details|reference|vorgang|umsatzart|text)/i, iban: /^(iban|kontonummer\/iban|kontonummer|gegenkonto|iban zahlungsbeteiligter|iban des? (empfängers|auftraggebers))$/i, own: /(auftragskonto|eigene iban|mein konto|kontonummer des kontos)/i, saldo: /^(saldo|kontostand|balance|saldo nach buchung)$/i, isin: /^isin$/i, stk: /^(stück|stk|anzahl|bestand|menge|nominale|quantity|shares)$/i, wert: /^(kurswert|marktwert|wert|wert in eur|bewertung|aktueller wert|value)$/i, kurs: /^(kurs|aktueller kurs|preis|price)$/i, wpname: /^(name|bezeichnung|wertpapier|wertpapiername|titel|instrument)$/i, einstand: /^(einstandswert|kaufwert|einstand|investiert)$/i };
   let hi = -1, col = {};
   for (let i = 0; i < Math.min(rows.length, 40); i++) { const c = {}; rows[i].forEach((h, k) => { const s = h.replace(/\s+/g, ' ').trim(); for (const key in H) if (c[key] == null && H[key].test(s)) { if (key === 'date' && c.date != null) continue; c[key] = k; } }); if ((c.date != null && (c.amount != null || c.soll != null)) || (c.isin != null && (c.wert != null || c.stk != null))) { hi = i; col = c; break; } }
@@ -11037,14 +11066,17 @@ function impKlassifizieren() {
       if (z.manuell) continue;
       z.self = self; z.flag = ''; z.on = true; z.ersetzt = null;
       const other = z.ciban && ibanAcc[z.ciban];
-      if (z.trDepot) { const dq = IMP.q.find(x => x.art === 'depot' && x.tr); const dk = dq ? accKey(dq) : (S.accounts.find(a => a.kind === 'depot') || {}).id; if (dk && dk !== self) { z.typ = 'umb'; z.other = dk; } else { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); } }
+      if (z.pocketUmb) { const pq = konten.find(k => k.c24Pockets); if (pq) { z.typ = 'umb'; z.other = accKey(pq); } else { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); } }
+      else if (z.trDepot) { const dq = IMP.q.find(x => x.art === 'depot' && x.tr); const dk = dq ? accKey(dq) : (S.accounts.find(a => a.kind === 'depot') || {}).id; if (dk && dk !== self) { z.typ = 'umb'; z.other = dk; } else { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); } }
       else if (z.trTyp === 'steuer') { z.typ = z.dir < 0 ? 'aus' : 'ein'; const c = katName('Steuern & Gebühren'); z.cat = c && c.type === z.typ ? c.id : impKat(z, z.typ); }
       else if (z.trTyp === 'div') { z.typ = z.dir < 0 ? 'aus' : 'ein'; const c = katName('Dividenden'); z.cat = c && c.type === z.typ ? c.id : impKat(z, z.typ); }
       else if (other && other !== self) { z.typ = 'umb'; z.other = other; }
       else if (trK && trK !== self && /trade republic/i.test(z.name + ' ' + z.vz)) { z.typ = 'umb'; z.other = trK; }
       else if (z.eigen) { z.typ = 'umb'; const o = konten.find(k => accKey(k) !== self && k.kind === 'giro') || konten.find(k => accKey(k) !== self); z.other = o ? accKey(o) : (S.accounts.find(a => a.id !== self && a.kind === 'giro') || S.accounts.find(a => a.id !== self && a.kind !== 'depot') || {}).id || ''; z.flag = 'unsicher'; }
-      else if ((nameIstIch(z.name) || nameIstIch(z.vz.slice(0, 80))) && !(z.ciban && !ibanAcc[z.ciban])) { z.typ = 'umb'; z.other = eigenesGegenkonto(z, self, konten); z.flag = 'unsicher'; if (!z.other) { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); } }
+      else if ((nameIstIch(z.name) || nameIstIch(z.vz.slice(0, 80))) && !(z.ciban && !ibanAcc[z.ciban]) && !(z.c24 && !z.ciban)) { z.typ = 'umb'; z.other = eigenesGegenkonto(z, self, konten); z.flag = 'unsicher'; if (!z.other) { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); } }
       else { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); if (!z.sicher) z.flag = 'unsicher'; }
+      z.gsX = z.typ === 'ein' && nameIstIch(z.name); // Geld von dir selbst (z. B. altes eigenes Konto) ist keine Einnahme in der Geld-Stadt
+      if (z.gsX) z.flag = 'unsicher';
     }
   }
   // Gegenbuchungen zwischen zwei eingelesenen Konten zusammenführen
@@ -11115,7 +11147,7 @@ function impMalen() {
     const zr = s.rows && s.rows.length ? `${fmtDs(s.rows.reduce((a, z) => z.date < a ? z.date : a, '9999'))}–${fmtDs(s.rows.reduce((a, z) => z.date > a ? z.date : a, '0000'))}` : '';
     h += `<div class="card imp-q" data-q="${s.i}"><div class="row sb"><b class="ell">${s.art === 'depot' ? '📈' : '🏦'} ${esc(s.bank || 'Bank unbekannt')}${s.iban ? ' · ' + esc(s.iban.replace(/(.{4})/g, '$1 ').trim()) : ''}</b></div>
       <div class="sub ell">${esc(s.datei)} · ${s.art === 'konto' ? `${n} Buchungen${zr ? ' · ' + zr : ''}` : `${n} ${s.items[0] && s.items[0].art === 'bestand' ? 'Positionen' : 'Vorgänge'}`} · <b>${neu} neu</b></div>
-      <div class="${s.acc === 'neu' ? 'grid2' : ''}" style="margin-top:8px">${fSel('acc', 'Konto in der App', accOptsImp(s), s.acc, 'data-k="acc"')}${s.acc === 'neu' ? fIn('neuName', 'Name des neuen Kontos', s.neuName, 'text', 'data-k="neuName"') : ''}</div>
+      <div class="${s.acc === 'neu' ? 'grid2' : ''}" style="margin-top:8px">${fSel('acc', 'Konto in der App', accOptsImp(s), s.acc, 'data-k="acc"')}${s.acc === 'neu' ? fIn('neuName', 'Name des neuen Kontos', s.neuName, 'text', 'data-k="neuName"') : ''}</div>${s.pocket ? `<div class="sub" style="margin-top:6px">${s.pocket} Buchungen von und zu deinen Pockets werden Umbuchungen auf das Konto „C24 Pockets“, sie zählen nicht als Einnahme oder Ausgabe.</div>` : ''}
       ${s.acc === 'neu' ? fSel('neuKind', 'Art', Object.entries(ACC_KIND), s.neuKind, 'data-k="neuKind"') : ''}
       ${s.art === 'konto' && s.ende != null ? `<label class="chk"><input type="checkbox" data-k="abgl" ${s.abgl ? 'checked' : ''}><span>Kontostand auf <b>${eur(s.ende)}</b> (${fmtDs(s.endeD)}) abgleichen</span></label>` : ''}</div>`;
   }
@@ -11167,6 +11199,7 @@ function impUebernehmen() {
       else o.cat = z.cat;
       if (z.recId) o.rec = z.recId;
       if (z.isin) o.isin = z.isin;
+      if (z.gsX && o.type === 'ein') o.gs = 'x';
       if (z.lern && z.typ !== 'umb') { const k = impKey(z.name); if (k) S.impRules[k] = z.cat; }
       S.tx.push(o); nT++;
     }
@@ -12446,7 +12479,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 130;
+const APP_V = 131;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
