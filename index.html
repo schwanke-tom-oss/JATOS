@@ -2192,6 +2192,22 @@ body:not(.bar-unten).gescrollt nav.tabs{background:linear-gradient(var(--bg) 0,v
 .dc3-wert{fill:none;stroke-width:4.5;stroke-linecap:round;stroke-dasharray:var(--U);stroke-dashoffset:var(--d)}
 .dc3 b{font-size:13px;font-weight:700}
 .dc3 small{font-size:7.5px;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+/* Alte Stundenberichte per Foto (v_blatt.js) */
+.bf-tw{max-height:46vh;overflow:auto;margin-top:8px;border:1px solid var(--line);border-radius:12px}
+.bf-t{width:100%;border-collapse:collapse;font-size:13px}
+.bf-t th{position:sticky;top:0;background:var(--fest,var(--bg));font-weight:600;font-size:11px;color:var(--tx2);padding:6px 3px;text-align:left;z-index:1}
+.bf-t td{padding:2px 3px;border-top:1px solid var(--line)}
+.bf-t td:first-child{width:38px;white-space:nowrap}.bf-t td:first-child b{display:inline-block;min-width:16px}.bf-t td:first-child small{color:var(--tx2);font-size:10px;margin-left:3px}
+.bf-t .bf-in{padding:5px 4px;font-size:13px;min-width:0;width:100%;text-align:center}
+.bf-t tr.bf-leer .bf-in{opacity:.55}.bf-t tr.bf-we td:first-child{color:var(--tx2)}
+.bf-check{display:flex;flex-wrap:wrap;gap:6px 14px;margin:8px 0;font-size:13px}
+.bf-fest{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:color-mix(in srgb,#3fe08a 12%,transparent);border:1px solid color-mix(in srgb,#3fe08a 35%,transparent)}
+.bf-fest span:last-child{display:grid}.bf-fest small{color:var(--tx2);font-size:12px}.bf-schloss{font-size:20px}
+.db-fest{float:left;font-size:12px;border:1.5px solid #2c8a52;color:#2c8a52;border-radius:6px;padding:1px 8px;transform:rotate(-3deg);font-weight:700}
+.bf-ov{position:fixed;inset:0;z-index:320;background:rgba(0,0,0,.92);display:grid;place-items:center;padding:calc(env(safe-area-inset-top,0px) + 50px) 10px 20px}
+.bf-ov img{max-width:100%;max-height:100%;object-fit:contain;touch-action:pinch-zoom}.bf-ov iframe{width:100%;height:100%;border:0;background:#fff}
+.bf-ov button{position:absolute;top:calc(env(safe-area-inset-top,0px) + 8px);right:12px;width:40px;height:40px;border-radius:50%;border:0;background:rgba(255,255,255,.15);color:#fff;font-size:16px}
+.bf-t tr.bf-warn td{background:color-mix(in srgb,#ff4d6a 16%,transparent)}.bf-t tr.bf-warn td:first-child b{color:#ff6b86}
 
 
 /* =====================================================================
@@ -3610,6 +3626,7 @@ function sollMonat(m) { const e = sollEigen(m); return e !== null ? e : sollAuto
 /* Soll eines Tages: eingetragenes Monats-Soll wird gleichmäßig auf die Werktage verteilt */
 function sollTag(d) { const b = sollBasis(d); if (!b) return 0; const m = d.slice(0, 7), e = sollEigen(m); if (e === null) return b; const a = sollAuto(m); return a > 0 ? b * e / a : 0; }
 function otTag(d) {
+  if (S.dbFest && S.dbFest[d.slice(0, 7)] && !otPlanModus()) { const bf = bfOtTag(d); if (bf !== null) return bf; }
   const s = S.shifts[d], a = S.abs[d];
   if (otPlanModus()) { let o = 0; if (s && !s.ma) o += dayWork(d).over; if (a && !a.ma) o -= daStunden(d); return o; }
   const w = s ? dayWork(d) : { plan: 0, ist: 0 }, ist = s ? (s.ma ? w.plan : w.ist) : 0, soll = sollTag(d);
@@ -6341,6 +6358,7 @@ function dbZeile(d) {
   return r;
 }
 function dbBericht(m) {
+  const bfb = bfBericht(m); if (bfb) return bfb;
   const [y, mo] = m.split('-').map(Number), n = dim(y, mo), Z = [];
   for (let i = 1; i <= n; i++) Z.push(dbZeile(`${m}-${pad(i)}`));
   const summe = Z.reduce((x, r) => x + (r.ges || 0), 0);
@@ -6360,7 +6378,7 @@ function dbBlatt(m) {
       <tr><th>Tag</th><th>Art</th><th>von</th><th>bis</th><th>Art</th><th>von</th><th>bis</th><th>Art</th><th>von</th><th>bis</th><th>Art</th><th>von</th><th>Pause</th><th>bis</th><th>gesamt</th><th>Bemerkungen</th></tr>
       ${b.Z.map(r => `<tr data-act="dbTag" data-d="${r.d}"><td>${r.tag}</td>${c(r.pArt)}${c(r.pVon)}${c(r.pBis)}${c(r.gArt)}${c('')}${c('')}${c(r.lArt)}${c(r.lVon)}${c(r.lBis)}${c(r.aArt)}${c(r.aVon)}${c(r.aPause)}${c(r.aBis)}${c(r.ges != null ? hmP(r.ges) : '')}<td class="db-bem">${esc(r.bem || '')}</td></tr>`).join('')}
     </table>
-    <div class="db-summe">Summe: <b>${hmP(b.summe)}</b></div>
+    <div class="db-summe">${b.fest ? '<span class="db-fest">Verbindlich vom Foto</span>' : ''}Summe: <b>${hmP(b.summe)}</b></div>
     <div class="db-fuss"><div class="db-soll"><div><b>${hmP(b.ind)}</b><span>monatl. ind. Stundensoll</span></div><div><b>${hmP(b.planSoll)}</b><span>Stundensoll gem. Dienstplan</span></div></div>
       <div class="db-diff"><b>${hmS(b.diff)}</b><span>+ Mehr<br>- Minder</span></div>
       <div class="db-unt"><div><i></i><span>(Unterschrift des Beamten/des Angestellten)</span></div><div><i></i><span>(Unterschrift des Dienststellenleiters)</span></div></div></div></div>`;
@@ -6375,7 +6393,7 @@ function dbAuswahl() {
     <div class="grid2" style="margin-top:10px"><label class="f"><span>Jahr</span><select class="in" data-chg="dbJahr">${jahre.map(([v]) => `<option ${v === y ? 'selected' : ''}>${v}</option>`).join('')}</select></label>
     <label class="f"><span>Monat</span><select class="in" data-chg="dbMonat">${MON.map((n, i) => `<option value="${i + 1}" ${i + 1 === mo ? 'selected' : ''}>${n}</option>`).join('')}</select></label></div>
     <div class="sub">Summe ${hmP(b.summe)} h · Soll ${hmP(b.ind)} h · <b class="${b.diff < 0 ? 'neg' : 'pos'}">${hmS(b.diff)}</b></div>
-    <button class="btn full" style="margin-top:10px" data-act="dbOpen">📄 Einlegeblatt ${MON[mo - 1]} ${y} öffnen</button></div>`;
+    <button class="btn full" style="margin-top:10px" data-act="dbOpen">📄 Einlegeblatt ${MON[mo - 1]} ${y} öffnen</button><div style="margin-top:8px">${bfLeiste(m)}</div></div>`;
 }
 ACT.dbJahr = (d, el) => { const m = UI.dbM || UI.month; UI.dbM = el.value + m.slice(4); render(); };
 ACT.dbMonat = (d, el) => { const m = UI.dbM || UI.month; UI.dbM = m.slice(0, 5) + pad(+el.value); render(); };
@@ -6392,6 +6410,200 @@ ACT.dbOpen = () => {
   };
   document.body.appendChild(ov); zeig(); window.addEventListener('resize', skala);
 };
+
+/* ---------- Alte Stundenberichte (Dienstbuch-Einlegeblatt) per Foto verbindlich übernehmen (Vorsilbe bf) ----------
+   Foto oder PDF eines ausgefüllten Einlegeblatts wird auf dem Gerät gelesen. Übernommen wird der "abgerechnete Dienst" je Tag
+   (Art, von, Pause, bis, gesamt), dazu Summe und monatl. ind. Stundensoll. Nach dem Prüfen gilt der Monat als verbindlich:
+   Überstunden und Einlegeblatt dieses Monats rechnen dann mit genau diesen Werten, egal was im Dienstplan steht.
+   Gespeichert in S.dbFest[YYYY-MM] = { tage: { 'YYYY-MM-DD': {art, von, pause, bis, ges, bem} }, ind, summe, doc, am }. */
+const bfZeit = s => { const m = /^(-?)(\d{1,3})[:.,](\d{2})$/.exec(String(s || '').trim()); return m ? (m[1] ? -1 : 1) * (+m[2] + +m[3] / 60) : null; };
+const bfFest = m => S.dbFest && S.dbFest[m] || null;
+function bfErkannt(T) { return /einlegeblatt|abgerechnete[rn]?\s*dienst|geleistete[rn]?\s*dienst|stundensoll/i.test(T || '') && /dienstbuch|stundensoll|abgerechnet/i.test(T || ''); }
+function bfParse(T, ref) {
+  const L = String(T || '').replace(/[|\[\]{}]/g, ' ').split('\n').map(z => z.replace(/\s+/g, ' ').trim()).filter(Boolean);
+  let y = 0, mo = 0;
+  for (const z of L.slice(0, 14)) { const m = /\b(0?[1-9]|1[0-2])\s*[/|\\]\s*(20\d\d)\b/.exec(z); if (m) { mo = +m[1]; y = +m[2]; break; } }
+  if (!y) for (const z of L.slice(0, 14)) { const i = MON.findIndex(n => new RegExp('\\b' + n + '\\b', 'i').test(z)), j = /\b(20\d\d)\b/.exec(z); if (i >= 0 && j) { mo = i + 1; y = +j[1]; break; } }
+  if (!y && ref) { y = +ref.slice(0, 4); mo = +ref.slice(5, 7); }
+  const m = y ? `${y}-${pad(mo)}` : '', n = y ? dim(y, mo) : 31, tage = {}, gesehen = new Set();
+  const CODE = /^[A-ZÄÖÜ]{1,3}$/;
+  let zuletzt = 0;
+  for (const z0 of L) {
+    const z = z0.replace(/^[^0-9A-Za-zÄÖÜäöü]+/, '');
+    let k = /^(\d{1,2})[.,]?\s+(.*)$/.exec(z);
+    /* "11" wird gern als "u", "ll" oder "Il" gelesen: dann den Tag aus der Reihenfolge nehmen */
+    if (!k && zuletzt) { const j = /^(\S{1,2})\s+([A-ZÄÖÜ]{1,3}\b.*)$/.exec(z); if (j && !/^\d+$/.test(j[1])) k = [z, String(zuletzt + 1), j[2]]; }
+    if (!k && zuletzt) { const j = /^([A-ZÄÖÜ]{1,3}\s+\d{1,2}[:.]\d{2}\b.*)$/.exec(z); if (j) k = [z, String(zuletzt + 1), j[1]]; }
+    if (!k) continue; const tag = +k[1]; if (tag < 1 || tag > n || gesehen.has(tag)) continue;
+    if (zuletzt && tag < zuletzt) continue;
+    const rest = k[2].replace(/(\d{1,2})[.,](\d{2})(?!\d)/g, '$1:$2').replace(/(?<![:\d])([01]\d|2[0-4]) ([0-5]\d)(?![:\d])/g, '$1:$2').replace(/(?<![:\d])([01]\d|2[0-4])([0-5]\d)(?![:\d])/g, '$1:$2'), tok = rest.split(' ');
+    const zeiten = [], codes = []; let letzteZeit = -1;
+    tok.forEach((t, i) => { if (/^\d{1,2}:\d{2}$/.test(t)) { zeiten.push([i, t]); letzteZeit = i; } else if (CODE.test(t)) codes.push([i, t]); });
+    if (!zeiten.length && !codes.length) continue;
+    gesehen.add(tag); zuletzt = tag;
+    const r = { art: '', von: '', pause: '', bis: '', ges: '', bem: '' }, zt = zeiten.map(x => x[1]);
+    if (zt.length >= 4) { const [a, p, b, g] = zt.slice(-4); Object.assign(r, { von: a, pause: p, bis: b, ges: g }); }
+    else if (zt.length === 3) { Object.assign(r, { von: zt[0], bis: zt[1], ges: zt[2] }); }
+    else if (zt.length === 2) { Object.assign(r, { von: zt[0], bis: zt[1] }); }
+    else if (zt.length === 1) r.ges = zt[0];
+    /* Art des abgerechneten Diensts: das letzte Kürzel vor dem abgerechneten Block, sonst das letzte überhaupt */
+    const ab = zt.length >= 4 ? zeiten[zeiten.length - 4][0] : zeiten.length ? zeiten[0][0] : 99;
+    const vor = codes.filter(c => c[0] < ab); r.art = (vor.length ? vor[vor.length - 1] : codes[codes.length - 1] || [0, ''])[1];
+    if (letzteZeit >= 0) r.bem = tok.slice(letzteZeit + 1).filter(t => !CODE.test(t) || t.length > 3).join(' ').trim();
+    if (!/[A-Za-zÄÖÜäöü]{2}/.test(r.bem)) r.bem = '';
+    if (!r.ges && r.von && r.bis) { let h = bfZeit(r.bis) - bfZeit(r.von); if (h <= 0) h += 24; h -= bfZeit(r.pause) || 0; r.ges = hmP(h); }
+    if (m) tage[`${m}-${pad(tag)}`] = r;
+  }
+  const such = re => { for (const z of L) { const x = re.exec(z); if (x) return x[1]; } return ''; };
+  const summe = bfZeit(such(/summe\s*:?\s*(\d{1,3}[:.]\d{2})/i));
+  let ind = bfZeit(such(/(\d{2,3}[:.]\d{2})\s*monatl/i) || such(/ind\.?\s*stundensoll\s*:?\s*(\d{2,3}[:.]\d{2})/i));
+  if (ind === null) { const f = L.findIndex(z => /monatl|stundensoll/i.test(z)); if (f > 0) { const x = /(\d{2,3}[:.]\d{2})/.exec(L[f - 1] + ' ' + L[f]); if (x) ind = bfZeit(x[1]); } }
+  return { m, tage, summe, ind };
+}
+const bfSumme = tage => Object.values(tage).reduce((s, r) => s + (bfZeit(r.ges) || 0), 0);
+
+/* Prüf-Fenster: jede Zeile lässt sich korrigieren, erst "Verbindlich übernehmen" speichert */
+function bfPruefen(r, docId) {
+  if (!r.m) r.m = UI.dbM || UI.month;
+  const [y, mo] = r.m.split('-').map(Number), n = dim(y, mo);
+  const alle = Array.from({ length: n }, (_, i) => `${r.m}-${pad(i + 1)}`), leer = { art: '', von: '', pause: '', bis: '', ges: '', bem: '' };
+  const zeile = d => { const x = r.tage[d] || leer, wd = WD[pd(d).getDay()], we = /Sa|So/.test(wd) ? ' bf-we' : '';
+    return `<tr class="${x.ges || x.art ? '' : 'bf-leer'}${we}"><td><b>${+d.slice(8)}</b><small>${wd}</small></td>${['art', 'von', 'pause', 'bis', 'ges'].map(k => `<td><input class="in bf-in" name="${k}_${d}" value="${esc(x[k] || '')}" ${k === 'art' ? 'maxlength="4" autocapitalize="characters"' : 'inputmode="decimal" placeholder="--:--"'}></td>`).join('')}</tr>`; };
+  const erkannt = Object.keys(r.tage).length;
+  const m = modal(`Stundenbericht ${MON[mo - 1]} ${y}`, `
+    <div class="sub" style="margin-bottom:8px">${erkannt ? `Ich habe ${erkannt} ${erkannt === 1 ? 'Tag' : 'Tage'} gelesen.` : 'Ich konnte keine Zeilen sicher lesen. Du kannst sie hier eintragen.'} Prüf bitte jede Zeile mit dem Foto${docId ? ` (<a href="#" data-act="bfAnsehen" data-id="${docId}">Foto ansehen</a>)` : ''}. Danach gilt dieser Monat als verbindlich: Überstunden und Einlegeblatt nehmen genau diese Werte.</div>
+    <div class="grid2">${fSel('monat', 'Monat', MON.map((x, i) => [i + 1, x]), mo)}${fIn('jahr', 'Jahr', y, 'number')}</div>
+    <div class="bf-tw"><table class="bf-t"><thead><tr><th>Tag</th><th>Art</th><th>von</th><th>Pause</th><th>bis</th><th>gesamt</th></tr></thead><tbody>${alle.map(zeile).join('')}</tbody></table></div>
+    <div class="grid2" style="margin-top:10px">${fIn('ind', 'monatl. ind. Stundensoll', r.ind != null ? hmP(r.ind) : hmP(sollMonat(r.m)), 'text', 'inputmode="decimal"')}<label class="f"><span>Summe laut Blatt</span><input class="in" name="summeBlatt" value="${r.summe != null ? hmP(r.summe) : ''}" inputmode="decimal" placeholder="--:--"></label></div>
+    <div class="bf-check" id="bfCheck"></div>
+    ${fChk('plan', 'Dienstplan dieses Monats an das Blatt anpassen', true)}`,
+    v => {
+      const mm = `${+v.jahr}-${pad(+v.monat)}`; if (!/^\d{4}-\d\d$/.test(mm)) { toast('Bitte Monat und Jahr prüfen.'); return false; }
+      const tage = {}; for (const d of alle) { const x = {}; for (const k of ['art', 'von', 'pause', 'bis', 'ges']) x[k] = String(v[k + '_' + d] || '').trim().toUpperCase().replace(/(\d)[.,](\d\d)$/, '$1:$2'); if (x.art || x.ges) tage[mm + d.slice(7)] = Object.assign(x, { bem: (r.tage[d] || {}).bem || '' }); }
+      const ind = bfZeit(String(v.ind).replace(',', ':')); if (ind === null) { toast('Bitte das Stundensoll eintragen, z.B. 172:12.'); return false; }
+      if (!S.dbFest) S.dbFest = {};
+      S.dbFest[mm] = { tage, ind, summe: bfSumme(tage), summeBlatt: bfZeit(v.summeBlatt), doc: docId || (bfFest(mm) || {}).doc || '', am: today() };
+      if (!S.indSoll) S.indSoll = {}; S.indSoll[mm] = ind;
+      if (v.plan) bfPlanAnpassen(mm);
+      UI.dbM = mm; setTimeout(() => toast(`🔒 ${MON[+mm.slice(5) - 1]} ${mm.slice(0, 4)} ist jetzt verbindlich (${hmS(bfSumme(tage) - ind)} h).`), 50);
+    }, { still: true, saveLabel: '🔒 Verbindlich übernehmen' });
+  const pruef = () => { const f = m.el.querySelector('form'), tg = {}; let warn = 0;
+    for (const d of alle) { const w = k => (f.elements[k + '_' + d] || {}).value || ''; tg[d] = { ges: w('ges') };
+      /* Zeile passt nicht zusammen (bis − von − Pause ≠ gesamt)? Dann rot markieren, damit man genau dort aufs Foto schaut */
+      const a = bfZeit(w('von')), b = bfZeit(w('bis')), g = bfZeit(w('ges')), pz = bfZeit(w('pause')) || 0; let bad = false;
+      if (a !== null && b !== null && g !== null) { let h = b - a; if (h <= 0) h += 24; bad = Math.abs(h - pz - g) > .02; }
+      const tr = f.elements['ges_' + d].closest('tr'); tr.classList.toggle('bf-warn', bad); if (bad) warn++; }
+    const s = bfSumme(tg), sb = bfZeit(String(f.elements.summeBlatt.value).replace(',', ':')), ind = bfZeit(String(f.elements.ind.value).replace(',', ':')), el = m.el.querySelector('#bfCheck');
+    const ok = sb === null || Math.abs(s - sb) < .02;
+    el.innerHTML = `<span>Summe der Zeilen <b class="num">${hmP(s)}</b></span>${sb !== null ? `<span class="${ok ? 'pos' : 'neg'}">${ok ? '✓ passt zum Blatt' : `⚠ Blatt sagt ${hmP(sb)}`}</span>` : ''}${warn ? `<span class="neg">⚠ ${warn} ${warn === 1 ? 'Zeile passt' : 'Zeilen passen'} nicht zusammen (rot)</span>` : ''}${ind !== null ? `<span>Mehr/Minder <b class="num ${s - ind < 0 ? 'neg' : 'pos'}">${hmS(s - ind)}</b></span>` : ''}`; };
+  m.el.addEventListener('input', pruef); pruef();
+}
+/* Dienstplan an das Blatt anpassen: Uhrzeiten und gesamt als "tatsächlich", Kürzel nur, wenn es die Schichtart gibt */
+function bfPlanAnpassen(mm) {
+  const f = bfFest(mm); if (!f) return; const absK = Object.fromEntries(Object.entries(DB_ABS).map(([k, v]) => [v, k]));
+  for (const [d, x] of Object.entries(f.tage)) {
+    if (absK[x.art] && ABS[absK[x.art]]) { if (!S.abs[d]) S.abs[d] = { type: absK[x.art] }; continue; }
+    const ty = (S.shiftTypes || []).find(t => t.code && t.code.toUpperCase() === x.art);
+    let s = S.shifts[d]; if (!s && !ty) continue; if (!s) s = S.shifts[d] = { type: ty.id }; else if (ty && s.type !== ty.id && !stype(s.type)) s.type = ty.id;
+    if (x.von) s.aStart = x.von; if (x.bis) s.aEnd = x.bis; if (x.pause) { const p = bfZeit(x.pause); if (p !== null) s.aPause = Math.round(p * 60); }
+    if (x.ges) s.anr = x.ges;
+  }
+}
+/* Überstunden eines Tages in einem verbindlichen Monat: gesamt laut Blatt minus Soll (Monats-Soll gleichmäßig auf die Werktage) */
+function bfOtTag(d) {
+  const m = d.slice(0, 7), f = bfFest(m); if (!f) return null;
+  const x = f.tage[d], ges = x ? bfZeit(x.ges) || 0 : 0, a = sollAuto(m), b = sollBasis(d);
+  if (a > 0) return ges - b * f.ind / a;
+  /* Monat ohne Werktage-Soll: das Soll auf den ersten Tag legen */
+  return ges - (d.slice(8) === '01' ? f.ind : 0);
+}
+/* Einlegeblatt aus dem verbindlichen Monat */
+function bfBericht(m) {
+  const f = bfFest(m); if (!f) return null; const [y, mo] = m.split('-').map(Number), n = dim(y, mo), Z = [];
+  for (let i = 1; i <= n; i++) { const d = `${m}-${pad(i)}`, x = f.tage[d], r = dbZeile(d);
+    if (x) Object.assign(r, { aArt: x.art, aVon: x.von, aPause: x.pause, aBis: x.bis, ges: bfZeit(x.ges), bem: x.bem || r.bem }); else Object.assign(r, { aArt: '', aVon: '', aPause: '', aBis: '', ges: null });
+    Z.push(r); }
+  const summe = Z.reduce((s, r) => s + (r.ges || 0), 0); let planSoll = 0; for (let i = 1; i <= n; i++) { const d = `${m}-${pad(i)}`, s = S.shifts[d]; if (s && !s.extra) planSoll += spanH(shiftSpan(d, s, false)); }
+  return { y, mo, Z, summe, planSoll, ind: f.ind, diff: summe - f.ind, fest: f };
+}
+/* Hinweis und Knöpfe im Monatsbericht */
+function bfLeiste(m) {
+  const f = bfFest(m);
+  if (!f) return `<button type="button" class="btn sec full bf-btn" data-act="bfFoto">📷 Altes Blatt per Foto übernehmen</button>`;
+  return `<div class="bf-fest"><span class="bf-schloss" aria-hidden="true">🔒</span><span><b>Verbindlich vom Foto</b><small>übernommen am ${fmtD(f.am)} · ${Object.keys(f.tage).length} Tage</small></span></div>
+    <div class="row wrap" style="gap:6px;margin-top:8px">${f.doc ? '<button type="button" class="btn sm sec" data-act="bfAnsehen">Foto ansehen</button>' : ''}<button type="button" class="btn sm sec" data-act="bfBearbeiten">Werte prüfen</button><button type="button" class="btn sm sec" data-act="bfLoesen">Aufheben</button></div>`;
+}
+ACT.bfFoto = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = 'image/*,application/pdf'; i.multiple = true;
+  i.onchange = async () => { for (const f of [...i.files]) await bfDatei(f); }; i.click(); };
+async function bfDatei(f, text) {
+  const mime = f.type || (/\.pdf$/i.test(f.name) ? 'application/pdf' : 'image/jpeg'), buf = await f.arrayBuffer();
+  if (text == null) { toast(/^image\//.test(mime) ? '🔍 Lese das Blatt …' : '📄 Lese das Dokument …'); text = await docLesen({ buf, mime }); }
+  /* Fotos: noch einmal ohne Tabellenlinien lesen, das findet die Zeilen viel besser */
+  if (/^image\//.test(mime)) { try { toast('🔍 Lese die Tabelle Zeile für Zeile …'); const t2 = await bfOcr(buf, mime); if (Object.keys(bfParse(t2).tage).length >= Object.keys(bfParse(text).tage).length) { const k = bfParse(text); text = t2 + '\n' + (k.summe != null ? 'Summe: ' + hmP(k.summe) + '\n' : '') + (k.ind != null ? hmP(k.ind) + ' monatl.\n' : '') + text.split('\n').slice(0, 4).join('\n'); } } catch (e) {} }
+  const r = bfParse(text, UI.dbM || UI.month), id = uid();
+  try { await docPut(id, { buf, mime, name: f.name || 'Stundenbericht' }); } catch (e) {}
+  if (r.m && bfFest(r.m) && !(await ask(`Für ${MON[+r.m.slice(5) - 1]} ${r.m.slice(0, 4)} gibt es schon ein verbindliches Blatt. Ersetzen?`, 'Ersetzen', 'Abbrechen'))) return;
+  UI.tab = 'arbeit'; UI.sub.arbeit = 'zeit'; if (r.m) UI.dbM = r.m; render();
+  return new Promise(res => { bfPruefen(r, id); const iv = setInterval(() => { if (!_modalStack.length) { clearInterval(iv); res(); } }, 300); });
+}
+ACT.bfBearbeiten = () => { const m = UI.dbM || UI.month, f = bfFest(m); if (f) bfPruefen({ m, tage: JSON.parse(JSON.stringify(f.tage)), ind: f.ind, summe: f.summeBlatt }, f.doc); };
+ACT.bfLoesen = async () => { const m = UI.dbM || UI.month; if (!(await ask(`Soll ${MON[+m.slice(5) - 1]} ${m.slice(0, 4)} wieder aus dem Dienstplan gerechnet werden? Die Werte vom Foto werden gelöscht.`, 'Aufheben', 'Abbrechen'))) return;
+  const f = bfFest(m); if (f && f.doc) { try { await docDel(f.doc); } catch (e) {} } delete S.dbFest[m]; save(); render(); toast('Der Monat wird wieder aus dem Dienstplan gerechnet.'); };
+ACT.bfAnsehen = async d => { const f = bfFest(UI.dbM || UI.month), id = d && d.id || f && f.doc; if (!id) return; const rec = await docGet(id); if (!rec) return toast('Das Foto ist nicht mehr da.');
+  const url = URL.createObjectURL(new Blob([rec.buf], { type: rec.mime })), ov = document.createElement('div'); ov.className = 'bf-ov';
+  ov.innerHTML = /^image\//.test(rec.mime) ? `<img src="${url}" alt="Stundenbericht">` : `<iframe src="${url}" title="Stundenbericht"></iframe>`; ov.insertAdjacentHTML('beforeend', '<button type="button" aria-label="Schließen">✕</button>');
+  ov.onclick = e => { if (e.target.tagName === 'IMG') return; ov.remove(); URL.revokeObjectURL(url); }; document.body.appendChild(ov); };
+
+/* Eigene Texterkennung für das Blatt: Tabellenlinien vorher aus dem Bild entfernen, dann Zeile für Zeile lesen.
+   Linien = sehr lange dunkle Läufe (waagrecht länger als 1/30 der Breite, senkrecht länger als 1/45 der Höhe). Leicht schiefe Fotos gehen auch,
+   weil vor dem Messen um 2 Pixel quer verbreitert wird. */
+function bfSchraege(bmp) {
+  const k = Math.min(1, 700 / bmp.width), w = Math.round(bmp.width * k), h = Math.round(bmp.height * k), c = document.createElement('canvas'); c.width = w; c.height = h;
+  const x = c.getContext('2d'); x.drawImage(bmp, 0, 0, w, h); const d = x.getImageData(0, 0, w, h).data, P = [];
+  /* dunkel = deutlich dunkler als die Umgebung (Kacheln 24 px), so zählen Schatten und dunkler Tisch am Rand nicht */
+  const g = new Float32Array(w * h); for (let i = 0, j = 0; j < w * h; i += 4, j++) g[j] = d[i] + d[i + 1] + d[i + 2];
+  const K = 24, kw = Math.ceil(w / K), kh = Math.ceil(h / K), mit = new Float32Array(kw * kh), sp = new Float32Array(kw * kh);
+  for (let ky = 0; ky < kh; ky++) for (let kx = 0; kx < kw; kx++) { let s1 = 0, mx = 0, n = 0; for (let y = ky * K; y < Math.min(h, ky * K + K); y++) for (let q = kx * K; q < Math.min(w, kx * K + K); q++) { const v = g[y * w + q]; s1 += v; if (v > mx) mx = v; n++; } mit[ky * kw + kx] = s1 / n; sp[ky * kw + kx] = mx; }
+  for (let y = 0; y < h; y++) for (let q = 0; q < w; q++) { const t = (y / K | 0) * kw + (q / K | 0), v = g[y * w + q]; if (sp[t] > 420 && v < sp[t] * .6) P.push(q - w / 2, y - h / 2); }
+  if (P.length < 200) return 0;
+  let best = 0, bestV = -1;
+  for (let a = -6; a <= 6.001; a += .25) { const r = a * Math.PI / 180, sn = Math.sin(r), cs = Math.cos(r), hist = new Float32Array(h * 2);
+    for (let i = 0; i < P.length; i += 2) { const yy = Math.round(P[i + 1] * cs - P[i] * sn + h); if (yy >= 0 && yy < h * 2) hist[yy]++; }
+    let v = 0; for (let i = 0; i < hist.length; i++) v += hist[i] * hist[i]; if (v > bestV) { bestV = v; best = a; } }
+  return best;
+}
+async function bfBildVorbereiten(blob) {
+  const bmp = await createImageBitmap(blob), sc = Math.min(3, Math.max(2600 / bmp.width, .5)), W = Math.round(bmp.width * sc), H = Math.round(bmp.height * sc);
+  const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d');
+  /* Schief fotografiert? Winkel über die Tabellenlinien schätzen (die Zeilensummen sind am schärfsten, wenn die Linien waagrecht liegen) und gerade drehen */
+  const wink = bfSchraege(bmp); x.fillStyle = '#fff'; x.fillRect(0, 0, W, H);
+  x.translate(W / 2, H / 2); x.rotate(-wink * Math.PI / 180); x.drawImage(bmp, -W / 2, -H / 2, W, H); x.setTransform(1, 0, 0, 1, 0, 0);
+  const im = x.getImageData(0, 0, W, H), d = im.data, g = new Uint8Array(W * H);
+  /* Graustufen und örtliche Schwelle (Mittel über Kacheln), damit Schatten im Foto nicht stören */
+  for (let i = 0, j = 0; i < d.length; i += 4, j++) g[j] = .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2];
+  const K = 48, kw = Math.ceil(W / K), kh = Math.ceil(H / K), mit = new Float32Array(kw * kh);
+  for (let ky = 0; ky < kh; ky++) for (let kx = 0; kx < kw; kx++) { let s = 0, n = 0; for (let y = ky * K; y < Math.min(H, ky * K + K); y += 3) for (let xx = kx * K; xx < Math.min(W, kx * K + K); xx += 3) { s += g[y * W + xx]; n++; } mit[ky * kw + kx] = s / n; }
+  const dk = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) for (let xx = 0; xx < W; xx++) { const m = mit[Math.min(kh - 1, y / K | 0) * kw + Math.min(kw - 1, xx / K | 0)]; dk[y * W + xx] = g[y * W + xx] < Math.min(m - 28, 175) ? 1 : 0; }
+  const weg = new Uint8Array(W * H), LH = Math.round(W / 30), LV = Math.round(H / 45), R = 2;
+  /* waagrechte Linien */
+  for (let y = 0; y < H; y++) { let a = -1; for (let xx = 0; xx <= W; xx++) { let on = 0; if (xx < W) for (let k = -R; k <= R && !on; k++) { const yy = y + k; if (yy >= 0 && yy < H && dk[yy * W + xx]) on = 1; }
+    if (on && a < 0) a = xx; else if (!on && a >= 0) { if (xx - a >= LH) for (let q = a; q < xx; q++) for (let k = -R; k <= R; k++) { const yy = y + k; if (yy >= 0 && yy < H) weg[yy * W + q] = 1; } a = -1; } } }
+  /* senkrechte Linien */
+  for (let xx = 0; xx < W; xx++) { let a = -1; for (let y = 0; y <= H; y++) { let on = 0; if (y < H) for (let k = -R; k <= R && !on; k++) { const q = xx + k; if (q >= 0 && q < W && dk[y * W + q]) on = 1; }
+    if (on && a < 0) a = y; else if (!on && a >= 0) { if (y - a >= LV) for (let q = a; q < y; q++) for (let k = -R; k <= R; k++) { const z = xx + k; if (z >= 0 && z < W) weg[q * W + z] = 1; } a = -1; } } }
+  for (let j = 0, i = 0; j < W * H; j++, i += 4) { const v = dk[j] && !weg[j] ? 0 : 255; d[i] = d[i + 1] = d[i + 2] = v; d[i + 3] = 255; }
+  x.putImageData(im, 0, 0); return await new Promise(r => c.toBlob(b => r(b || blob), 'image/png'));
+}
+async function bfOcr(buf, mime, fort) {
+  if (!window.Tesseract || !/^https?:/.test(location.protocol)) return '';
+  const b = new URL('./ocr/', location.href).href;
+  const w = await Tesseract.createWorker('deu', 1, { workerPath: b + 'worker.min.js', corePath: b + 'tesseract-core-simd-lstm.js', langPath: b.replace(/\/$/, ''), workerBlobURL: false, gzip: true, cacheMethod: 'none',
+    logger: m => { if (fort && m.status === 'recognizing text') fort(m.progress); } });
+  try { await w.setParameters({ tessedit_pageseg_mode: '6', preserve_interword_spaces: '1' });
+    const { data } = await w.recognize(await bfBildVorbereiten(new Blob([buf], { type: mime || 'image/jpeg' }))); return data && data.text || ''; }
+  finally { try { await w.terminate(); } catch (e) {} }
+}
 
 /* ---------- Planung ---------- */
 VIEWS.planung = () => {
@@ -11107,7 +11319,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 126;
+const APP_V = 127;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -11429,10 +11641,10 @@ function spielInit() {
 }
 
 /* ---------- Dokument-Eingang auf Heute: eine Datei oder ein Foto einwerfen, die App erkennt die Art und sortiert sie ein (alles offline) ---------- */
-const EIN_ARTEN = { reise: ['✈️', 'Reisen', 'Ticket oder Hotel'], konto: ['💶', 'Finanzen', 'Kontoauszug oder Depot'], beleg: ['📈', 'Depot', 'Kauf, Verkauf oder Dividende'], dienst: ['🚓', 'Arbeit', 'Dienstplan'], health: ['🏃', 'Sport', 'Health-Export'] };
+const EIN_ARTEN = { reise: ['✈️', 'Reisen', 'Ticket oder Hotel'], konto: ['💶', 'Finanzen', 'Kontoauszug oder Depot'], beleg: ['📈', 'Depot', 'Kauf, Verkauf oder Dividende'], dienst: ['🚓', 'Arbeit', 'Dienstplan'], stunden: ['🕘', 'Arbeit', 'Stundenbericht (Einlegeblatt)'], health: ['🏃', 'Sport', 'Health-Export'] };
 function einKarte() {
-  return `<div class="card ein-k" data-ein-drop><button type="button" class="ein-btn" data-act="einDatei"><span class="ein-ic" aria-hidden="true"><i></i><b>📥</b></span><span class="ein-t"><b>Dokument einwerfen</b><span class="sub">Ticket, Hotel, Kontoauszug, Depot-Beleg, Dienstplan oder Health-Export. Ich erkenne es und sortiere es ein.</span></span></button>
-    <div class="ein-chips">${Object.entries(EIN_ARTEN).filter(([k]) => k !== 'beleg').map(([, v]) => v).map(([i, n]) => `<span>${i} ${n}</span>`).join('')}<button type="button" class="ein-txt" data-act="einText">📋 Text einfügen</button></div></div>`;
+  return `<div class="card ein-k" data-ein-drop><button type="button" class="ein-btn" data-act="einDatei"><span class="ein-ic" aria-hidden="true"><i></i><b>📥</b></span><span class="ein-t"><b>Dokument einwerfen</b><span class="sub">Ticket, Hotel, Kontoauszug, Depot-Beleg, Dienstplan, Stundenbericht oder Health-Export. Ich erkenne es und sortiere es ein.</span></span></button>
+    <div class="ein-chips">${Object.entries(EIN_ARTEN).filter(([k]) => k !== 'beleg' && k !== 'stunden').map(([, v]) => v).map(([i, n]) => `<span>${i} ${n}</span>`).join('')}<button type="button" class="ein-txt" data-act="einText">📋 Text einfügen</button></div></div>`;
 }
 ACT.einDatei = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.pdf,.csv,.txt,.xlsx,.zip,.xml,application/pdf,text/csv,text/plain,image/*,application/zip,text/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'; i.style.display = 'none';
   i.onchange = () => { const f = i.files[0]; i.remove(); if (f) einDatei(f); }; document.body.appendChild(i); i.click(); };
@@ -11445,6 +11657,7 @@ function einArt(name, mime, text) {
   if (/\.xlsx$/.test(n)) return 'dienst';
   const T = text || '', bank = (T.match(/buchungstag|wertstellung|valuta|kontoauszug|alter saldo|neuer saldo|kontostand|finanzstatus|lastschrift|gutschrift|umsatzliste|depotauszug|transaktionsexport/gi) || []).length;
   if (/\.csv$/.test(n)) return /dienst|schicht/i.test(T.slice(0, 400)) && !bank ? 'dienst' : 'konto';
+  if (bfErkannt(T) && bank < 2) return 'stunden';
   if (/dienstplan|schichtplan|dienstfolge/i.test(T) && bank < 2) return 'dienst';
   if (trAbrechnung(T)) return 'beleg';
   if (/abrechnung|ausf(ü|u)hrung|schlusstag|handelstag|order|dividendengutschrift|aussch(ü|ue)ttung/i.test(T) && T.split('\n').length < 150 && belegAllgemein(T)) return 'beleg';
@@ -11465,6 +11678,7 @@ async function einDatei(f) {
   if (!art) return;
   const [ic, ziel, was] = EIN_ARTEN[art]; toast(`${ic} Erkannt: ${was} → ${ziel}`);
   if (art === 'health') return hlImportDatei(f);
+  if (art === 'stunden') return bfDatei(f, text);
   if (art === 'beleg') { if (!text) { buf = buf || await f.arrayBuffer(); text = await docLesen({ buf, mime }); } const ref = f.lastModified ? new Date(f.lastModified - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10) : today();
     let b = trBeleg(text, ref) || belegAllgemein(text); const vor = Object.assign({}, b || {});
     b = lernAnwenden(text, 'beleg', Object.assign({ art: 'kauf', date: ref, leer: !b }, b || {})) || (b ? b : { art: 'kauf', date: ref, leer: true, name: '', qty: 0, kurs: 0, summe: 0, gebuehr: 0 });
