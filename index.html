@@ -10706,7 +10706,7 @@ async function impPdfZeilen(buf) {
 
 /* ---------- Kontoauszug aus PDF-Zeilen ---------- */
 const STOP_RE = /^(alter|neuer|anfangs|end|vorläufiger)?\s*(kontostand|saldo)|^(übertrag|seite \d|blatt \d|summe|gesamtumsätze|kontoauszug\b|iban\b|bic\b|kontonummer|konto-?nr)|^bitte beachten|^rechnungsabschluss|^dieser auszug|^sehr geehrte/i;
-const ART_RE = /^(sepa[- ]?)?(basis-?)?(nfc kartenzahlung|karteneinsatz im internet( -)?|echtzeitgutschrift|echtzeitüberweisung inland tbol|echtzeitüberweisung|überweisung inland|inland tbol|bargeldausz\.? geldautomat( -)?|lohn ?\/ ?gehalt ?\/ ?rente|online-kartenzahlung|lastschrift(einzug)?|überweisung|ueberweisung|gutschrift|dauerauftrag|kartenzahlung|kartenumsatz|debitkarte|girocard|visa|mastercard|echtzeit-?überweisung|einzahlung|auszahlung|bargeldauszahlung|geldautomat|zahlung|abschluss|entgelt|zinsen|lohn\/gehalt|gehalt\/rente|retoure|rücklastschrift|umbuchung)\b[^A-Za-zÄÖÜäöü]*/i;
+const ART_RE = /^(sepa[- ]?)?(basis-?)?(nfc kartenzahlung|karteneinsatz im internet( -)?|echtzeitgutschrift|echtzeitüberweisung inland tbol|echtzeitüberweisung|überweisung inland|inland tbol|bargeldausz\.? geldautomat( -)?|lohn ?\/ ?gehalt ?\/ ?rente|online-kartenzahlung|lastschrift(einzug)?|überweisung|ueberweisung|gutschrift|dauerauftrag|kartenzahlung mit pin|kartenzahlung|kartenumsatz|debitkarte|girocard|visa|mastercard|echtzeit-?überweisung|einzahlung|auszahlung|bargeldauszahlung|geldautomat|zahlung|abschluss|entgelt|zinsen|lohn\/gehalt|gehalt\/rente|retoure|rücklastschrift|umbuchung)\b[^A-Za-zÄÖÜäöü]*/i;
 const EIN_RE = /gutschrift|zahlungseingang|eingang|lohn|gehalt|bezüge|besoldung|rente|zinsgutschrift|erstattung|rückzahlung|dividende|ausschüttung|einzahlung|retoure/i;
 
 function auszugAusZeilen(lines0, fname) {
@@ -10749,6 +10749,8 @@ function auszugAusZeilen(lines0, fname) {
     if (!dm || !b.length) { if (!cur || !cur.rows.length) kopf.push(t); continue; }
     // Vorgemerkte/reservierte Beträge sind noch nicht gebucht
     if (/reserv\.?\s*betrag|vorgemerkt|vormerkung/i.test(t)) { inTx = true; letzte = null; continue; }
+    // Hinweiszeilen zum Rechnungsabschluss (z.B. Targobank „Sollzinssätze …“ mit dem Kontostand dahinter) sind keine Buchung
+    if (/^(?:\d{1,2}\.\d{1,2}\.\S*\s+)?(?:[A-Z]{2}\s+)?(soll|haben|dispo)?zinss[aä]tz|zinssatz für|geduldete überziehung/i.test(t) || (b.length === 1 && cur && cur.lauf != null && Math.abs(b[0].v - Math.abs(cur.lauf)) < 0.011 && !ART_RE.test((dm[3] || '').replace(/^(MO|DI|MI|DO|FR|SA|SO)\s+/, '')))) { inTx = false; letzte = null; continue; }
     if (!cur) neueSektion('');
     // Betrag: letzter Betrag; bei zwei Beträgen prüfen, ob der letzte ein laufender Saldo ist
     let x = b[b.length - 1], sgSaldo = 0;
@@ -11053,7 +11055,7 @@ function impKlassifizieren() {
   for (const s of konten) for (const z of s.rows) {
     if (z.flag === 'paar') continue;
     const [von, nach] = z.typ === 'umb' ? (z.dir < 0 ? [z.self, z.other] : [z.other, z.self]) : [z.self, null];
-    const dup = S.tx.find(t => !benutzt.has(t.id) && t.date === z.date && Math.abs(t.amount - z.amount) < 0.01 && (t.imp === impHash(s, z) || (t.type === 'umb' ? (t.acc === von && t.to === nach) || (t.acc === nach && t.to === von) : t.acc === z.self && t.type === z.typ)));
+    const dup = S.tx.find(t => !benutzt.has(t.id) && (t.date === z.date || (z.typ === 'umb' && t.type === 'umb' && Math.abs(dayDiff(t.date, z.date)) <= 4)) && Math.abs(t.amount - z.amount) < 0.01 && (t.imp === impHash(s, z) || (t.type === 'umb' ? (t.acc === von && t.to === nach) || (t.acc === nach && t.to === von) : t.acc === z.self && t.type === z.typ)));
     if (dup) { z.on = false; z.flag = 'dupe'; benutzt.add(dup.id); continue; }
     const geplant = S.tx.find(t => !benutzt.has(t.id) && t.rec && !t.imp && t.acc === (z.typ === 'umb' ? von : z.self) && Math.abs(t.amount - z.amount) <= Math.max(0.01, t.amount * 0.005) && Math.abs(dayDiff(t.date, z.date)) <= 7);
     if (geplant) { z.ersetzt = geplant.id; z.recId = geplant.rec; benutzt.add(geplant.id); if (!z.flag) z.flag = 'rec'; }
@@ -12444,7 +12446,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 129;
+const APP_V = 130;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
