@@ -3426,6 +3426,21 @@ html.gs3-offen,html.gs3-offen body{overflow:hidden}
 .gs3-f .gs3-sel{flex:none;font-size:14px;padding:8px 26px 8px 10px}
 .gs3-bauen{all:unset;box-sizing:border-box;cursor:pointer;display:block;width:100%;margin-top:12px;padding:11px;border-radius:12px;background:#1c2333;color:#fff;text-align:center;font-size:14px;font-weight:800}
 .gs3-fv{min-height:1.4em}
+.gs3-bu{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;width:100%;padding:6px 8px;border-radius:10px;background:#f5f7fa;font-size:12px;color:#1c2333;-webkit-tap-highlight-color:transparent}
+.gs3-bu>b{font-size:12.5px;font-weight:800;white-space:nowrap}
+.gs3-bu:active{background:#e8ecf3}
+.gs3-hh{font-weight:600;letter-spacing:0;text-transform:none;margin-left:4px}
+button.gs3-lm{all:unset;cursor:pointer;font-size:11.5px;font-weight:800;color:#2f74e0;padding:6px 8px}
+.gs3-nicht{display:block;margin-top:8px;width:100%;box-sizing:border-box}
+.gs3-nicht.on{box-shadow:inset 0 0 0 1.5px #c8372a}
+.gs3-cb{display:flex;gap:8px;align-items:flex-start;margin-top:10px;font-size:12px;color:#1c2333;cursor:pointer}
+.gs3-cb input{margin:2px 0 0;width:16px;height:16px;flex:none;accent-color:#1c2333}
+.gs3-cb b{display:block;font-size:12px;font-weight:700}
+.gs3-cb small{display:block;font-size:10.5px;color:var(--gs3-mut)}
+.gs3-abs{margin-top:12px;border-radius:12px;background:#f5f7fa;padding:8px 10px}
+.gs3-abs summary{cursor:pointer;font-size:12px;font-weight:800;color:#1c2333}
+.gs3-absl{max-height:260px;overflow-y:auto;overscroll-behavior:contain}
+.gs3-ziele button span{white-space:normal;line-height:1.15}
 .gs3-det[hidden]{display:none}
 @keyframes gs3Auf{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .gs3-dk{display:flex;gap:10px;align-items:center}
@@ -5955,26 +5970,34 @@ function gsEigene() {
   if (GS.eRef === L && GS.eLen === L.length && GS.eL) return GS.eL;
   GS.eRef = L; GS.eLen = L.length;
   return GS.eL = L.slice(0, GS_PLAETZE.length).map((e, i) => { const ty = GS_TYPEN[e.typ] || GS_TYPEN.buero, w = String(e.wort || '').split(/[,;]+/).map(x => x.trim()).filter(Boolean);
-    return { k: 'e_' + e.id, id: e.id, eigen: true, typ: GS_TYPEN[e.typ] ? e.typ : 'buero', name: e.name || ty.name, ort: e.name || ty.name, icon: ty.icon, col: ty.col, cat: e.cat || '', wort: w,
+    return { k: 'e_' + e.id, id: e.id, eigen: true, typ: GS_TYPEN[e.typ] ? e.typ : 'buero', name: e.name || ty.name, ort: e.name || ty.name, icon: ty.icon, col: ty.col, cat: e.cat || '', wort: w, betrag: +e.betrag || 0,
       wre: w.length ? new RegExp(w.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i') : null, blk: GS_PLAETZE[i], blkW: GS_PLAETZE_W[i] }; });
 }
 const gsAlle = () => [...GS_QUELLEN, ...gsEigene()];
-const gsSig = d => JSON.stringify([d.avg, d.monat, d.jahr, GS.weit, (S.gsQ || []).map(e => [e.id, e.typ, e.name, e.cat, e.wort])]);
-function gsQuelle(t) {
+const gsSig = d => JSON.stringify([d.avg, d.monat, d.jahr, GS.weit, (S.gsQ || []).map(e => [e.id, e.typ, e.name, e.cat, e.wort, e.betrag]), S.gsWeg || []]);
+/* Absender-Schlüssel einer Buchung: Text ohne Zahlen, damit „Zinsen 11/2026“ und „Zinsen 12/2026“ zusammengehören */
+const gsKey = t => String(t.note || (cat(t.cat) || {}).name || '').toLowerCase().replace(/[0-9.,:/€%-]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40);
+const GS_TR = /^\s*(zinsen|zinsgutschrift|habenzinsen|dividende|aussch(ü|ue)ttung|steuerausgleich|steuergutschrift|vorabpauschale|saveback|bonus|aktien-?prämie|barausgleich)\b/i; // Trade-Republic-Posten
+const gsGibt = k => k === 'x' || GS_QUELLEN.some(q => q.k === k) || gsEigene().some(q => q.k === k);
+function gsQuelle(t) { const k = gsQRoh(t); return k !== 'x' && (S.gsWeg || []).includes(k) ? 'x' : k; } // 'x' = zählt nicht als Einnahme
+function gsQRoh(t) {
+  if (t.gs && gsGibt(t.gs)) return t.gs;
+  const r = S.gsRegel && S.gsRegel[gsKey(t)]; if (r && gsGibt(r)) return r;
   const c = cat(t.cat), p = c && c.parent ? cat(c.parent) : null, txt = [c && c.name, p && p.name].filter(Boolean).join(' '), E = gsEigene();
+  for (const q of E) if (q.wre && q.wre.test(t.note || '')) return q.k;
   for (const q of E) if (q.cat && (t.cat === q.cat || (c && c.parent === q.cat))) return q.k;
   for (const q of GS_QUELLEN) if (q.re && q.re.test(txt)) return q.k;
-  for (const q of E) if (q.wre && q.wre.test(t.note || '')) return q.k;
   if (!c) for (const q of GS_QUELLEN) if (q.re && q.k !== 'gehalt' && q.re.test(t.note || '')) return q.k;
-  if (/^\s*(zinsen|zinsgutschrift|habenzinsen|dividende|aussch(ü|ue)ttung)\b/i.test(t.note || '')) return 'bank'; // z. B. Trade-Republic-Zinsen mit Kategorie „Sonstige Einnahmen“
+  if (GS_TR.test(t.note || '')) return 'bank'; // Zinsen, Prämien, Saveback, Steuerausgleich usw. mit Kategorie „Sonstige Einnahmen“
   return 'sonst';
 }
 function gsDaten() {
-  const m = today().slice(0, 7), sumM = mm => { const o = {}, z = { v: 0 }; for (const t of monthTx(mm)) if (t.type === 'ein') { const k = gsQuelle(t); o[k] = (o[k] || 0) + t.amount; if (k === 'gehalt' && /zulage|duz/i.test(((cat(t.cat) || {}).name || '') + ' ' + (t.note || ''))) z.v += t.amount; } return [o, z.v]; };
+  const m = today().slice(0, 7), sumM = mm => { const o = {}, z = { v: 0 }; for (const t of monthTx(mm)) if (t.type === 'ein') { const k = gsQuelle(t); if (k === 'x') continue; o[k] = (o[k] || 0) + t.amount; if (k === 'gehalt' && /zulage|duz/i.test(((cat(t.cat) || {}).name || '') + ' ' + (t.note || ''))) z.v += t.amount; } return [o, z.v]; };
   const avg = {}, monat = sumM(m)[0], jahr = {}; let n = 0, zul = 0;
   for (let i = 1; i <= 3; i++) { const [o, z] = sumM(addM(m, -i)); if (Object.keys(o).length) { n++; zul += z; for (const k in o) avg[k] = (avg[k] || 0) + o[k]; } }
   if (n) { for (const k in avg) avg[k] /= n; zul /= n; } else { Object.assign(avg, monat); zul = sumM(m)[1]; }
   for (let i = 0; i < +m.slice(5); i++) { const [o] = sumM(m.slice(0, 5) + String(i + 1).padStart(2, '0')); for (const k in o) jahr[k] = (jahr[k] || 0) + o[k]; }
+  for (const q of gsEigene()) if (q.betrag > 0) { avg[q.k] = q.betrag; monat[q.k] = q.betrag; jahr[q.k] = q.betrag * +m.slice(5); } // fester Betrag pro Monat
   const tot = o => Object.values(o).reduce((a, b) => a + b, 0);
   return { avg, monat, jahr, zul, total: tot(avg), totMonat: tot(monat), totJahr: tot(jahr) };
 }
@@ -6040,7 +6063,12 @@ function gsBauen() {
     else if (a === 'edit') gsFormular(b.dataset.id);
     else if (a === 'typ') gsFormTyp(b.dataset.v);
     else if (a === 'bauen') gsFormSpeichern();
-    else if (a === 'weg') gsEigeneWeg(b.dataset.id);
+    else if (a === 'weg') gsAbreissen(b.dataset.v);
+    else if (a === 'auf') gsAufbauen(b.dataset.v);
+    else if (a === 'alle') { GS.alle = true; gsZeitNeu(); }
+    else if (a === 'bu') gsUmsortieren(b.dataset.id);
+    else if (a === 'zu') gsUmSetzen(b.dataset.v);
+    else if (a === 'zur') gsDetail(GS.fokus);
     else if (a === 'bal') { GS.zr.art = b.dataset.art; if (b.dataset.art === 'jahr') GS.zr.j = b.dataset.v; else { GS.zr.m = b.dataset.v; } gsZeitNeu(); } });
   w.addEventListener('input', e => { if (e.target.closest('.gs3-form')) { if (e.target.name === 'name') GS.form.nameFest = true; gsFormVorschau(); } });
   w.addEventListener('change', e => { if (e.target.closest('.gs3-form')) { gsFormVorschau(); return; } const s = e.target.closest('[data-gs="zrw"]'); if (!s || !GS.zr) return; if (GS.zr.art === 'jahr') GS.zr.j = s.value; else GS.zr.m = s.value; gsZeitNeu(); });
@@ -6107,7 +6135,7 @@ function gsFokus(k) {
   GS.fokus = g ? k : null;
   GS.el.tags.querySelectorAll('.gs3-tag').forEach(t => t.classList.toggle('fokus', t.dataset.k === k)); GS.el.tags.classList.toggle('hat-fokus', !!g);
   GS.wrap.classList.toggle('gs3-hat-det', !!g);
-  if (g) { if (!GS.zr || GS.zrK !== k) GS.zr = { art: 'monat', m: today().slice(0, 7), j: today().slice(0, 4) }; GS.zrK = k; gsDetail(k); } else { GS.el.det.hidden = true; gsVersatz(); }
+  if (g) { if (!GS.zr || GS.zrK !== k) GS.zr = { art: 'monat', m: today().slice(0, 7), j: today().slice(0, 4) }; GS.zrK = k; GS.alle = false; gsDetail(k); } else { GS.el.det.hidden = true; gsVersatz(); }
 }
 const gsWinkel = a => { while (a > Math.PI) a -= 2 * Math.PI; while (a < -Math.PI) a += 2 * Math.PI; return a; };
 
@@ -6459,7 +6487,7 @@ function gsStadt(d) {
   for (const [dx, dz] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) for (let k = -3; k <= 3; k++) { const r = GS_PLATZ + .55, q = k * .36; gsDeck(S, dx ? dx * r : q, .014, dz ? dz * r : q, dx ? .55 : .2, dx ? .2 : .55, '#ffffff'); }
   gsNetz(W, S, M.fl, false);
   // Blöcke: Gehweg, Grundfläche, Inhalt
-  const sonderBlk = {}; gsAlle().forEach(q => { sonderBlk[(GS.weit ? q.blkW : q.blk).join()] = q; });
+  const sonderBlk = {}; gsAlle().forEach(q => { if (!(S.gsWeg || []).includes(q.k)) sonderBlk[(GS.weit ? q.blkW : q.blk).join()] = q; });
   const arten = ['wohn', 'wohn', 'wohn', 'park', 'turm', 'wohn'], bauBlk = GS.weit ? '-2,2' : '2,-2';
   for (const i of [-4, -3, -2, -1, 1, 2, 3, 4]) for (const j of [-4, -3, -2, -1, 1, 2, 3, 4]) {
     const [x0, x1] = gsBlock(i), [z0, z1] = gsBlock(j), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, w = x1 - x0, dd = z1 - z0;
@@ -6624,7 +6652,7 @@ function gsDetail(k) {
   const kopf = (b, s) => `<div class="gs3-dk"><i style="--c:${q.col}">${q.icon}</i><div><b>${b}</b><small>${s}</small></div><button type="button" class="gs3-x" data-gs="heim" aria-label="Schließen">${GS_SVG.zu}</button></div>`;
   GS.el.dl = null; el.scrollTop = 0;
   if (!g.aktiv && q.eigen) { el.innerHTML = kopf(esc(q.ort), 'noch keine Einnahmen') + `<p class="gs3-dt">Sobald eine Einnahme passt, fließt hier Geld über die Straße zum Brunnen.</p>` + gsZuordnung(q); el.hidden = false; gsVersatz(); return; }
-  if (!g.aktiv) { el.innerHTML = kopf('Bauplatz ' + q.name, GS_BAU[q.k]) + `<p class="gs3-dt">Sobald du eine Einnahme mit der Kategorie „${q.name}“ buchst, wird hier gebaut.</p>`; el.hidden = false; gsVersatz(); return; }
+  if (!g.aktiv) { el.innerHTML = kopf('Bauplatz ' + q.name, GS_BAU[q.k]) + `<p class="gs3-dt">Sobald du eine Einnahme mit der Kategorie „${q.name}“ buchst, wird hier gebaut.</p>` + gsAbrissKnopf(q); el.hidden = false; gsVersatz(); return; }
   const n = new Date(), r = GS.detRate = (d.avg[k] || 0) / (dim(n.getFullYear(), n.getMonth() + 1) * 86400);
   const ant = (d.avg[k] || 0) / (d.total || 1) * 100, anteil = ant > 0 && ant < 1 ? 'unter 1' : Math.round(ant);
   let h = kopf(esc(q.ort), `${q.eigen ? 'Eigene Quelle' : q.name} · ${anteil} % deiner Einnahmen`);
@@ -6634,7 +6662,7 @@ function gsDetail(k) {
   if (k === 'gehalt' && d.zul > 1) h += `<p class="gs3-dt">Davon im Schnitt <b class="num">${eur0(d.zul)}</b> Zulagen und DUZ.</p>`;
   h += `<div class="gs3-zs">${gsZeitBlock(k)}</div>`;
   h += gsAnsteht(k);
-  if (q.eigen) h += gsZuordnung(q);
+  h += q.eigen ? gsZuordnung(q) : gsAbrissKnopf(q);
   el.innerHTML = h;
   GS.el.dl = { g: el.querySelector('.gs3-dg'), c: el.querySelector('.gs3-dc'), f: el.querySelector('.gs3-df') };
   el.hidden = false; gsVersatz();
@@ -6665,8 +6693,10 @@ function gsZeitBlock(k) {
   const werte = bal.map(x => summe(x.von, x.bis)), mx = Math.max(1, ...werte), dicht = bal.length > 12;
   h += `<div class="gs3-bal${dicht ? ' dicht' : ''}" style="--c:${GS.geb[k].q.col}">${bal.map((x, i) => `<button type="button" data-gs="bal" data-art="${x.art}" data-v="${x.v}" class="${x.an ? 'an' : ''}${x.zuk ? ' zuk' : ''}" aria-label="${x.l}: ${eur0(werte[i])}"><i style="height:${Math.max(werte[i] ? 4 : 0, werte[i] / mx * 100).toFixed(1)}%"></i><span>${!dicht || i % 2 === (bal.length - 1) % 2 ? x.l : ''}</span></button>`).join('')}</div>`;
   if (k === 'bank') h += gsHerkunft(txP);
-  else if (txP.length) { const L = txP.slice().reverse();
-    h += `<div class="gs3-h">Buchungen</div><div class="gs3-li">${L.slice(0, 6).map(t => `<div class="gs3-lz"><span class="gs3-ld">${fmtDs(t.date)}</span><span class="gs3-ln">${esc(t.note || (cat(t.cat) || {}).name || 'Einnahme')}</span><b class="num">${eur(t.amount)}</b></div>`).join('')}${L.length > 6 ? `<div class="gs3-lm">und ${L.length - 6} weitere</div>` : ''}</div>`; }
+  const q = GS.geb[k].q;
+  if (q.betrag > 0) h += `<p class="gs3-dt">Hier zählt ein fester Betrag von <b class="num">${eur(q.betrag)}</b> im Monat. Ändern unter Bearbeiten.</p>`;
+  if (txP.length) { const L = txP.slice().reverse(), n = GS.alle ? L.length : 6;
+    h += `<div class="gs3-h">Buchungen <span class="gs3-hh">antippen, wenn eine falsch ist</span></div><div class="gs3-li">${L.slice(0, n).map(t => `<button type="button" class="gs3-lz gs3-bu" data-gs="bu" data-id="${t.id}"><span class="gs3-ld">${fmtDs(t.date)}${t.date.slice(0, 4) !== today().slice(0, 4) ? t.date.slice(2, 4) : ''}</span><span class="gs3-ln">${esc(t.note || (cat(t.cat) || {}).name || 'Einnahme')}</span><b class="num">${eur(t.amount)}</b></button>`).join('')}${L.length > n ? `<button type="button" class="gs3-lm" data-gs="alle">Alle ${L.length} zeigen</button>` : ''}</div>`; }
   return h;
 }
 /* Bank: aus welcher Aktie, welchem ETF oder welchem Konto (Zinsen) das Geld kommt */
@@ -6677,6 +6707,7 @@ function gsHerkunft(txP) {
     const p = gsIstDiv(t) && typeof dpDivPos === 'function' ? dpDivPos(t) : null;
     if (p) { key = 'p' + p.id; name = p.name; logo = typeof dpLogo === 'function' ? dpLogo(p, 26) : ''; art = 'Dividende'; }
     else if (gsIstZins(t)) { const a = byId(S.accounts, t.acc); key = 'z' + (t.acc || ''); name = a ? a.name : 'Konto'; logo = '<span class="gs3-lg">%</span>'; art = 'Zinsen'; }
+    else if (GS_TR.test(t.note || '') && !gsIstDiv(t)) { const m = GS_TR.exec(t.note); name = m[1].replace(/^./, x => x.toUpperCase()).replace(/^Aktien-?prämie/i, 'Aktien-Prämie'); key = 't' + name.toLowerCase(); logo = '<span class="gs3-lg">TR</span>'; art = 'Trade Republic'; }
     else { name = String(t.note || (cat(t.cat) || {}).name || 'Sonstiges').replace(/^(dividende|ausschüttung)\s+/i, ''); key = 'n' + name.toLowerCase(); logo = '<span class="gs3-lg">€</span>'; art = gsIstDiv(t) ? 'Dividende' : 'Einnahme'; }
     const o = G[key] || (G[key] = { name, logo, art, v: 0, n: 0 }); o.v += t.amount; o.n++; }
   const L = Object.values(G).sort((a, b) => b.v - a.v), tot = sum(L, x => x.v) || 1;
@@ -6708,14 +6739,14 @@ function gsAnsteht(k) {
 function gsZuordnung(q) {
   const c = q.cat && cat(q.cat), teile = [c ? `Kategorie „${esc(c.name)}“` : '', q.wort.length ? `Buchungstext enthält ${q.wort.map(w => '„' + esc(w) + '“').join(' oder ')}` : ''].filter(Boolean);
   return `<div class="gs3-h">Was hierher zählt</div><p class="gs3-dt" style="margin-top:0">${teile.length ? teile.join(', oder ') : 'Noch nichts festgelegt. Tippe auf Bearbeiten und wähle eine Kategorie oder Wörter aus dem Buchungstext.'}</p>
-    <div class="gs3-knoepfe"><button type="button" class="gs3-k2" data-gs="edit" data-id="${q.id}">Bearbeiten</button><button type="button" class="gs3-k2 rot" data-gs="weg" data-id="${q.id}">Gebäude abreißen</button></div>`;
+    <div class="gs3-knoepfe"><button type="button" class="gs3-k2" data-gs="edit" data-id="${q.id}">Bearbeiten</button><button type="button" class="gs3-k2 rot" data-gs="weg" data-v="${q.k}">Gebäude abreißen</button></div>`;
 }
 /* Plus-Knopf: Fenster zum Anlegen oder Bearbeiten einer eigenen Einnahmequelle */
 function gsFormular(id) {
   const e = id && (S.gsQ || []).find(x => x.id === id);
   if (!e && (S.gsQ || []).length >= GS_PLAETZE.length) { toast('Die Stadt hat keinen freien Bauplatz mehr. Reiß zuerst ein eigenes Gebäude ab.'); return; }
   if (GS.fokus) { GS.fokus = null; GS.el.tags.classList.remove('hat-fokus'); gsFlug({ az: GS.kam.az, el: .8, zoom: 1, ziel: new THREE.Vector3(0, .5, 0) }, 900); }
-  GS.form = e ? { id, typ: e.typ, name: e.name, cat: e.cat || '', wort: e.wort || '', nameFest: true } : { id: null, typ: 'familienkasse', name: GS_TYPEN.familienkasse.name, cat: '', wort: GS_TYPEN.familienkasse.wort, nameFest: false };
+  GS.form = e ? { id, typ: e.typ, name: e.name, cat: e.cat || '', wort: e.wort || '', betrag: e.betrag || 0, nameFest: true } : { id: null, typ: 'familienkasse', name: GS_TYPEN.familienkasse.name, cat: '', wort: GS_TYPEN.familienkasse.wort, nameFest: false };
   const f = GS.form, el = GS.el.det, cats = S.cats.filter(c => c.type === 'ein').sort((a, b) => a.name.localeCompare(b.name, 'de'));
   el.innerHTML = `<div class="gs3-dk"><i style="--c:#1c2333;color:#fff">＋</i><div><b>${e ? 'Gebäude bearbeiten' : 'Neue Einnahmequelle'}</b><small>${e ? 'Name und Zuordnung ändern' : 'Es entsteht irgendwo in der Stadt, mit Weg zum Brunnen'}</small></div><button type="button" class="gs3-x" data-gs="heim" aria-label="Schließen">${GS_SVG.zu}</button></div>
     <div class="gs3-form">
@@ -6725,12 +6756,23 @@ function gsFormular(id) {
       <div class="gs3-h">Welche Einnahmen gehören dazu?</div>
       <label class="gs3-f"><span>Kategorie</span><select name="cat" class="gs3-sel"><option value="">keine bestimmte</option>${cats.map(c => `<option value="${c.id}"${c.id === f.cat ? ' selected' : ''}>${esc(c.name)}</option>`).join('')}</select></label>
       <label class="gs3-f"><span>Wörter im Buchungstext</span><input name="wort" maxlength="80" value="${esc(f.wort)}" placeholder="z. B. Kindergeld, mehrere mit Komma" autocomplete="off"></label>
+      <label class="gs3-f"><span>Oder fester Betrag pro Monat (optional)</span><input name="betrag" inputmode="decimal" value="${f.betrag ? String(f.betrag).replace('.', ',') : ''}" placeholder="z. B. 255" autocomplete="off"></label>
+      ${gsAbsenderListe(f)}
       <p class="gs3-dt gs3-fv"></p>
       <button type="button" class="gs3-bauen" data-gs="bauen">${e ? 'Speichern' : 'Bauen'}</button>
+      ${!e && (S.gsWeg || []).length ? `<div class="gs3-h">Abgerissen</div><div class="gs3-knoepfe" style="flex-wrap:wrap">${S.gsWeg.map(k => { const q = GS_QUELLEN.find(x => x.k === k); return q ? `<button type="button" class="gs3-k2" data-gs="auf" data-v="${k}">${q.icon} ${q.ort} wieder aufbauen</button>` : ''; }).join('')}</div>` : ''}
     </div>`;
   el.hidden = false; el.scrollTop = 0; GS.wrap.classList.add('gs3-hat-det'); GS.vz = [0, 0]; gsFormVorschau(); gsLauf();
 }
-function gsFormWerte() { const el = GS.el.det, f = GS.form; if (!f) return f; const v = n => (el.querySelector(`[name="${n}"]`) || {}).value; f.name = (v('name') || '').trim(); f.cat = v('cat') || ''; f.wort = (v('wort') || '').trim(); return f; }
+function gsFormWerte() { const el = GS.el.det, f = GS.form; if (!f) return f; const v = n => (el.querySelector(`[name="${n}"]`) || {}).value; f.name = (v('name') || '').trim(); f.cat = v('cat') || ''; f.wort = (v('wort') || '').trim(); f.betrag = Math.max(0, parseFloat(String(v('betrag') || '').replace(/\./g, '').replace(',', '.')) || 0); f.keys = [...el.querySelectorAll('[name="abs"]:checked')].map(x => x.value); return f; }
+/* Absender zum Ankreuzen: jeder Absender einmal, der neueste zuerst; angekreuzte merkt sich die App */
+function gsAbsenderListe(f) {
+  const k = f.id ? 'e_' + f.id : null, M = new Map();
+  for (const t of S.tx.slice().sort((a, b) => a.date < b.date ? 1 : -1)) { if (t.type !== 'ein') continue; const key = gsKey(t); if (!key) continue; const o = M.get(key); if (o) o.n++; else M.set(key, { key, t, n: 1 }); if (M.size > 60 && !o) break; }
+  const L = [...M.values()].slice(0, 40); if (!L.length) return '';
+  return `<details class="gs3-abs"><summary>Oder Buchungen auswählen, die hierher gehören</summary><div class="gs3-absl">${L.map(o => { const j = gsQuelle(o.t), q = gsAlle().find(x => x.k === j), an = k && S.gsRegel && S.gsRegel[o.key] === k;
+    return `<label class="gs3-cb"><input type="checkbox" name="abs" value="${esc(o.key)}"${an ? ' checked' : ''}><span><b>${esc((o.t.note || (cat(o.t.cat) || {}).name || '').slice(0, 36))}</b><small>${o.n}× · zuletzt ${fmtDs(o.t.date)} ${eur(o.t.amount)} · jetzt: ${j === 'x' ? 'zählt nicht' : q ? q.icon + ' ' + esc(q.ort) : '?'}</small></span></label>`; }).join('')}</div></details>`;
+}
 function gsFormTyp(k) {
   const f = gsFormWerte(), t = GS_TYPEN[k]; if (!f || !t) return; const alt = GS_TYPEN[f.typ];
   f.typ = k; if (!f.nameFest || !f.name) { f.name = t.name; GS.el.det.querySelector('[name="name"]').value = t.name; }
@@ -6743,20 +6785,49 @@ function gsFormVorschau() {
   const w = f.wort.split(/[,;]+/).map(x => x.trim().toLowerCase()).filter(Boolean), ab = addM(today().slice(0, 7), -3) + '-01';
   const pass = S.tx.filter(t => t.type === 'ein' && ((f.cat && (t.cat === f.cat || ((cat(t.cat) || {}).parent === f.cat))) || (w.length && w.some(x => (t.note || '').toLowerCase().includes(x)))));
   const neu3 = sum(pass.filter(t => t.date >= ab && t.date < today().slice(0, 7) + '-01'), t => t.amount) / 3;
+  if (f.betrag > 0) { out.innerHTML = `Es zählt ein fester Betrag von <b class="num">${eur(f.betrag)}</b> im Monat.`; return; }
+  if (f.keys.length) { out.innerHTML = `<b>${f.keys.length}</b> ${f.keys.length === 1 ? 'Absender' : 'Absender'} ausgewählt${f.cat || w.length ? ', dazu Kategorie oder Wörter' : ''}.`; return; }
   out.innerHTML = !f.cat && !w.length ? 'Ohne Kategorie oder Wörter steht das Gebäude erst einmal leer. Du kannst das später ändern.' : pass.length ? `Passt schon zu <b>${pass.length} ${pass.length === 1 ? 'Buchung' : 'Buchungen'}</b>${neu3 > .5 ? `, im Schnitt <b class="num">${eur0(neu3)}</b> im Monat` : ''}.` : 'Passt noch zu keiner Buchung. Sobald eine kommt, fließt Geld zum Brunnen.';
 }
 function gsFormSpeichern() {
   const f = gsFormWerte(); if (!f) return; if (!f.name) f.name = GS_TYPEN[f.typ].name;
   S.gsQ = S.gsQ || []; let e = f.id && S.gsQ.find(x => x.id === f.id);
-  if (e) Object.assign(e, { typ: f.typ, name: f.name, cat: f.cat, wort: f.wort }); else { e = { id: uid(), typ: f.typ, name: f.name, cat: f.cat, wort: f.wort }; S.gsQ.push(e); }
+  if (e) Object.assign(e, { typ: f.typ, name: f.name, cat: f.cat, wort: f.wort, betrag: f.betrag }); else { e = { id: uid(), typ: f.typ, name: f.name, cat: f.cat, wort: f.wort, betrag: f.betrag }; S.gsQ.push(e); }
+  const k = 'e_' + e.id; S.gsRegel = S.gsRegel || {};
+  for (const [key, v] of Object.entries(S.gsRegel)) if (v === k && !f.keys.includes(key)) delete S.gsRegel[key];
+  for (const key of f.keys) S.gsRegel[key] = k;
   save(); GS.eRef = null; GS.form = null; GS.el.det.hidden = true; GS.wrap.classList.remove('gs3-hat-det');
   const d = gsDaten(); GS.d = d; GS.sig = gsSig(d); gsStadt(d); gsFokus('e_' + e.id);
 }
-async function gsEigeneWeg(id) {
-  const e = (S.gsQ || []).find(x => x.id === id); if (!e) return;
-  if (!(await ask(`„${e.name}“ abreißen? Deine Buchungen bleiben erhalten und zählen wieder zu den anderen Gebäuden.`, 'Abreißen'))) return;
-  S.gsQ = S.gsQ.filter(x => x.id !== id); save(); GS.eRef = null; gsFokus(null);
-  const d = gsDaten(); GS.d = d; GS.sig = gsSig(d); gsStadt(d);
+function gsNeuBauen(fokus) { save(); GS.eRef = null; const d = gsDaten(); GS.d = d; GS.sig = gsSig(d); gsStadt(d); gsFokus(fokus && GS.geb[fokus] ? fokus : null); }
+const gsName = k => k === 'x' ? 'zählt nicht' : ((gsAlle().find(q => q.k === k) || {}).ort || k);
+function gsAbrissKnopf(q) { return `<div class="gs3-knoepfe"><button type="button" class="gs3-k2 rot" data-gs="weg" data-v="${q.k}">Gebäude abreißen</button></div>`; }
+/* Jedes Gebäude lässt sich abreißen: eigene verschwinden ganz, die festen kommen auf die Abriss-Liste (über Plus wieder aufbauen) */
+async function gsAbreissen(k) {
+  const q = gsAlle().find(x => x.k === k); if (!q) return;
+  if (q.eigen) { if (!(await ask(`„${q.ort}“ abreißen? Deine Buchungen bleiben erhalten und zählen wieder zu den anderen Gebäuden.`, 'Abreißen'))) return; S.gsQ = (S.gsQ || []).filter(x => x.id !== q.id); }
+  else { if (!(await ask(`„${q.ort}“ abreißen? Seine Buchungen zählen dann nicht mehr mit. Über den Plus-Knopf kannst du es jederzeit wieder aufbauen.`, 'Abreißen'))) return; S.gsWeg = [...new Set([...(S.gsWeg || []), k])]; }
+  gsNeuBauen(null); toast(`${q.ort} abgerissen`);
+}
+function gsAufbauen(k) { S.gsWeg = (S.gsWeg || []).filter(x => x !== k); GS.form = null; GS.el.det.hidden = true; GS.wrap.classList.remove('gs3-hat-det'); gsNeuBauen(k); }
+/* Eine Buchung antippen: zu welchem Gebäude gehört sie wirklich? Auf Wunsch für alle Buchungen desselben Absenders (die App merkt es sich) */
+function gsUmsortieren(id) {
+  const t = byId(S.tx, id); if (!t) return; GS.um = id;
+  const key = gsKey(t), gleich = S.tx.filter(x => x.type === 'ein' && gsKey(x) === key).length, jetzt = gsQuelle(t);
+  const ziele = gsAlle().filter(q => !(S.gsWeg || []).includes(q.k));
+  const el = GS.el.det; el.scrollTop = 0;
+  el.innerHTML = `<div class="gs3-dk"><i style="--c:#1c2333;color:#fff">↔</i><div><b>Buchung zuordnen</b><small>${fmtDs(t.date)}${t.date.slice(2, 4)} · ${esc((t.note || 'Einnahme').slice(0, 40))} · ${eur(t.amount)}</small></div><button type="button" class="gs3-x" data-gs="zur" aria-label="Zurück">${GS_SVG.zu}</button></div>
+    <div class="gs3-h" style="margin-top:6px">Gehört zu</div>
+    <div class="gs3-typen gs3-ziele">${ziele.map(q => `<button type="button" data-gs="zu" data-v="${q.k}" style="--c:${q.col}" class="${jetzt === q.k ? 'on' : ''}"><i>${q.icon}</i><span>${esc(q.ort)}</span></button>`).join('')}</div>
+    <button type="button" class="gs3-k2 rot gs3-nicht${jetzt === 'x' ? ' on' : ''}" data-gs="zu" data-v="x">Zählt nicht als Einnahme</button>
+    ${gleich > 1 ? `<label class="gs3-cb"><input type="checkbox" name="alleVon" checked><span>Auch die anderen ${gleich - 1} Buchungen von „${esc((t.note || '').slice(0, 32))}“, und künftige</span></label>` : ''}
+    <p class="gs3-dt">Zum Beispiel deine eigenen Überweisungen zwischen deinen Konten: „Zählt nicht“ wählen.</p>
+    <div class="gs3-knoepfe"><button type="button" class="gs3-k2" data-gs="zur">Zurück</button></div>`;
+}
+function gsUmSetzen(k) {
+  const t = byId(S.tx, GS.um); if (!t) return; const cb = GS.el.det.querySelector('[name="alleVon"]'), alle = !cb || cb.checked;
+  t.gs = k; if (alle) { S.gsRegel = S.gsRegel || {}; S.gsRegel[gsKey(t)] = k; }
+  const zur = GS.fokus; GS.um = null; gsNeuBauen(zur); toast(`Zählt jetzt ${k === 'x' ? 'nicht mehr als Einnahme' : 'zu ' + gsName(k)}`);
 }
 function gsZeitNeu() { const box = GS.fokus && GS.el.det.querySelector('.gs3-zs'); if (box) box.innerHTML = gsZeitBlock(GS.fokus); }
 function gsDetZahl(v) {
@@ -12373,7 +12444,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 128;
+const APP_V = 129;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
