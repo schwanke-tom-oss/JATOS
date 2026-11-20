@@ -2179,6 +2179,19 @@ body:not(.bar-unten).gescrollt nav.tabs{background:linear-gradient(var(--bg) 0,v
 .seg-zr{position:relative}
 .seg-zr .seg{padding-right:60px}
 .seg-zr>.ibtn{position:absolute;right:-4px;top:0;z-index:2;background:rgba(24,20,40,.94);box-shadow:-16px 0 16px -4px rgba(10,8,20,.9)}
+/* Wochenplan mit Pfeilen (19.11.) */
+.sp-wpk{display:flex;align-items:center;gap:6px}
+.sp-wpk .ibtn{font-size:20px;line-height:1}
+.sp-wpd.vorbei:not(.ok){opacity:.55}
+.sp-wpd.eigen .sp-wpi{box-shadow:0 0 0 1.5px currentColor}
+/* Countdown-Ring zum nächsten Dienst (design5.js) */
+.dc3-tile{position:relative;padding-right:80px}
+.dc3{position:absolute;right:12px;top:50%;width:64px;height:64px;margin-top:-32px;display:grid;place-content:center;text-align:center;line-height:1.05;pointer-events:none}
+.dc3 svg{position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg);overflow:visible}
+.dc3-bahn{fill:none;stroke:var(--line);stroke-width:4.5}
+.dc3-wert{fill:none;stroke-width:4.5;stroke-linecap:round;stroke-dasharray:var(--U);stroke-dashoffset:var(--d)}
+.dc3 b{font-size:13px;font-weight:700}
+.dc3 small{font-size:7.5px;color:var(--tx2);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
 
 
 /* =====================================================================
@@ -3130,6 +3143,153 @@ html.g2-ruhig .ein-ic b,html.g2-ruhig .ein-ic i,html.g2-ruhig .ein-chips span{an
 @media (prefers-reduced-motion:reduce){.ein-ic b,.ein-ic i,.ein-chips span{animation:none}}
 /* Heller Himmel: Unterzeile unter der Begrüßung gut lesbar */
 html.g2[data-wx-ph]:not([data-wx-ph=nacht]) #app .kopf .take{color:rgba(255,255,255,.94);text-shadow:0 1px 2px rgba(0,10,30,.55),0 1px 14px rgba(0,10,30,.55)}
+/* ---------- Stunden-Anzeige: drei Proben (20.11.) ---------- */
+.zk2-wahl{display:flex;gap:4px;justify-content:center;margin:8px auto 0;padding:3px;border-radius:999px;background:rgba(255,255,255,.05);border:1px solid var(--line);width:fit-content}
+.zk2-wahl button{all:unset;cursor:pointer;font-size:12px;font-weight:600;padding:5px 12px;border-radius:999px;color:var(--tx2,#aaa)}
+.zk2-wahl button.on{background:var(--amb);color:#08101e;box-shadow:0 0 14px -2px var(--amb)}
+.zk2{position:relative;display:flex;flex-direction:column;align-items:center;min-width:0}
+.zk2 svg{width:100%;max-width:170px;height:auto;display:block;overflow:visible}
+.zk2-uhr .zk-v{margin-top:-2px}
+.zk2-st{stroke:#c9d0de;stroke-width:.6;opacity:.55}.zk2-st.m{stroke-width:.9;opacity:.8}.zk2-st.g{stroke-width:1.6;opacity:1}
+.zk2-zahl{font-size:7px;font-weight:700;fill:#dfe5f1;font-family:var(--sans)}
+.zk2-marke{font-size:4.6px;letter-spacing:.3em;fill:#8b95aa;font-weight:700}
+.zk2-zr{fill:none;stroke-width:2.6;stroke-linecap:round;opacity:.9}
+.zk2-kz{fill:rgba(0,0,0,.35);stroke:rgba(255,255,255,.15);stroke-width:.6}
+.zk2-sek{stroke:var(--zc);stroke-width:.9;stroke-linecap:round;transform-box:view-box;transform-origin:60px 84px}
+.zk2-zeiger{transform-box:view-box;transform-origin:60px 60px;transform:rotate(var(--w));filter:drop-shadow(0 2px 2px rgba(0,0,0,.6)) drop-shadow(0 0 3px var(--zc))}
+.zk2-glanz{fill:none;stroke:rgba(255,255,255,.18);stroke-width:5;stroke-linecap:round}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk2-sek{animation:zk2Sek 60s steps(60) infinite}
+@keyframes zk2Sek{to{transform:rotate(360deg)}}
+html.g2:not(.g2-ruhig) .zk:not(.zk-an) .zk2-zeiger{transform:rotate(-135deg)}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk2-zeiger{animation:zk2Zeiger 1.6s cubic-bezier(.3,1.35,.5,1) calc(.15s + var(--i) * .12s) both}
+@keyframes zk2Zeiger{0%{transform:rotate(-135deg)}100%{transform:rotate(var(--w))}}
+.zk2-ring svg{max-width:150px}
+.zk2-rb{fill:none;stroke-width:13;opacity:.16}
+.zk2-rv{fill:none;stroke-width:13;stroke-linecap:round;stroke-dasharray:var(--U);stroke-dashoffset:var(--d);transform-box:view-box;transform-origin:60px 60px;transform:rotate(-90deg);filter:drop-shadow(0 0 6px var(--zc))}
+.zk2-r2{filter:drop-shadow(0 0 4px rgba(0,0,0,.8)) drop-shadow(0 0 8px var(--zc))}
+.zk2-rk{filter:drop-shadow(0 0 3px rgba(0,0,0,.7))}
+.zk2-rp{fill:var(--tx3,#777)}
+.zk2-rm{position:absolute;left:0;right:0;top:calc(50% + 4px);transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;pointer-events:none}
+.zk2-rm b{font-size:19px;font-weight:700;color:var(--zc)}
+.zk2-rm small{font-size:9.5px;color:var(--tx3,#888)}
+html.g2:not(.g2-ruhig) .zk:not(.zk-an) .zk2-rv{stroke-dashoffset:var(--U)}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk2-rv{animation:zk2Ring 1.4s cubic-bezier(.25,.9,.3,1) calc(.15s + var(--i) * .12s) both}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk2-r2{animation-delay:calc(1.2s + var(--i) * .12s)}
+@keyframes zk2Ring{0%{stroke-dashoffset:var(--U)}100%{stroke-dashoffset:var(--d)}}
+html.g2:not(.g2-ruhig) .zk:not(.zk-an) .zk2-rk{opacity:0}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk2-rk{animation:zk2Auf .4s ease calc(1.3s + var(--i) * .12s) both}
+@keyframes zk2Auf{0%{opacity:0;transform:scale(.4)}100%{opacity:1;transform:none}}
+.zk2-tank svg{max-width:120px}
+.zk2-null{stroke:rgba(255,255,255,.55);stroke-width:1;stroke-dasharray:2 2}
+.zk2-fl{transform-box:view-box;transform-origin:44px var(--y0)}
+html.g2:not(.g2-ruhig) .zk:not(.zk-an) .zk2-fl{transform:scaleY(0)}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk2-fl{animation:zk2Fuell 1.4s cubic-bezier(.3,1.2,.5,1) calc(.15s + var(--i) * .12s) both}
+@keyframes zk2Fuell{0%{transform:scaleY(0)}100%{transform:none}}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk2-wl{animation:zkWelle 3s linear infinite}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk2-tank .zk-blase{animation:zkBlase 3.2s ease-in calc(1.4s + var(--k) * .55s) infinite}
+
+/* Tacho: nur die Zone am Zeiger leuchtet, der Rest tritt blass zurück (wie der Vertrags-Ring) */
+.zk-zone.zk-aus{fill-opacity:.2;filter:saturate(.35)}
+.zk-zone.zk-akt{filter:drop-shadow(0 0 5px var(--zc))}
+.zk2-zr.zk-aus{stroke-opacity:.3;filter:saturate(.35)}
+.zk2-zr.zk-akt{stroke-width:3.4;filter:drop-shadow(0 0 3px var(--zc))}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk-zone.zk-akt{animation:zkZone .45s ease-out calc(var(--z) * .07s) both,zk3Glimm 2.8s ease-in-out 1.2s infinite}
+html.g2:not(.g2-ruhig) .zk.zk-an .zk2-zr.zk-akt{animation:zk3Glimm 2.8s ease-in-out 1.2s infinite}
+@keyframes zk3Glimm{0%,100%{filter:drop-shadow(0 0 3px var(--zc))}50%{filter:drop-shadow(0 0 8px var(--zc))}}
+
+/* Countdown-Ring: zeichnet sich beim Öffnen, im Dienst atmet das Licht */
+html.g2 .dc3-bahn{stroke:rgba(255,255,255,.08)}
+html.g2 .dc3-wert{filter:drop-shadow(0 0 4px var(--dc))}
+html.g2:not(.g2-ruhig) .dc3:not(.still) .dc3-wert{animation:dc3Zeichne 1.3s cubic-bezier(.3,.9,.4,1) .25s both}
+@keyframes dc3Zeichne{from{stroke-dashoffset:var(--U)}}
+html.g2:not(.g2-ruhig) .dc3.im .dc3-wert{animation:dc3Zeichne 1.3s cubic-bezier(.3,.9,.4,1) .25s both,dc3Atem 3.2s ease-in-out 1.6s infinite}
+html.g2:not(.g2-ruhig) .dc3.im.still .dc3-wert{animation:dc3Atem 3.2s ease-in-out infinite}
+@keyframes dc3Atem{0%,100%{filter:drop-shadow(0 0 3px var(--dc))}50%{filter:drop-shadow(0 0 9px var(--dc))}}
+
+/* ---------- Wochenrückblick (design6.js, Vorsilbe wr3) ---------- */
+.wr3-karte{display:flex;align-items:center;gap:14px;width:100%;text-align:left;cursor:pointer;font:inherit;color:inherit}
+.wr3-av{position:relative;flex:none;width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(from 200deg,#8f7bff,#ff8ad8,#ffb547,#3fe08a,#4f8cff,#8f7bff);padding:3px}
+.wr3-av b{display:grid;place-items:center;width:100%;height:100%;border-radius:50%;background:var(--bg);font-size:17px}
+.wr3-karte.gesehen .wr3-av{background:var(--line)}
+.wr3-kt{display:grid;gap:2px;flex:1;min-width:0}.wr3-kt small{color:var(--tx2);font-size:12.5px}
+.wr3-karte>i{font-style:normal;color:var(--tx2);font-size:22px}
+html.g2:not(.g2-ruhig) .wr3-karte:not(.gesehen) .wr3-av{animation:wr3Dreh 6s linear infinite}
+@keyframes wr3Dreh{to{filter:hue-rotate(360deg)}}
+.wr3{position:fixed;inset:0;z-index:300;--wc:#8f7bff;background:radial-gradient(120% 70% at 50% 0%,color-mix(in srgb,var(--wc) 34%,#05060a) 0%,#05060a 70%);color:#fff;display:flex;flex-direction:column;padding:calc(env(safe-area-inset-top,0px) + 12px) max(18px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 24px) max(18px,env(safe-area-inset-left,0px));opacity:0;transform:scale(.96);transition:opacity .3s,transform .3s cubic-bezier(.2,.9,.3,1),background .6s;user-select:none;-webkit-user-select:none;cursor:pointer}
+.wr3.auf{opacity:1;transform:none}.wr3.weg{opacity:0;transform:scale(.97)}
+.wr3-prog{display:flex;gap:4px;margin-right:44px}
+.wr3-prog i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.22);overflow:hidden}
+.wr3-prog b{display:block;height:100%;width:0;background:#fff;border-radius:2px}
+.wr3-prog i.voll b{width:100%}
+.wr3-prog i.jetzt b{animation:wr3Lauf var(--d,6s) linear forwards}
+.wr3.ruhig .wr3-prog i.jetzt b{animation:none;width:100%}
+@keyframes wr3Lauf{to{width:100%}}
+.wr3-zu{position:absolute;top:calc(env(safe-area-inset-top,0px) + 2px);right:max(10px,env(safe-area-inset-right,0px));width:40px;height:40px;border:0;border-radius:50%;background:rgba(255,255,255,.1);color:#fff;font-size:16px;cursor:pointer}
+.wr3-buehne{flex:1;display:flex;align-items:center;justify-content:center;max-width:520px;width:100%;margin:0 auto}
+.wr3-seite{width:100%;display:grid;gap:14px;text-align:center;justify-items:center}
+.wr3:not(.ruhig) .wr3-seite.vor{animation:wr3Rein .5s cubic-bezier(.2,.9,.3,1) both}
+.wr3:not(.ruhig) .wr3-seite.zur{animation:wr3Zur .5s cubic-bezier(.2,.9,.3,1) both}
+@keyframes wr3Rein{from{opacity:0;transform:translateX(40px) scale(.97)}}
+@keyframes wr3Zur{from{opacity:0;transform:translateX(-40px) scale(.97)}}
+.wr3-k{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:color-mix(in srgb,var(--wc) 70%,#fff)}
+.wr3-h{margin:0;font-size:30px;line-height:1.15;text-wrap:balance;font-weight:700}
+.wr3-h b{font-size:46px;display:block;letter-spacing:-.01em;text-shadow:0 0 28px color-mix(in srgb,var(--wc) 60%,transparent)}
+.wr3-h.pos b{color:#5dff9f}.wr3-h.neg b{color:#ff6b86}
+.wr3-p{margin:0;max-width:34ch;color:rgba(255,255,255,.78);font-size:15px;line-height:1.45}
+.wr3-ring{position:relative;width:170px;height:170px;display:grid;place-content:center;margin:10px 0}
+.wr3-ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.wr3-ring circle{fill:none;stroke:rgba(255,255,255,.1);stroke-width:7}
+.wr3-ring .wr3-rv{stroke:var(--wc);stroke-linecap:round;stroke-dasharray:314.2;stroke-dashoffset:0;filter:drop-shadow(0 0 8px var(--wc))}
+.wr3:not(.ruhig) .wr3-rv{animation:wr3Ring 1.4s cubic-bezier(.3,.9,.4,1) .2s both}
+@keyframes wr3Ring{from{stroke-dashoffset:314.2}}
+.wr3-ring b{font-size:54px;line-height:1}.wr3-ring small{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.wr3-bars{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;width:100%;max-width:360px;height:170px;align-items:end;margin-top:8px}
+.wr3-bar{position:relative;height:100%;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:4px}
+.wr3-bar i{display:block;width:100%;height:max(4px,calc(var(--h) * .78));border-radius:8px 8px 4px 4px;background:linear-gradient(180deg,var(--c),color-mix(in srgb,var(--c) 35%,transparent));box-shadow:0 0 14px color-mix(in srgb,var(--c) 45%,transparent);transform-origin:bottom}
+.wr3:not(.ruhig) .wr3-bar i{animation:wr3Wachs .7s cubic-bezier(.3,1.3,.5,1) calc(.25s + var(--i) * .07s) both}
+@keyframes wr3Wachs{from{transform:scaleY(0)}}
+.wr3-bar span{font-size:10.5px;color:rgba(255,255,255,.85);min-height:13px;order:-1}
+.wr3-bar em{font-style:normal;font-size:11px;color:rgba(255,255,255,.55)}
+.wr3-pfeil{width:100%;max-width:320px}
+.wr3-pfeil path{fill:none;stroke:var(--wc);stroke-width:5;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:260;filter:drop-shadow(0 0 10px var(--wc))}
+.wr3:not(.ruhig) .wr3-pfeil path{animation:wr3Linie 1.2s ease-out .3s both}
+@keyframes wr3Linie{from{stroke-dashoffset:260}}
+.wr3-dots{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;width:100%;max-width:340px}
+.wr3-dots span{display:grid;gap:5px;justify-items:center}
+.wr3-dots b{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.07);font-size:14px}
+.wr3-dots .an b{background:var(--wc);color:#14081c;box-shadow:0 0 16px color-mix(in srgb,var(--wc) 60%,transparent)}
+.wr3:not(.ruhig) .wr3-dots span{animation:wr3Pop .45s cubic-bezier(.3,1.5,.5,1) calc(.2s + var(--i) * .06s) both}
+@keyframes wr3Pop{from{opacity:0;transform:scale(.4)}}
+.wr3-dots em{font-style:normal;font-size:11px;color:rgba(255,255,255,.55)}
+.wr3-liste{display:grid;gap:8px;width:100%;max-width:340px;text-align:left}
+.wr3-liste div{display:flex;gap:12px;padding:10px 14px;border-radius:14px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.08)}
+.wr3-liste em{font-style:normal;color:color-mix(in srgb,var(--wc) 70%,#fff);min-width:62px;font-size:13px}
+.wr3-liste span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wr3-gruss{font-size:17px;color:#fff}
+
+/* ---------- Tagesmeldung Finanzen (design6.js, Vorsilbe fm3) ---------- */
+.fm3{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 10px);z-index:250;width:min(420px,calc(100% - 28px));display:flex;align-items:center;gap:12px;padding:12px 16px;border-radius:22px;background:rgba(18,20,30,.72);backdrop-filter:blur(22px) saturate(1.6);-webkit-backdrop-filter:blur(22px) saturate(1.6);border:1px solid rgba(255,255,255,.12);box-shadow:0 18px 40px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.12);color:#fff;pointer-events:none;
+  --fc:#3fe08a;transform:translate(-50%,-140%);opacity:0;transition:transform .6s cubic-bezier(.2,1.25,.35,1),opacity .35s}
+.fm3.ab{--fc:#ff5c7a}.fm3.neutral{--fc:var(--amb)}
+.fm3.da{transform:translate(-50%,0);opacity:1}
+.fm3.weg{transform:translate(-50%,-140%);opacity:0;transition:transform .5s cubic-bezier(.5,0,.8,.3),opacity .5s}
+html.g2-ruhig .fm3{transition:opacity .3s;transform:translate(-50%,0)}
+.fm3::before{content:"";position:absolute;inset:0;border-radius:inherit;padding:1px;background:linear-gradient(120deg,transparent 30%,var(--fc),transparent 70%);-webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;opacity:.8}
+.fm3-ico{flex:none;width:38px;height:38px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,var(--fc) 22%,transparent);box-shadow:0 0 18px color-mix(in srgb,var(--fc) 35%,transparent)}
+.fm3-ico svg{width:22px;height:22px;fill:none;stroke:var(--fc);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:40}
+.fm3.da .fm3-ico svg{animation:wr3Linie .9s ease-out .35s both}
+.fm3-t{flex:1;min-width:0;display:grid;line-height:1.2}
+.fm3-t small{font-size:11.5px;color:rgba(255,255,255,.62)}
+.fm3-t b{font-size:20px;color:var(--fc)}
+.fm3-t em{font-style:normal;font-size:12px;color:rgba(255,255,255,.7);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fm3-t em b{font-size:12px}
+.fm3-t em .pos{color:#5dff9f}.fm3-t em .neg{color:#ff8098}
+.fm3-pct{flex:none;padding:5px 9px;border-radius:999px;font-size:13px;font-weight:700;color:var(--fc);background:color-mix(in srgb,var(--fc) 16%,transparent)}
+.wr3 .wr3-h{font-size:28px;margin:0;color:#fff}
+.wr3 .wr3-h b{font-size:48px}
+.wr3-ring small{font-size:9.5px;letter-spacing:.1em}
+.wr3-pfeil svg{display:block;width:100%;height:auto;overflow:visible;background:none}
+.wr3-ring svg{overflow:visible}
 
 </style>
 </head>
@@ -3600,7 +3760,7 @@ function modal(title, html, onSave, opts = {}) {
   return { el: m, form: f, close };
 }
 const fIn = (name, label, val = '', type = 'text', extra = '') => `<label class="f"><span>${label}</span><input class="in" name="${name}" type="${type}" value="${esc(val)}" ${type === 'number' ? 'step="any" inputmode="decimal"' : ''} ${extra}></label>`;
-const fMoney = (name, label, val) => `<label class="f"><span>${label}</span><input class="in" name="${name}" type="text" inputmode="decimal" value="${val !== undefined && val !== '' && val !== null ? esc(String(val).replace('.', ',')) : ''}" placeholder="0,00"></label>`;
+const fMoney = (name, label, val) => `<label class="f"><span>${label}</span><input class="in" name="${name}" type="text" inputmode="decimal" value="${val !== undefined && val !== '' && val !== null ? esc(typeof val === 'number' ? val.toFixed(2).replace('.', ',') : String(val).replace('.', ',')) : ''}" placeholder="0,00"></label>`;
 const fSel = (name, label, opts, val, extra = '') => `<label class="f"><span>${label}</span><select class="in" name="${name}" ${extra}>${opts.map(([v, l]) => `<option value="${esc(v)}" ${String(v) === String(val) ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></label>`;
 const fTxt = (name, label, val = '') => `<label class="f"><span>${label}</span><textarea class="in" name="${name}">${esc(val)}</textarea></label>`;
 const fChk = (name, label, on) => `<label class="chk"><input type="checkbox" name="${name}" ${on ? 'checked' : ''}><span>${label}</span></label>`;
@@ -4028,6 +4188,7 @@ function designNach(neu) {
   if (neu) { const sg = document.querySelector('#app .seg'); if (sg) sg.classList.add('g2-neu'); }
   if (UI.tab === 'sport' && typeof abzNeuPruefen === 'function') { clearTimeout(designNach._abz); designNach._abz = setTimeout(() => { try { abzNeuPruefen(); } catch (e) {} }, 900); }
   if (typeof design3Nach === 'function') { try { design3Nach(neu, tabNeu); } catch (e) {} }
+  try { dcStart(); design6Nach(); } catch (e) {}
   if (neu && !g2Ruhig()) { try { einzug(!tabNeu); zaehlen(); zeichnen(); } catch (e) {} }
 }
 
@@ -4659,6 +4820,156 @@ function a5Nach(neu, tabNeu) {
   if (tabNeu || neu) a5Welle();
 }
 
+/* ---------- Nachtglas Stufe 6: Countdown-Ring zum nächsten Dienst in der Dienst-Kachel auf Heute (Vorsilbe dc3) ----------
+   Vor dem Dienst: der Ring füllt sich in den letzten 24 Stunden bis Dienstbeginn. Im Dienst: der Ring zeigt, wie viel geschafft ist,
+   in der Farbe der Schicht, und atmet leicht. Aktualisiert sich jede halbe Minute, solange Heute offen ist. */
+function dcNaechster(jetzt = new Date()) {
+  if (typeof schulModus === 'function' && schulModus()) return null;
+  const t0 = today(), n = jetzt.getTime();
+  for (let k = -1; k <= 14; k++) {
+    const d = addD(t0, k), s = S.shifts[d]; if (!s || S.abs[d]) continue;
+    const ty = stype(s.type), sp = ty && shiftSpan(d, s, true); if (!sp) continue;
+    const [y, m, dd] = d.split('-').map(Number), a = new Date(y, m - 1, dd).getTime() + sp.a * 6e4, b = new Date(y, m - 1, dd).getTime() + sp.b * 6e4;
+    if (n >= a && n < b) return { im: true, a, b, n, ty };
+    if (a > n) return { im: false, a, b, n, ty };
+  }
+  return null;
+}
+function dcInhalt(x) {
+  const r = 21, U = 2 * Math.PI * r;
+  let q, gross, klein, farbe;
+  if (x.im) { q = (x.n - x.a) / (x.b - x.a); const rest = Math.round((x.b - x.n) / 6e4); gross = `${Math.floor(rest / 60)}:${String(rest % 60).padStart(2, '0')}`; klein = 'noch'; farbe = x.ty.color || 'var(--amb)'; }
+  else { const min = Math.round((x.a - x.n) / 6e4); q = Math.max(0, 1 - min / 1440); farbe = 'var(--amb)'; klein = 'bis Start';
+    gross = min >= 2880 ? Math.floor(min / 1440) + ' T' : min >= 600 ? Math.round(min / 60) + ' h' : `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`; }
+  return `<svg viewBox="0 0 54 54" aria-hidden="true"><circle cx="27" cy="27" r="${r}" class="dc3-bahn"/>
+    <circle cx="27" cy="27" r="${r}" class="dc3-wert" stroke="${farbe}" style="--U:${U.toFixed(1)};--d:${(U * (1 - Math.min(1, q))).toFixed(1)}"/></svg>
+    <b class="num">${gross}</b><small>${klein}</small>`;
+}
+function dcRing() {
+  const x = dcNaechster(); if (!x) return '';
+  return `<div class="dc3${x.im ? ' im' : ''}" id="dc3" style="--dc:${x.im ? x.ty.color || 'var(--amb)' : 'var(--amb)'}">${dcInhalt(x)}</div>`;
+}
+function dcStart() {
+  clearInterval(dcStart._t); if (!document.getElementById('dc3')) return;
+  dcStart._t = setInterval(() => { const el = document.getElementById('dc3'); if (!el) { clearInterval(dcStart._t); return; }
+    const x = dcNaechster(); if (!x) return; el.classList.add('still'); el.classList.toggle('im', x.im); el.innerHTML = dcInhalt(x); }, 30000);
+}
+
+/* ---------- Wochenrückblick als Story (Vorsilbe wr3) ----------
+   Sonntags steht auf Heute eine Karte. Antippen öffnet eine Story wie bei Instagram: Arbeit, Sport, Geld, Depot, Termine, Ausblick.
+   Rechts tippen = weiter, links = zurück, jede Seite läuft nach ein paar Sekunden von selbst weiter. Alles wird nur aus den eigenen Daten gerechnet. */
+function wrWoche(bezug) {
+  const t = bezug || today(), mo = mondayOf(t), tage = Array.from({ length: 7 }, (_, i) => addD(mo, i));
+  const arbeit = tage.map(d => { try { return S.abs[d] ? 0 : dayWork(d).ist || 0; } catch (e) { return 0; } });
+  const dienste = tage.filter(d => S.shifts[d] && !S.abs[d] && (stype(S.shifts[d].type) || {}).start).length;
+  const ws = (S.workouts || []).filter(w => w.date >= mo && w.date <= tage[6]);
+  const sportTag = tage.map(d => ws.filter(w => w.date === d).length);
+  const km = sum(ws.filter(w => w.kind === 'lauf'), w => w.dist || 0), std = sum(ws, w => woDauer(w)) / 3600;
+  const aus = (S.tx || []).filter(x => x.type === 'aus' && x.date >= mo && x.date <= tage[6]);
+  const geldTag = tage.map(d => sum(aus.filter(x => x.date === d), x => x.amount || 0));
+  const proKat = {}; for (const x of aus) { const c = cat(x.cat), k = c ? c.name : 'Sonstiges'; proKat[k] = (proKat[k] || 0) + (x.amount || 0); }
+  const topKat = Object.entries(proKat).sort((a, b) => b[1] - a[1])[0] || null;
+  let depot = null; try { if ((S.depot || []).length) { const pf = dpPerf(S.depot, addD(t, -7), t); if (pf.v1 > 0) depot = pf; } } catch (e) {}
+  const termine = sum(tage, d => dayItems(d).filter(i => ['ev', 'bday', 'jt'].includes(i.k)).length);
+  const erledigt = (S.wtasks || []).filter(x => x.done && x.date >= mo && x.date <= tage[6]).length;
+  const nw = Array.from({ length: 7 }, (_, i) => addD(mo, 7 + i));
+  const nDienste = nw.filter(d => S.shifts[d] && !S.abs[d] && (stype(S.shifts[d].type) || {}).start).length;
+  const nTermine = nw.flatMap(d => dayItems(d).filter(i => ['ev', 'bday', 'jt'].includes(i.k)).map(i => ({ d, t: i.t }))).slice(0, 4);
+  return { mo, so: tage[6], tage, arbeit, dienste, ws, sportTag, km, std, aus, geldTag, topKat, depot, termine, erledigt, nDienste, nTermine };
+}
+const wrKurz = d => `${pd(d).getDate()}.${pd(d).getMonth() + 1}.`;
+/* Kleine Säulen Mo–So, wachsen nacheinander */
+function wrSaeulen(werte, farbe, fmt) {
+  const m = Math.max(...werte, 0.0001);
+  return `<div class="wr3-bars">${werte.map((v, i) => `<div class="wr3-bar" style="--h:${(v / m * 100).toFixed(1)}%;--i:${i};--c:${farbe}"><i></i><span>${v ? fmt(v) : ''}</span><em>${WD[(i + 1) % 7]}</em></div>`).join('')}</div>`;
+}
+function wrSeiten(W) {
+  const soll = (+S.settings.soll || 41), ist = sum(W.arbeit, x => x), name = S.settings.name ? ', ' + esc(S.settings.name) : '';
+  const seiten = [];
+  seiten.push({ c: '#8f7bff', html: `<div class="wr3-k">KW ${kw(W.mo)} · ${wrKurz(W.mo)}–${wrKurz(W.so)}</div><h2 class="wr3-h">Deine Woche${name}</h2>
+    <div class="wr3-ring"><svg viewBox="0 0 120 120"><circle cx="60" cy="60" r="50"/><circle cx="60" cy="60" r="50" class="wr3-rv"/></svg><b class="num">${kw(W.mo)}</b><small>Kalenderwoche</small></div>
+    <p class="wr3-p">Tipp rechts für weiter, links für zurück.</p>` });
+  seiten.push({ c: '#4f8cff', html: `<div class="wr3-k">Arbeit</div><h2 class="wr3-h"><b class="num wr3-z" data-z="${ist.toFixed(2)}" data-f="hm">${hm(ist)}</b> Stunden</h2>
+    <p class="wr3-p">${W.dienste ? `${W.dienste} ${W.dienste === 1 ? 'Dienst' : 'Dienste'} diese Woche.` : 'Diese Woche kein Dienst eingetragen.'} ${ist > soll ? `Das sind ${hm(ist - soll)} mehr als dein Soll von ${soll} h.` : ist > 0 ? `Soll wären ${soll} h.` : ''}</p>
+    ${wrSaeulen(W.arbeit, '#4f8cff', v => hm(v))}` });
+  seiten.push({ c: '#3fe08a', html: `<div class="wr3-k">Sport</div><h2 class="wr3-h"><b class="num wr3-z" data-z="${W.ws.length}">${W.ws.length}</b> ${W.ws.length === 1 ? 'Training' : 'Trainings'}</h2>
+    <p class="wr3-p">${W.ws.length ? `${dec(W.std, 1)} Stunden in Bewegung${W.km ? `, davon ${dec(W.km, 1)} km gelaufen` : ''}.` : 'Diese Woche war Pause. Nächste Woche wieder?'}</p>
+    ${wrSaeulen(W.sportTag, '#3fe08a', v => v)}` });
+  const ausG = sum(W.geldTag, x => x);
+  seiten.push({ c: '#ffb547', html: `<div class="wr3-k">Ausgaben</div><h2 class="wr3-h"><b class="num wr3-z" data-z="${ausG.toFixed(2)}" data-f="eur">${eur(ausG)}</b></h2>
+    <p class="wr3-p">${W.topKat ? `Am meisten ging für <b>${esc(W.topKat[0])}</b> raus (${eur(W.topKat[1])}).` : 'Keine Ausgaben eingetragen.'}</p>
+    ${wrSaeulen(W.geldTag, '#ffb547', v => Math.round(v))}` });
+  if (W.depot) { const g = W.depot.g, plus = g >= 0;
+    seiten.push({ c: plus ? '#3fe08a' : '#ff5c7a', html: `<div class="wr3-k">Depot · 7 Tage</div><h2 class="wr3-h ${plus ? 'pos' : 'neg'}"><b class="num">${plus ? '+' : '−'}${eur(Math.abs(g))}</b></h2>
+      <p class="wr3-p">${plus ? '+' : '−'}${dec(Math.abs(W.depot.pct), 2)} % in einer Woche. Wert jetzt ${eur(W.depot.v1)}.</p>
+      <div class="wr3-pfeil ${plus ? 'auf' : 'ab'}"><svg viewBox="0 0 200 90"><path d="${plus ? 'M10 78 L60 58 L95 66 L140 30 L190 12' : 'M10 12 L60 34 L95 26 L140 62 L190 78'}"/></svg></div>` }); }
+  seiten.push({ c: '#c58cff', html: `<div class="wr3-k">Planung</div><h2 class="wr3-h"><b class="num wr3-z" data-z="${W.termine}">${W.termine}</b> ${W.termine === 1 ? 'Termin' : 'Termine'}</h2>
+    <p class="wr3-p">${W.erledigt ? `${W.erledigt} ${W.erledigt === 1 ? 'Aufgabe' : 'Aufgaben'} erledigt.` : ''}</p>
+    <div class="wr3-dots">${W.tage.map((d, i) => { const n = dayItems(d).filter(x => ['ev', 'bday', 'jt'].includes(x.k)).length; return `<span style="--i:${i}" class="${n ? 'an' : ''}"><b>${n || ''}</b><em>${WD[(i + 1) % 7]}</em></span>`; }).join('')}</div>` });
+  seiten.push({ c: '#ff8ad8', html: `<div class="wr3-k">Nächste Woche</div><h2 class="wr3-h">${W.nDienste ? `${W.nDienste} ${W.nDienste === 1 ? 'Dienst' : 'Dienste'}` : 'Dienstfrei'}</h2>
+    ${W.nTermine.length ? `<div class="wr3-liste">${W.nTermine.map(x => `<div><em>${WD[pd(x.d).getDay()]} ${wrKurz(x.d)}</em><span>${esc(x.t)}</span></div>`).join('')}</div>` : '<p class="wr3-p">Noch keine Termine eingetragen.</p>'}
+    <p class="wr3-p wr3-gruss">Schöne neue Woche! 🧙</p>` });
+  return seiten;
+}
+function wrKarte() {
+  const t = today(); if (pd(t).getDay() !== 0) return '';
+  const gesehen = S.settings.wrGesehen === t;
+  return `<button type="button" class="card wr3-karte${gesehen ? ' gesehen' : ''}" data-act="wrOeffnen"><span class="wr3-av"><b class="num">${kw(t)}</b></span><span class="wr3-kt"><b>Dein Wochenrückblick</b><small>KW ${kw(t)} · ${gesehen ? 'noch einmal ansehen' : 'Antippen zum Ansehen'}</small></span><i>›</i></button>`;
+}
+ACT.wrOeffnen = () => wrZeig();
+ACT.wrJetzt = () => { const sh = document.querySelector('.sheet [data-close], .modal [data-close]'); if (sh) sh.click(); setTimeout(() => wrZeig(), 200); };
+function wrZeig(bezug) {
+  const W = wrWoche(bezug), seiten = wrSeiten(W), ruhig = typeof g2Ruhig === 'function' && g2Ruhig(), DAUER = 6000;
+  S.settings.wrGesehen = today(); save();
+  const el = document.createElement('div'); el.className = 'wr3' + (ruhig ? ' ruhig' : ''); el.setAttribute('role', 'dialog'); el.setAttribute('aria-label', 'Wochenrückblick');
+  el.innerHTML = `<div class="wr3-prog">${seiten.map(() => '<i><b></b></i>').join('')}</div><button type="button" class="wr3-zu" aria-label="Schließen">✕</button><div class="wr3-buehne"></div>`;
+  document.body.appendChild(el); requestAnimationFrame(() => el.classList.add('auf'));
+  const buehne = el.querySelector('.wr3-buehne'), balken = [...el.querySelectorAll('.wr3-prog i')];
+  let i = -1, timer = 0;
+  const zu = () => { clearTimeout(timer); el.classList.remove('auf'); el.classList.add('weg'); setTimeout(() => el.remove(), 320); if (UI.tab === 'heute') { const k = document.querySelector('.wr3-karte'); if (k) k.classList.add('gesehen'); } };
+  const zaehle = () => buehne.querySelectorAll('.wr3-z').forEach(b => { const z = +b.dataset.z, f = b.dataset.f, fmt = v => f === 'hm' ? hm(v) : f === 'eur' ? eur(v) : String(Math.round(v)); if (ruhig || !(z > 0)) { b.textContent = fmt(z); return; }
+    const t0 = performance.now() + 250, D = 900; const lauf = t => { if (!b.isConnected) return; const p = Math.max(0, Math.min(1, (t - t0) / D)); b.textContent = fmt(z * (1 - Math.pow(1 - p, 3))); if (p < 1) requestAnimationFrame(lauf); }; requestAnimationFrame(lauf); });
+  const geh = n => {
+    if (n < 0) n = 0; if (n >= seiten.length) { zu(); return; }
+    clearTimeout(timer); const vor = n > i; i = n;
+    balken.forEach((b, k) => { b.className = k < i ? 'voll' : k === i ? 'jetzt' : ''; b.style.setProperty('--d', DAUER + 'ms'); });
+    el.style.setProperty('--wc', seiten[i].c);
+    buehne.innerHTML = `<div class="wr3-seite ${vor ? 'vor' : 'zur'}">${seiten[i].html}</div>`; zaehle();
+    timer = setTimeout(() => geh(i + 1), DAUER);
+  };
+  el.addEventListener('click', e => { if (e.target.closest('.wr3-zu')) { zu(); return; } const r = el.getBoundingClientRect(); geh(e.clientX < r.left + r.width * .3 ? i - 1 : i + 1); });
+  const taste = e => { if (!el.isConnected) { removeEventListener('keydown', taste); return; } if (e.key === 'Escape') zu(); else if (e.key === 'ArrowRight') geh(i + 1); else if (e.key === 'ArrowLeft') geh(i - 1); };
+  addEventListener('keydown', taste);
+  geh(0);
+}
+
+/* ---------- Tagesmeldung in Finanzen (Vorsilbe fm3) ----------
+   Beim ersten Öffnen von Finanzen nach dem App-Start fährt oben eine kleine Glas-Meldung herein: Depot heute in € und %, darunter was heute ausgegeben wurde. */
+let _fm3Gezeigt = false;
+function fmDaten() {
+  const out = {}; const t = today();
+  try { if ((S.depot || []).length) { const f = dpFenster('1t'), pf = dpPerf(S.depot, f.a, f.t); if (pf.v1 > 0) out.depot = { g: pf.g, pct: pf.pct, lbl: f.lbl, v: pf.v1 }; } } catch (e) {}
+  const aus = (S.tx || []).filter(x => x.type === 'aus' && x.date === t), ein = (S.tx || []).filter(x => x.type === 'ein' && x.date === t);
+  out.aus = sum(aus, x => x.amount || 0); out.ein = sum(ein, x => x.amount || 0);
+  return out;
+}
+function fmZeig() {
+  if (_fm3Gezeigt) return; _fm3Gezeigt = true;
+  const D = fmDaten(); if (!D.depot && !D.aus && !D.ein) return;
+  const el = document.createElement('div'), d = D.depot, plus = d ? d.g >= 0 : true;
+  el.className = 'fm3 ' + (d ? (plus ? 'auf' : 'ab') : 'neutral'); el.setAttribute('role', 'status');
+  const zeile2 = [D.ein ? `heute rein <b class="pos">+${eur(D.ein)}</b>` : '', D.aus ? `heute ausgegeben <b class="neg">−${eur(D.aus)}</b>` : ''].filter(Boolean).join(' · ');
+  el.innerHTML = d ? `<span class="fm3-ico"><svg viewBox="0 0 24 24"><path d="${plus ? 'M4 16l5-5 4 3 7-8M15 6h5v5' : 'M4 8l5 5 4-3 7 8M15 18h5v-5'}"/></svg></span>
+      <span class="fm3-t"><small>Depot ${esc(d.lbl)}</small><b class="num">${plus ? '+' : '−'}${eur(Math.abs(d.g))}</b>${zeile2 ? `<em>${zeile2}</em>` : ''}</span><span class="fm3-pct num">${plus ? '+' : '−'}${dec(Math.abs(d.pct), 2)} %</span>`
+    : `<span class="fm3-ico"><svg viewBox="0 0 24 24"><path d="M4 12h16M12 4v16"/></svg></span><span class="fm3-t"><small>Heute</small><em style="margin:0">${zeile2}</em></span>`;
+  document.body.appendChild(el);
+  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('da')));
+  setTimeout(() => { el.classList.remove('da'); el.classList.add('weg'); setTimeout(() => el.remove(), 600); }, 4200);
+}
+function design6Nach() {
+  if (UI.tab === 'finanzen' && !_fm3Gezeigt) { clearTimeout(design6Nach._t); design6Nach._t = setTimeout(() => { try { if (UI.tab === 'finanzen') fmZeig(); } catch (e) {} }, 450); }
+}
+
 /* ---------- Heute ---------- */
 VIEWS.heute = () => {
   const t = today(), d = pd(t), tm = addD(t, 1);
@@ -4682,10 +4993,11 @@ VIEWS.heute = () => {
   const ot = overtimeTotal();
   const wk = mondayOf(t); const wCount = S.workouts.filter(w => w.date >= wk && w.date <= t).length; const fg = S.sgoals.find(g => g.kind === 'freq');
   const lastW = [...S.workouts].sort((a, b) => a.date < b.date ? 1 : -1)[0];
-  const dienstKacheln = () => `<div class="tile wide" data-act="goto" data-tab="arbeit" data-sub="dienstplan"><span class="lbl">🚓 Dienst</span><div class="row" style="gap:6px;margin-top:4px">${shiftLine(t)}</div><span class="sub">Morgen: ${shiftLine(tm).replace(/<span class="chip"[^>]*>[^<]*<\/span> /, '').replace(/<span class="sub">/, '<span>')}</span></div>`;
+  const dienstKacheln = () => `<div class="tile wide dc3-tile" data-act="goto" data-tab="arbeit" data-sub="dienstplan">${dcRing()}<span class="lbl">🚓 Dienst</span><div class="row" style="gap:6px;margin-top:4px">${shiftLine(t)}</div><span class="sub">Morgen: ${shiftLine(tm).replace(/<span class="chip"[^>]*>[^<]*<\/span> /, '').replace(/<span class="sub">/, '<span>')}</span></div>`;
   h += `<div class="tiles">
     ${schulModus() ? schulKacheln(t, tm) : dienstKacheln()}
     ${notizKachel()}</div>`;
+  h += wrKarte();
   h += einKarte();
 
   // Termine heute & morgen
@@ -4732,6 +5044,9 @@ ACT.settings = () => {
     <div class="sub" style="margin:-4px 0 8px">Stehen jedes Jahr im Kalender, mit der Zahl der Jahre.</div>
     <div class="jt-liste" id="jtListe">${jtListeHtml()}</div>
     <button type="button" class="btn sec sm" data-act="jtNeu" style="margin:6px 0 12px">+ Jahrestag</button>
+    <h3>🎬 Wochenrückblick</h3>
+    <div class="sub" style="margin:-4px 0 8px">Steht jeden Sonntag auf Heute. Hier kannst du ihn jederzeit ansehen.</div>
+    <button type="button" class="btn sec sm" data-act="wrJetzt" style="margin:0 0 12px">Diese Woche ansehen</button>
     <h3>🎓 Ausbildung</h3>
     ${fChk('schule', 'Ich bin noch in der Schule / Ausbildung', s.schule)}
     <div class="sub" style="margin:-4px 0 10px">Dann bekommt „Arbeit“ einen Reiter Schule (Noten, Prüfungen, Stundenplan). Statt Dienstplan gibt es einen Kalender nur für besondere Ereignisse. Beurteilung und Stunden & DUZ werden ausgeblendet, deine Daten bleiben gespeichert.</div>
@@ -4762,10 +5077,15 @@ ACT.settings = () => {
       kursEinstSave(v, s);
       for (const k in _holCache) delete _holCache[k]; }, { init: kursEinstInit });
 };
+const bufB64 = buf => { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+const b64Buf = b => { const s = atob(b), u = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i); return u.buffer; };
 ACT.export = async () => {
   const name = `alltagsplaner-${(S.settings.name || 'daten').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${today()}.json`;
   S.settings.lastBackup = today(); save();
-  const blob = new Blob([JSON.stringify(HL ? Object.assign({}, S, { health: HL }) : S)], { type: 'application/json' });
+  const extra = {}; if (HL) extra.health = HL;
+  /* Reise-Dokumente (Tickets, Hotel-Unterlagen) mitnehmen, sonst fehlen sie nach dem Einspielen auf einem anderen Gerät */
+  try { const docs = {}; for (const tr of S.trips || []) for (const m of tr.docs || []) { if (!m.id || docs[m.id]) continue; const r = await docGet(m.id); if (r && r.buf) docs[m.id] = { name: r.name, mime: r.mime, b64: bufB64(r.buf) }; } if (Object.keys(docs).length) extra.docs = docs; } catch (e) {}
+  const blob = new Blob([JSON.stringify(Object.keys(extra).length ? Object.assign({}, S, extra) : S)], { type: 'application/json' });
   const file = new File([blob], name, { type: 'application/json' });
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try { await navigator.share({ files: [file], title: 'Alltagsplaner Sicherung' }); toast('Sicherung geteilt'); render(); return; } catch (e) { if (e.name === 'AbortError') return; }
@@ -4781,7 +5101,8 @@ ACT.import = () => {
       let d; try { d = JSON.parse(r.result); } catch (e) { toast('Die Datei ist keine gültige Sicherung.'); return; }
       if (!d || !d.settings || !Array.isArray(d.tx)) { toast('Die Datei ist keine Alltagsplaner-Sicherung.'); return; }
       if (!await ask(`Sicherung vom ${d.settings.lastBackup ? fmtD(d.settings.lastBackup) : '?'}${d.settings.name ? ' (' + d.settings.name + ')' : ''} importieren?\n\nAlle aktuellen Daten auf diesem Gerät werden ersetzt.`, 'Importieren')) return;
-      const hl = d.health; delete d.health; localStorage.setItem(KEY, JSON.stringify(d)); load(); if (hl) { HL = hl; try { await hlPut('hl', hl); } catch (e) {} } for (const k in _holCache) delete _holCache[k];
+      const hl = d.health; delete d.health; const docs = d.docs; delete d.docs; localStorage.setItem(KEY, JSON.stringify(d));
+      if (docs) for (const id in docs) { try { const x = docs[id]; await docPut(id, { name: x.name, mime: x.mime, buf: b64Buf(x.b64) }); } catch (e) {} } load(); if (hl) { HL = hl; try { await hlPut('hl', hl); } catch (e) {} } for (const k in _holCache) delete _holCache[k];
       _modalStack.forEach(m => m.remove()); _modalStack = []; render(); toast('Import erfolgreich');
     };
     r.readAsText(f);
@@ -5711,13 +6032,68 @@ const zkMonat = (f, m) => f(`${m}-31`, addM(m, -1) + '-31');
 /* Tacho aus Bögen: rot, gelb, grün, gelb, rot. Drei Lagen übereinander geben dem Bogen Tiefe, die Nadel schwingt beim Öffnen ein */
 /* Konto ±50 Std.: grün bis ±20 (darüber meldet die AZV den Saldo dem Vorgesetzten), gelb bis ±40 (höchster Übertrag nach § 7 AZV), dann rot */
 const ZK_ZONEN = [[0, .1, '#ff4d6a'], [.1, .3, '#ffc845'], [.3, .7, '#3fe08a'], [.7, .9, '#ffc845'], [.9, 1, '#ff4d6a']];
+/* Stil der Stunden-Anzeige (Toms Wunsch 20.11.: drei Proben zum Umschalten) */
+const ZK_STILE = [['tacho', 'Tacho'], ['uhr', 'Uhr'], ['ringe', 'Ringe'], ['tank', 'Tank']];
+ACT.zkStil = d => { S.settings.zkStil = d.v; save(); render(); };
+const zkStilWahl = () => `<div class="zk2-wahl" role="group" aria-label="Aussehen der Anzeige">${ZK_STILE.map(([k, l]) => `<button type="button" class="${(S.settings.zkStil || 'tacho') === k ? 'on' : ''}" data-act="zkStil" data-v="${k}">${l}</button>`).join('')}</div>`;
+const zkZoneNr = (wert, max) => { const u = Math.max(0, Math.min(1, .5 + wert / (2 * max))); return ZK_ZONEN.findIndex(z => u >= z[0] && u <= z[1]); };
+const zkZone = (wert, max) => { const u = Math.max(0, Math.min(1, .5 + wert / (2 * max))); return ZK_ZONEN.find(z => u >= z[0] && u <= z[1])[2]; };
+function zkAnzeige(wert, max, titel, i = 0) { const st = S.settings.zkStil || 'tacho'; return st === 'uhr' ? zkUhr(wert, max, titel, i) : st === 'ringe' ? zkRing(wert, max, titel, i) : st === 'tank' ? zkRoehre(wert, max, titel, i) : zkTacho(wert, max, titel, i); }
+
+/* Probe 1: Chronograph. Zifferblatt über 270°, Minus links, Plus rechts, Lünette aus Metall, kleine Sekunde läuft */
+function zkUhr(wert, max, titel, i = 0) {
+  const c = 60, f = n => n.toFixed(2), wk = u => (-135 + u * 270) * Math.PI / 180, pt = (a, r) => [c + Math.sin(a) * r, c - Math.cos(a) * r];
+  const u = Math.max(0, Math.min(1, .5 + wert / (2 * max))), w = -135 + u * 270, zc = zkZone(wert, max), id = 'zu' + i;
+  const bogen = (u0, u1, r) => { const [x0, y0] = pt(wk(u0), r), [x1, y1] = pt(wk(u1), r); return `M${f(x0)} ${f(y0)}A${r} ${r} 0 ${(u1 - u0) * 270 > 180 ? 1 : 0} 1 ${f(x1)} ${f(y1)}`; };
+  let t = ''; for (let k = 0; k <= 40; k++) { const a = wk(k / 40), g = k % 10 === 0, m = k % 5 === 0, [x0, y0] = pt(a, 44), [x1, y1] = pt(a, g ? 37 : m ? 39.5 : 41.5); t += `<line x1="${f(x0)}" y1="${f(y0)}" x2="${f(x1)}" y2="${f(y1)}" class="zk2-st${g ? ' g' : m ? ' m' : ''}"/>`; }
+  const zahl = [-1, -.5, 0, .5, 1].map(q => { const [x, y] = pt(wk(.5 + q / 2), 30); return `<text x="${f(x)}" y="${f(y + 2.6)}" text-anchor="middle" class="zk2-zahl">${q > 0 ? '+' : ''}${Math.round(q * max)}</text>`; }).join('');
+  const zi = zkZoneNr(wert, max), zonen = ZK_ZONEN.map(([a, b, col], z) => `<path d="${bogen(a + .006, b - .006, 47.5)}" stroke="${col}" class="zk2-zr${z === zi ? ' zk-akt' : ' zk-aus'}"/>`).join('');
+  return `<div class="zk2 zk2-uhr" style="--w:${w.toFixed(1)}deg;--zc:${zc};--i:${i}"><span class="zk-tl">${titel}</span><svg viewBox="0 0 120 120" aria-hidden="true">
+    <defs><radialGradient id="${id}f" cx=".5" cy=".38" r=".7"><stop offset="0" stop-color="#2a3142"/><stop offset=".7" stop-color="#121722"/><stop offset="1" stop-color="#07090f"/></radialGradient>
+      <linearGradient id="${id}l" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f4f6fb"/><stop offset=".35" stop-color="#8a93a6"/><stop offset=".6" stop-color="#e6e9f0"/><stop offset="1" stop-color="#5b6274"/></linearGradient></defs>
+    <ellipse cx="60" cy="114" rx="44" ry="5" class="zk-sch"/>
+    <circle cx="60" cy="60" r="57" fill="url(#${id}l)"/><circle cx="60" cy="60" r="53.5" fill="#0b0e15"/><circle cx="60" cy="60" r="52" fill="url(#${id}f)"/>
+    ${zonen}${t}${zahl}
+    <g class="zk2-klein"><circle cx="60" cy="84" r="9" class="zk2-kz"/>${[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(k => { const a = k * Math.PI / 6; return `<line x1="${f(60 + Math.sin(a) * 7.5)}" y1="${f(84 - Math.cos(a) * 7.5)}" x2="${f(60 + Math.sin(a) * 8.6)}" y2="${f(84 - Math.cos(a) * 8.6)}" class="zk2-st"/>`; }).join('')}<line x1="60" y1="84" x2="60" y2="77" class="zk2-sek"/></g>
+    <text x="60" y="44" text-anchor="middle" class="zk2-marke">STUNDEN</text>
+    <g class="zk2-zeiger"><path d="M60 14L62.2 60L60 70L57.8 60Z" fill="#f2f4f8"/><path d="M60 14L61 40H59Z" fill="var(--zc)"/></g>
+    <circle cx="60" cy="60" r="4.2" fill="url(#${id}l)"/><circle cx="60" cy="60" r="1.6" fill="var(--zc)"/>
+    <path d="M14 40A50 50 0 0 1 60 8" class="zk2-glanz"/></svg>
+    <b class="zk-v num ${wert < 0 ? 'neg' : ''}">${hm(wert)}</b></div>`;
+}
+/* Probe 2: Ring wie bei Apple Fitness. Der Ring füllt sich bis zum Grenzwert, darüber beginnt eine zweite Runde */
+function zkRing(wert, max, titel, i = 0) {
+  const r = 40, U = 2 * Math.PI * r, q = Math.min(2, Math.abs(wert) / max), plus = wert >= 0, c1 = zkZone(wert, max), c2 = '#ffffff', id = 'zr' + i;
+  const voll = Math.min(1, q), rest = Math.max(0, q - 1), [ex, ey] = [60 + Math.sin(q * 2 * Math.PI) * r, 60 - Math.cos(q * 2 * Math.PI) * r];
+  return `<div class="zk2 zk2-ring" style="--zc:${c1};--i:${i};--U:${U.toFixed(1)}"><span class="zk-tl">${titel}</span><svg viewBox="0 0 120 120" aria-hidden="true" style="${plus ? '' : 'transform:scaleX(-1)'}">
+    <defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c1}" stop-opacity=".55"/><stop offset="1" stop-color="${c1}"/></linearGradient></defs>
+    <circle cx="60" cy="60" r="${r}" class="zk2-rb" style="stroke:${c1}"/>
+    <circle cx="60" cy="60" r="${r}" class="zk2-rv" stroke="url(#${id})" style="--d:${(U * (1 - voll)).toFixed(1)}"/>
+    ${rest ? `<circle cx="60" cy="60" r="${r}" class="zk2-rv zk2-r2" stroke="${c2}" style="--d:${(U * (1 - rest)).toFixed(1)}"/>` : ''}
+    ${q > .02 ? `<circle cx="${ex.toFixed(2)}" cy="${ey.toFixed(2)}" r="6.5" fill="${q >= 1 ? c2 : c1}" class="zk2-rk"/>` : ''}
+    ${[0, .25, .5, .75].map(k => `<circle cx="${(60 + Math.sin(k * 2 * Math.PI) * 52).toFixed(1)}" cy="${(60 - Math.cos(k * 2 * Math.PI) * 52).toFixed(1)}" r="1" class="zk2-rp"/>`).join('')}</svg>
+    <div class="zk2-rm"><b class="num ${wert < 0 ? 'neg' : ''}">${hm(wert)}</b><small>${Math.round(q * 100)} % von ${plus ? '+' : '−'}${max}</small></div></div>`;
+}
+/* Probe 3: Glasröhre. Null liegt in der Mitte, Plus steigt grün nach oben, Minus fällt rot nach unten, die Oberfläche wogt */
+function zkRoehre(wert, max, titel, i = 0) {
+  const q = Math.max(-1, Math.min(1, wert / max)), mid = 64, h = 50, top = q >= 0 ? mid - q * h : mid, bot = q >= 0 ? mid : mid - q * h, zc = zkZone(wert, max), id = 'zt' + i;
+  const marken = [-1, -.5, 0, .5, 1].map(k => `<line x1="66" x2="${k === 0 ? 76 : 72}" y1="${mid - k * h}" y2="${mid - k * h}" class="zk-tick${k === 0 ? ' gross' : ''}"/><text x="79" y="${mid - k * h + 2.5}" class="zk2-zahl" text-anchor="start">${k > 0 ? '+' : ''}${Math.round(k * max)}</text>`).join('');
+  return `<div class="zk2 zk2-tank" style="--zc:${zc};--i:${i}"><span class="zk-tl">${titel}</span><svg viewBox="0 0 100 128" aria-hidden="true">
+    <defs><clipPath id="${id}c"><rect x="28" y="12" width="32" height="104" rx="16"/></clipPath><linearGradient id="${id}g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${zc}" stop-opacity="${q >= 0 ? 1 : .5}"/><stop offset="1" stop-color="${zc}" stop-opacity="${q >= 0 ? .5 : 1}"/></linearGradient></defs>
+    <ellipse cx="44" cy="122" rx="26" ry="4" class="zk-sch"/><rect x="24" y="8" width="40" height="112" rx="20" class="zk-glas"/>
+    <g clip-path="url(#${id}c)"><g class="zk2-fl" style="--y0:${mid}px"><rect x="20" y="${top.toFixed(1)}" width="48" height="${Math.max(0, bot - top).toFixed(1)}" fill="url(#${id}g)"/>
+      ${Math.abs(q) > .02 ? `<path class="zk2-wl" d="M-20 ${(q >= 0 ? top : bot).toFixed(1)}q8 -3 16 0t16 0 16 0 16 0 16 0 16 0 16 0v${q >= 0 ? 4 : -4}H-20z" fill="#fff" opacity=".35"/>` : ''}</g>
+      ${Array.from({ length: 5 }, (_, k) => `<circle class="zk-blase" cx="${34 + k * 5}" cy="${q >= 0 ? mid - 2 : bot - 2}" r="${1 + k % 2 * .5}" style="--k:${k}"/>`).join('')}</g>
+    <line x1="28" x2="60" y1="${mid}" y2="${mid}" class="zk2-null"/><rect x="30" y="14" width="6" height="100" rx="3" class="zk-glanz"/>${marken}</svg>
+    <b class="zk-v num ${wert < 0 ? 'neg' : ''}">${hm(wert)}</b></div>`;
+}
 function zkTacho(wert, max, titel, i = 0) {
   const cx = 80, cy = 84, R = 58, B = 15, f = n => n.toFixed(2), pt = (a, r) => [cx + Math.cos(a) * r, cy - Math.sin(a) * r];
   const bog = (u0, u1, r0, r1, dy = 0) => { const a0 = Math.PI * (1 - u0), a1 = Math.PI * (1 - u1), [x0, y0] = pt(a0, r1), [x1, y1] = pt(a1, r1), [x2, y2] = pt(a1, r0), [x3, y3] = pt(a0, r0);
     return `M${f(x0)} ${f(y0 + dy)}A${r1} ${r1} 0 0 1 ${f(x1)} ${f(y1 + dy)}L${f(x2)} ${f(y2 + dy)}A${r0} ${r0} 0 0 0 ${f(x3)} ${f(y3 + dy)}Z`; };
-  let s = '';
-  for (let k = 5; k >= 1; k--) s += ZK_ZONEN.map(([a, b, c]) => `<path d="${bog(a + .004, b - .004, R - B, R, k)}" fill="${c}" opacity="${(.16 + (5 - k) * .05).toFixed(2)}"/>`).join('');
-  s += ZK_ZONEN.map(([a, b, c], z) => `<path class="zk-zone" d="${bog(a + .004, b - .004, R - B, R)}" fill="${c}" style="--z:${z}"/><path d="${bog(a + .004, b - .004, R - B * .55, R)}" fill="url(#zkg)" opacity=".55"/>`).join('');
+  let s = ''; const zi = zkZoneNr(wert, max);
+  for (let k = 5; k >= 1; k--) s += ZK_ZONEN.map(([a, b, c], z) => `<path d="${bog(a + .004, b - .004, R - B, R, k)}" fill="${c}" opacity="${((.16 + (5 - k) * .05) * (z === zi ? 1 : .2)).toFixed(3)}"/>`).join('');
+  s += ZK_ZONEN.map(([a, b, c], z) => `<path class="zk-zone${z === zi ? ' zk-akt' : ' zk-aus'}" d="${bog(a + .004, b - .004, R - B, R)}" fill="${c}" style="--z:${z}"/>${z === zi ? `<path d="${bog(a + .004, b - .004, R - B * .55, R)}" fill="url(#zkg)" opacity=".55"/>` : ''}`).join('');
   for (let k = 0; k <= 20; k++) { const a = Math.PI * (1 - k / 20), [x0, y0] = pt(a, R + 3), [x1, y1] = pt(a, R + (k % 5 ? 6 : 9)); s += `<line x1="${f(x0)}" y1="${f(y0)}" x2="${f(x1)}" y2="${f(y1)}" class="zk-tick${k % 5 ? '' : ' gross'}"/>`; }
   const u = Math.max(0, Math.min(1, .5 + wert / (2 * max))), w = (u - .5) * 180, zone = ZK_ZONEN.find(z => u >= z[0] && u <= z[1])[2];
   return `<div class="zk-t" style="--w:${w.toFixed(1)}deg;--zc:${zone};--i:${i}"><span class="zk-tl">${titel}</span><svg viewBox="0 0 160 100" aria-hidden="true"><defs><linearGradient id="zkg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient></defs>
@@ -5759,10 +6135,10 @@ function zkKarten(m) {
   const daM = sum(Object.keys(S.abs).filter(d => d.startsWith(m) && !S.abs[d].ma), d => daStunden(d));
   let h = `<div class="zk-grid">
     <div class="card zk"><div class="row sb"><h2 style="margin:0">Überstunden</h2><div class="row" style="gap:6px">${otPlanModus() ? '' : `<button type="button" class="zk-soll" data-act="sollMonat" data-m="${m}"><span>Soll ${MON[mo - 1].slice(0, 3)}.</span><b class="num">${hm(sollMonat(m))}</b>${sollEigen(m) !== null ? '<i>eigen</i>' : ''}</button>`}<button type="button" class="ibtn" data-act="otStand" aria-label="Stand übernehmen">✎</button></div></div><span class="sub">Überstunden- und Gleitzeitkonto</span>
-      <div class="zk-paar">${zkTacho(otM, 20, ML, 0)}${zkTacho(ot, 50, 'Konto', 1)}</div>
+      <div class="zk-paar">${zkAnzeige(otM, 20, ML, 0)}${zkAnzeige(ot, 50, 'Konto', 1)}</div>${zkStilWahl()}
       <div class="zk-fuss"><span>DA im ${MON[mo - 1]}: <b class="neg">${daM ? '−' + hm(daM) : '0:00'}</b></span><span>${ots && ots.d ? 'Stand ' + fmtDs(ots.d) + ': ' + hm(+ots.h) : '<a href="#" data-act="otStand">Stand übernehmen</a>'}</span></div></div>
     <div class="card zk"><div class="row sb"><h2 style="margin:0">Mehrarbeit</h2><button type="button" class="ibtn" data-act="maStand" aria-label="Stand übernehmen">✎</button></div><span class="sub">Angeordnete Mehrarbeit</span>
-      <div class="zk-paar">${zkTacho(maM, 20, ML, 2)}${zkTacho(ma, 20, 'Konto', 3)}</div>
+      <div class="zk-paar">${zkAnzeige(maM, 20, ML, 2)}${zkAnzeige(ma, 20, 'Konto', 3)}</div>
       <div class="zk-fuss"><span>${ma > 5 ? 'Über 5 Std.: Anspruch auf Dienstbefreiung' : 'Tag antippen: „angeordnete Mehrarbeit“'}</span><span>${mas && mas.d ? 'Stand ' + fmtDs(mas.d) + ': ' + hm(+mas.h) : '<a href="#" data-act="maStand">Stand übernehmen</a>'}</span></div></div>`;
   const v = vacation(+(UI.year || y));
   h += `<div class="card zk"><div class="row sb"><h2 style="margin:0">Erholungsurlaub</h2><button type="button" class="ibtn" data-act="carryEdit" data-y="${UI.year || y}" aria-label="Urlaub einstellen">✎</button></div><span class="sub">${v.h ? 'In Stunden wie im Zeitportal' : 'In Tagen. Im Stift kannst du auf Stunden umstellen'}</span>${zkTank(v)}</div>`;
@@ -6363,7 +6739,16 @@ const UEB = [
   ['Fahrrad-Crunches', 'Bauch', { bauch: .8, seitbauch: .8 }], ['Mountain Climbers', 'Bauch', { bauch: .8, schulter: .4, quad: .3 }],
   ['Laufband', 'Ausdauer', { quad: .5, beinbeuger: .5, waden: .6, gesaess: .4 }], ['Crosstrainer', 'Ausdauer', { quad: .5, gesaess: .4, beinbeuger: .3, schulter: .2 }], ['Fahrrad / Ergometer', 'Ausdauer', { quad: .7, waden: .3, gesaess: .3 }],
   ['Rudergerät', 'Ausdauer', { lat: .5, oberruecken: .5, quad: .5, bizeps: .25 }], ['Stepper', 'Ausdauer', { quad: .6, gesaess: .6, waden: .4 }], ['Seilspringen', 'Ausdauer', { waden: .8, schulter: .2 }],
-  ['Burpees', 'Ausdauer', { quad: .5, brust: .4, schulter: .3, bauch: .3 }]
+  ['Burpees', 'Ausdauer', { quad: .5, brust: .4, schulter: .3, bauch: .3 }],
+  /* 20.11. (Toms Wunsch): mehr Geräte und Übungen je Muskelgruppe */
+  ['Schrägbank-Brustpresse (Maschine)', 'Brust', { brust: 1, schulter: .6, trizeps: .4 }], ['Chest Press Hammer Strength', 'Brust', { brust: 1, trizeps: .5, schulter: .4 }], ['Kabelzug-Fliegende von unten', 'Brust', { brust: 1, schulter: .4 }], ['Multipresse Bankdrücken', 'Brust', { brust: 1, trizeps: .5, schulter: .5 }], ['Multipresse Schrägbank', 'Brust', { brust: 1, schulter: .6, trizeps: .4 }], ['Dip-Maschine (Brust)', 'Brust', { brust: 1, trizeps: .6, schulter: .4 }], ['Svend Press', 'Brust', { brust: 1, schulter: .3 }],
+  ['Latzug-Maschine (Plate Loaded)', 'Rücken', { lat: 1, bizeps: .5, oberruecken: .4 }], ['Klimmzug-Maschine (assistiert)', 'Rücken', { lat: 1, bizeps: .6, oberruecken: .4 }], ['Rudern an der Maschine (Brustauflage)', 'Rücken', { oberruecken: 1, lat: .7, bizeps: .4, trapez: .3 }], ['Low Row (Hammer Strength)', 'Rücken', { lat: 1, oberruecken: .7, bizeps: .4 }], ['Pullover-Maschine', 'Rücken', { lat: 1, brust: .3 }], ['Latziehen einarmig am Kabel', 'Rücken', { lat: 1, bizeps: .4 }], ['Rückenstrecker-Maschine', 'Rücken', { unterruecken: 1, gesaess: .4 }], ['Seal Row', 'Rücken', { oberruecken: 1, lat: .7, bizeps: .4 }], ['Pendlay Rudern', 'Rücken', { oberruecken: 1, lat: .8, unterruecken: .3, bizeps: .4 }], ['Kurzhantel-Shrugs', 'Rücken', { trapez: 1, unterarm: .3 }],
+  ['Seitheben-Maschine', 'Schultern', { schulter: 1, trapez: .2 }], ['Reverse Butterfly (Maschine)', 'Schultern', { schulter: 1, oberruecken: .6, trapez: .3 }], ['Multipresse Schulterdrücken', 'Schultern', { schulter: 1, trizeps: .5 }], ['Landmine Press', 'Schultern', { schulter: 1, brust: .4, trizeps: .4 }], ['Frontheben am Kabel', 'Schultern', { schulter: 1 }], ['Y-Raises', 'Schultern', { schulter: 1, trapez: .5, oberruecken: .3 }],
+  ['Bizeps-Maschine', 'Arme', { bizeps: 1 }], ['Bayesian Curls (Kabel)', 'Arme', { bizeps: 1 }], ['Incline Curls (Kurzhantel)', 'Arme', { bizeps: 1, unterarm: .3 }], ['Reverse Curls (SZ)', 'Arme', { unterarm: 1, bizeps: .6 }], ['Trizeps-Maschine', 'Arme', { trizeps: 1 }], ['Trizepsdrücken mit Seil', 'Arme', { trizeps: 1 }], ['Überkopf-Trizeps am Kabel', 'Arme', { trizeps: 1 }], ['Dip-Maschine (Trizeps)', 'Arme', { trizeps: 1, brust: .3, schulter: .3 }], ['JM Press', 'Arme', { trizeps: 1, brust: .3 }], ['Handgelenk-Roller', 'Arme', { unterarm: 1 }],
+  ['Pendelkniebeuge (Pendulum Squat)', 'Beine', { quad: 1, gesaess: .6 }], ['Multipresse Kniebeugen', 'Beine', { quad: 1, gesaess: .7, beinbeuger: .3 }], ['V-Squat (Maschine)', 'Beine', { quad: 1, gesaess: .6 }], ['Beinpresse liegend 45°', 'Beine', { quad: 1, gesaess: .6, beinbeuger: .3 }], ['Sissy Squats', 'Beine', { quad: 1 }], ['Beincurls stehend (einbeinig)', 'Beine', { beinbeuger: 1, waden: .2 }], ['Nordic Curls', 'Beine', { beinbeuger: 1, gesaess: .3 }], ['Wadenheben an der Beinpresse', 'Beine', { waden: 1 }], ['Wadenheben (Maschine)', 'Beine', { waden: 1 }], ['Walking Lunges', 'Beine', { quad: 1, gesaess: .8, beinbeuger: .3 }], ['Box Jumps', 'Beine', { quad: 1, gesaess: .6, waden: .5 }],
+  ['Hip-Thrust-Maschine', 'Po', { gesaess: 1, beinbeuger: .4 }], ['Glute-Kickback-Maschine', 'Po', { gesaess: 1, beinbeuger: .3 }], ['Kabelzug Pull-Through', 'Po', { gesaess: 1, beinbeuger: .6, unterruecken: .3 }], ['Reverse Hyperextension', 'Po', { gesaess: 1, beinbeuger: .5, unterruecken: .5 }], ['Frog Pumps', 'Po', { gesaess: 1 }], ['Abduktion am Kabel', 'Po', { gesaess: 1, abduktoren: .8 }],
+  ['Bauch-Maschine (Crunch)', 'Bauch', { bauch: 1 }], ['Beinheben am Dip-Barren', 'Bauch', { bauch: 1, seitbauch: .3 }], ['Rotations-Maschine (Torso)', 'Bauch', { seitbauch: 1, bauch: .4 }], ['Pallof Press', 'Bauch', { seitbauch: 1, bauch: .5 }], ['Dead Bug', 'Bauch', { bauch: 1 }], ['Hollow Hold', 'Bauch', { bauch: 1 }], ['Seitliche Crunches am Kabel', 'Bauch', { seitbauch: 1, bauch: .3 }],
+  ['Treppensteiger (Stairmaster)', 'Ausdauer', { quad: .6, gesaess: .6, waden: .4 }], ['Assault Bike', 'Ausdauer', { quad: .5, schulter: .3, bauch: .2 }], ['SkiErg', 'Ausdauer', { lat: .5, trizeps: .4, bauch: .3 }], ['Schwimmen', 'Ausdauer', { lat: .5, schulter: .5, brust: .3 }], ['Battle Ropes', 'Ausdauer', { schulter: .7, unterarm: .4, bauch: .3 }], ['Schlitten schieben (Prowler)', 'Ausdauer', { quad: .8, gesaess: .6, waden: .4 }]
 ];
 const UEB_MAP = new Map(UEB.map(u => [u[0].toLowerCase(), u]));
 /* Auch Namen, die nicht genau passen, sinnvoll zuordnen (eigene Übungen, alte Einträge) */
@@ -6505,22 +6890,34 @@ function rangKarte() {
     <div class="sp-r3"><div><b>${dec(ges.std, 0)}</b><span>Stunden</span></div><div><b>${dec(ges.km, 0)}</b><span>km gelaufen</span></div><div><b>${dec(ges.t, 1)}</b><span>Tonnen bewegt</span></div></div>
     <div class="sub" style="margin-top:8px">Diesen Monat: +${dec(mon.p, 0)} Punkte. Antippen für alle 24 Stufen.</div></div>`;
 }
-/* Wochenplan: feste Wochentage, gezeigt werden immer die nächsten 7 Tage */
+/* Wochenplan (Toms Wunsch 19.11.): jede Woche einzeln planbar, mit Pfeilen zur vorigen/nächsten Woche.
+   S.wplanTag[datum] gilt für genau diesen Tag ({k:''} = bewusst nichts), sonst gilt die Standardwoche S.wplan[1..7] */
 const WP_ART = { lauf: 'Laufen', kraft: 'Gym', sonst: 'Sonstiges', ruhe: 'Ruhetag' };
-const wpTag = d => (S.wplan || {})[(pd(d).getDay() + 6) % 7 + 1];
+const wpStd = d => (S.wplan || {})[(pd(d).getDay() + 6) % 7 + 1];
+const wpTag = d => { const e = (S.wplanTag || {})[d]; if (e) return e.k ? e : null; return wpStd(d); };
 function wochenplan() {
-  const t = today(), tage = Array.from({ length: 7 }, (_, i) => addD(t, i));
-  return `<div class="card"><div class="row sb"><h2 style="margin:0">Nächste 7 Tage</h2><span class="sub">Tag antippen zum Planen</span></div><div class="sp-wp">${tage.map(d => {
-    const p = wpTag(d), done = S.workouts.some(w => w.date === d && (!p || p.k === w.kind || p.k === 'ruhe')), pl = p && p.plan ? byId(S.templates, p.plan) : null, wt = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][pd(d).getDay()];
-    return `<button class="sp-wpd ${p ? p.k : 'leer'}${d === t ? ' heute' : ''}${done ? ' ok' : ''}" data-act="wpEdit" data-d="${d}"><span class="sp-wpw">${d === t ? 'Heute' : wt}</span><span class="sp-wpi"${pl && pl.color ? ` style="color:${pl.color};background:${pl.color}2e"` : ''}>${p ? ICO[p.k] : '<i>+</i>'}</span><span class="sp-wpl">${p ? esc(pl ? pl.name : WP_ART[p.k]) : ''}</span>${done ? '<em>✓</em>' : ''}</button>`; }).join('')}</div></div>`;
+  const t = today(), w0 = mondayOf(t), wk = UI.wpWoche && /^\d{4}-\d\d-\d\d$/.test(UI.wpWoche) ? UI.wpWoche : w0, tage = Array.from({ length: 7 }, (_, i) => addD(wk, i));
+  const off = Math.round(dayDiff(w0, wk) / 7), titel = off === 0 ? 'Diese Woche' : off === 1 ? 'Nächste Woche' : off === -1 ? 'Letzte Woche' : `KW ${kw(wk)}`;
+  const von = pd(wk), bis = pd(addD(wk, 6)), spanne = `${von.getDate()}.${von.getMonth() === bis.getMonth() ? '' : ' ' + MON[von.getMonth()].slice(0, 3)} – ${bis.getDate()}. ${MON[bis.getMonth()].slice(0, 3)}`;
+  return `<div class="card"><div class="sp-wpk"><div class="grow" style="min-width:0"><h2 style="margin:0">${titel}</h2><span class="sub">KW ${kw(wk)} · ${spanne}</span></div>
+    ${off !== 0 ? '<button class="btn sm sec" data-act="wpWoche" data-v="0">Heute</button>' : ''}<button class="ibtn" data-act="wpWoche" data-v="-1" aria-label="Vorige Woche">‹</button><button class="ibtn" data-act="wpWoche" data-v="1" aria-label="Nächste Woche">›</button></div>
+    <div class="sp-wp">${tage.map(d => {
+    const p = wpTag(d), eig = !!(S.wplanTag || {})[d], done = S.workouts.some(w => w.date === d && (!p || p.k === w.kind || p.k === 'ruhe')), pl = p && p.plan ? byId(S.templates, p.plan) : null, wt = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][pd(d).getDay()];
+    return `<button class="sp-wpd ${p ? p.k : 'leer'}${d === t ? ' heute' : ''}${d < t ? ' vorbei' : ''}${done ? ' ok' : ''}${eig ? ' eigen' : ''}" data-act="wpEdit" data-d="${d}"><span class="sp-wpw">${d === t ? 'Heute' : wt + ' ' + pd(d).getDate() + '.'}</span><span class="sp-wpi"${pl && pl.color ? ` style="color:${pl.color};background:${pl.color}2e"` : ''}>${p ? ICO[p.k] : '<i>+</i>'}</span><span class="sp-wpl">${p ? esc(pl ? pl.name : WP_ART[p.k]) : ''}</span>${done ? '<em>✓</em>' : ''}</button>`; }).join('')}</div>
+    <div class="sub" style="margin-top:8px">Tag antippen zum Planen. Mit ‹ › planst du andere Wochen.</div></div>`;
 }
+ACT.wpWoche = d => { const w0 = mondayOf(today()), cur = UI.wpWoche || w0; UI.wpWoche = +d.v === 0 ? w0 : addD(cur, 7 * +d.v); render(); };
 ACT.wpEdit = d => {
-  const wtag = (pd(d.d).getDay() + 6) % 7 + 1, cur = (S.wplan || {})[wtag] || {}, name = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'][wtag - 1];
+  const wtag = (pd(d.d).getDay() + 6) % 7 + 1, name = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'][wtag - 1], cur = wpTag(d.d) || {}, eig = !!(S.wplanTag || {})[d.d];
   const wahl = [['lauf', 'Laufen', 'lauf'], ...S.templates.map(p => ['p:' + p.id, p.name, 'kraft', p.color]), ['kraft', S.templates.length ? 'Gym (ohne festen Plan)' : 'Gym', 'kraft'], ['sonst', 'Sonstiges', 'sonst'], ['ruhe', 'Ruhetag', 'ruhe'], ['', 'Nichts geplant', '']];
   const akt = cur.k === 'kraft' && cur.plan && byId(S.templates, cur.plan) ? 'p:' + cur.plan : cur.k || '';
-  modal(`Jeden ${name}`, `<div class="sp-wpwahl">${wahl.map(([k, l, ic, c]) => `<label><input type="radio" name="k" value="${k}" ${akt === k ? 'checked' : ''}><span>${ic ? `<em class="sp-wpic ${ic}"${c ? ` style="color:${c}"` : ''}>${ICO[ic]}</em>` : '<i>–</i>'}${esc(l)}</span></label>`).join('')}</div>
-    <div class="sub">Gilt für jeden ${name}. In der Übersicht siehst du immer die nächsten 7 Tage. Neue Gym-Pläne legst du im Reiter Gym an.</div>`,
-    v => { S.wplan = S.wplan || {}; if (!v.k) delete S.wplan[wtag]; else if (v.k.startsWith('p:')) S.wplan[wtag] = { k: 'kraft', plan: v.k.slice(2) }; else S.wplan[wtag] = { k: v.k, plan: null }; });
+  modal(`${name}, ${fmtD(d.d).replace(/^\w+, /, '')}`, `<div class="sp-wpwahl">${wahl.map(([k, l, ic, c]) => `<label><input type="radio" name="k" value="${k}" ${akt === k ? 'checked' : ''}><span>${ic ? `<em class="sp-wpic ${ic}"${c ? ` style="color:${c}"` : ''}>${ICO[ic]}</em>` : '<i>–</i>'}${esc(l)}</span></label>`).join('')}</div>
+    ${fChk('immer', `Jeden ${name} so planen (Standardwoche)`, false)}${eig ? fChk('zurueck', `Einzelplanung entfernen, wieder die Standardwoche nehmen`, false) : ''}
+    <div class="sub">Ohne Haken gilt es nur für diesen Tag. Mit Haken wird es der Standard für jeden ${name}, an dem du nichts Eigenes geplant hast.${eig ? ' Dieser Tag ist gerade einzeln geplant.' : ''}</div>`,
+    v => { if (v.zurueck) { delete S.wplanTag[d.d]; return; } const e = !v.k ? { k: '' } : v.k.startsWith('p:') ? { k: 'kraft', plan: v.k.slice(2) } : { k: v.k, plan: null };
+      if (v.immer) { S.wplan = S.wplan || {}; if (e.k) S.wplan[wtag] = e; else delete S.wplan[wtag]; if (S.wplanTag) delete S.wplanTag[d.d]; }
+      else { S.wplanTag = S.wplanTag || {}; const std = wpStd(d.d) || { k: '' }; if (std.k === e.k && (std.plan || null) === (e.plan || null)) delete S.wplanTag[d.d]; else S.wplanTag[d.d] = e; } },
+    { still: true });
 };
 function wochenChart() {
   const wk = mondayOf(today()), fg = S.sgoals.find(g => g.kind === 'freq'), ziel = fg ? +fg.target : 0, n = 16, weeks = [];
@@ -7869,7 +8266,7 @@ function segEdit(tr, s) {
     ${isNew && !lok ? `<div class="rueck-box">${fChk('rueck', '↩ Rückfahrt gleich mit anlegen', false)}<div class="grid2">${fIn('rDate', 'Rückfahrt am', tr.to || '', 'date')}${fIn('rDep', 'Abfahrt / Abflug', '', 'time')}</div></div>` : ''}`,
     v => { let ad = v.arrDate || v.date; if (!v.arrDate && v.date && v.dep && v.arr && v.arr < v.dep) ad = addD(v.date, 1); /* Ankunft nach Mitternacht: Folgetag */
       const o = Object.assign(isNew ? { id: uid(), doc: s.doc } : s, { type: v.type, airline: (v.airline || '').trim(), from: v.from.trim(), to: v.to.trim(), via: (v.via || '').trim(), date: v.date, dep: v.dep, arrDate: ad, arr: v.arr, no: v.no.trim(), seat: v.seat.trim(), gate: v.gate.trim(), ref: v.ref.trim(), cost: num(v.cost), note: v.note });
-      if (!o.doc) delete o.doc; if (isNew) tr.segs.push(o);
+      if (!o.doc) delete o.doc; if (isNew) tr.segs.push(o); if (s._lernT) lernToast(lernMerken(s._lernT, 'seg', o, s._lernVor));
       if (v.rueck) tr.segs.push({ id: uid(), type: o.type, airline: o.airline, from: o.to, to: o.from, via: segStops(o).slice(1, -1).reverse().join(', '), date: v.rDate || tr.to || '', dep: v.rDep || '', arrDate: v.rDate || tr.to || '', arr: '', no: '', seat: '', gate: '', ref: o.ref, cost: 0, note: '' }); },
     { del: isNew ? null : () => { tr.segs = tr.segs.filter(x => x !== s); }, init: f => segAuto(f) });
 }
@@ -7906,7 +8303,7 @@ function hotEdit(tr, x) {
     <div class="grid2">${fIn('in', 'Check-in', x.in || '', 'date')}${fIn('inTime', 'ab', x.inTime || '', 'time')}</div><div class="grid2">${fIn('out', 'Check-out', x.out || '', 'date')}${fIn('outTime', 'bis', x.outTime || '', 'time')}</div>
     <div class="grid2">${fIn('ref', 'Buchungsnummer', x.ref || '')}${fIn('phone', 'Telefon', x.phone || '', 'tel')}</div>${fMoney('cost', 'Kosten gesamt (€)', x.cost || '')}${fTxt('note', 'Notizen (Frühstück, Parken, WLAN …)', x.note || '')}${x.doc ? '<div class="sub" style="margin:4px 0">📎 Aus der Buchungsbestätigung ausgelesen. Das Dokument bleibt in der Reise gespeichert.</div>' : ''}`,
     v => { if (!v.name.trim()) return false; const o = Object.assign(isNew ? { id: uid(), doc: x.doc } : x, { name: v.name.trim(), place: v.place.trim(), addr: v.addr.trim(), in: v.in, inTime: v.inTime, out: v.out, outTime: v.outTime, ref: v.ref.trim(), phone: v.phone.trim(), cost: num(v.cost), note: v.note });
-      if (isNew) tr.hotels.push(o); },
+      if (isNew) tr.hotels.push(o); if (x._lernT) lernToast(lernMerken(x._lernT, 'hotel', o, x._lernVor)); },
     { del: isNew ? null : () => { tr.hotels = tr.hotels.filter(y => y !== x); } });
 }
 ACT.planNew = d => planEdit(trp(d), d.d, {});
@@ -8722,7 +9119,9 @@ function docParse(text) {
   while ((m = reS.exec(T))) sitze.push(`Wagen ${m[1]}, Platz ${m[2].replace(/\s+/g, ' ').trim()}`); while ((m = reF.exec(T))) sitze.push(m[1]);
   const gate = fang(/\b(Gleis\s*\d+\w?|Gate\s*[A-Z]?\d+\w?|Terminal\s*\w+)\b/i);
   legs.forEach((l, i) => { l.type = r.kind; l.no = nos[i] || ''; l.seat = sitze[i] || ''; l.gate = i === 0 ? gate : ''; l.ref = r.ref; l.airline = airlineVon(l.no); l.cost = i === 0 ? r.cost : 0; });
-  r.legs = legs; return r;
+  r.legs = legs;
+  if (!legs.length) { const g = reiseAllgemein(T, L); if (g) { g.legs.forEach(l => { l.ref = r.ref; l.cost = r.cost; }); r.kind = g.kind; r.legs = g.legs; } }
+  return r;
 }
 ACT.docAdd = d => { const tr = trp(d); const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'application/pdf,image/*,.pdf,.txt,text/plain';
   inp.onchange = async () => { const f = inp.files[0]; if (!f) return; if (f.size > 15e6) return toast('Die Datei ist zu groß (max. 15 MB).'); toast('📄 Lese das Dokument …');
@@ -8737,15 +9136,16 @@ ACT.docText = d => { const tr = trp(d); modal('📋 Buchungstext einfügen', `<d
 /* Ergebnis übernehmen: Formular vorausgefüllt öffnen (zum Prüfen), Dokument an die Reise hängen */
 function docUebernehmen(tr, meta, text, bild) {
   tripFix(tr); (tr.docs = tr.docs || []).push(meta); save();
-  const p = text && text.trim().length > 20 ? docParse(text) : null;
+  let p = text && text.trim().length > 20 ? docParse(text) : null; if (text && text.trim().length > 20) p = lernReise(text, p);
   /* Gibt es die Fahrt oder Unterkunft schon? Dann diese ergänzen statt eine zweite anzulegen */
   const schon = p && (p.kind === 'hotel' ? (p.in || p.name) && tr.hotels.find(x => x.doc === meta.id || (x.in && x.in === p.in)) : p.legs && p.legs.length === 1 && tr.segs.find(x => (!p.legs[0].date || x.date === p.legs[0].date) && _gleichOrt(x.from, p.legs[0].from) && _gleichOrt(x.to, p.legs[0].to)));
   if (schon) { const r = docAbgleich(tr, meta, p); save(); UI.tripSec = p.kind === 'hotel' ? UI.tripSec : 'wege'; render(); if (p.kind === 'hotel') hotEdit(tr, schon); else segEdit(tr, schon);
     toast(r ? `✨ Schon eingetragen. ${r.charAt(0).toUpperCase() + r.slice(1)}. Bitte kurz prüfen.` : '📎 Diese Fahrt ist schon eingetragen und vollständig. Das Dokument hängt jetzt daran.'); return; }
-  if (p && p.kind === 'hotel' && (p.in || p.name)) { meta.kind = 'hotel'; save(); hotEdit(tr, { in: p.in || tr.from || '', inTime: p.inTime, out: p.out || tr.to || '', outTime: p.outTime, name: p.name, place: p.place || tr.ort || '', addr: p.addr, ref: p.ref, phone: p.phone, cost: p.cost || '', note: p.note || '', doc: meta.id, _neu: true }); toast('🏨 Hotelbuchung erkannt. Bitte kurz prüfen und speichern.'); return; }
-  if (p && p.legs && p.legs.length === 1) { meta.kind = p.kind; save(); segEdit(tr, Object.assign({ doc: meta.id, _neu: true }, p.legs[0])); toast(`${SEG_T[p.kind][0]} ${p.kind === 'zug' ? 'Zugticket' : p.kind === 'bus' ? 'Busticket' : 'Flugticket'} erkannt. Bitte kurz prüfen und speichern.`); return; }
+  if (p && p.kind === 'hotel' && (p.in || p.name)) { meta.kind = 'hotel'; save(); hotEdit(tr, { in: p.in || tr.from || '', inTime: p.inTime, out: p.out || tr.to || '', outTime: p.outTime, name: p.name, place: p.place || tr.ort || '', addr: p.addr, ref: p.ref, phone: p.phone, cost: p.cost || '', note: p.note || '', doc: meta.id, _neu: true, _lernT: text, _lernVor: Object.assign({}, p) }); toast('🏨 Hotelbuchung erkannt. Bitte kurz prüfen und speichern.'); return; }
+  if (p && p.legs && p.legs.length === 1) { meta.kind = p.kind; save(); segEdit(tr, Object.assign({ doc: meta.id, _neu: true, _lernT: text, _lernVor: Object.assign({}, p.legs[0]) }, p.legs[0])); toast(`${SEG_T[p.kind][0]} ${p.kind === 'zug' ? 'Zugticket' : p.kind === 'bus' ? 'Busticket' : 'Flugticket'} erkannt. Bitte kurz prüfen und speichern.`); return; }
   if (p && p.legs && p.legs.length > 1) { meta.kind = p.kind; p.legs.forEach(l => tr.segs.push(Object.assign({ id: uid(), doc: meta.id, note: '', cost: 0 }, l, { cost: l.cost || 0 }))); save(); UI.tripSec = 'wege'; render(); toast(`✨ ${p.legs.length} Fahrten aus dem Dokument übernommen. Tippe sie an, um sie zu prüfen.`); jatosAktion(`Ich habe ${p.legs.length} Verbindungen aus deinem Ticket gezaubert! 🪄`); return; }
   UI.tripSec = 'wege'; render();
+  if (text && text.trim().length > 20) return lernWahl(tr, meta, text);
   toast(bild && !text ? '📎 Bild gespeichert. Den Text konnte ich nicht lesen. Nutze „Text einfügen“ mit Live Text.' : bild ? '📎 Bild gespeichert. Ich habe darin keine Fahrt oder Buchung erkannt, trag sie bitte selbst ein.' : '📎 Dokument gespeichert. Ich konnte keine Fahrt oder Buchung darin erkennen, trag sie bitte selbst ein.');
 }
 /* Dokument ansehen: PDF Seite für Seite, Bilder groß, Text als Text */
@@ -8825,7 +9225,7 @@ function reiseplanLeg(stops, nos) {
   return { from: a.nm, to: b.nm, date: a.d, dep: a.t, arrDate: b.d || a.d, arr: b.t, via: stops.slice(1, -1).map(s => `${s.nm} ${s.t}`).join(', ') };
 }
 
-/* Pauschalreise/Hotel aus Reiseunterlagen: „Hotelaufenthalte … Crowne Plaza Zürich by IHG (Zurich) vom 28.12.2026 … bis 02.01.2027 (5 Nächte)“ */
+/* Pauschalreise/Hotel aus Reiseunterlagen: „Hotelaufenthalte … Hotel Beispiel (Stadt) vom TT.MM.JJJJ … bis TT.MM.JJJJ (n Nächte)“ */
 function hotelAusVomBis(T, L) {
   if (!/hotel|übernachtung|unterkunft|zimmer|nächte|naechte|nights/i.test(T)) return null;
   const i = L.findIndex(l => /\bvom\s+\d{1,2}\.\d{1,2}\.\d{2,4}/i.test(l)); if (i < 0) return null;
@@ -8853,7 +9253,7 @@ async function ocrText(buf, mime, fort) {
 }
 /* Dunkle Screenshots (z. B. Trade Republic, Dunkelmodus): umkehren und in Graustufen, damit auch graue Beschriftungen gelesen werden */
 async function ocrVorbereiten(blob) {
-  try { const bmp = await createImageBitmap(blob), sc = Math.min(1, 2400 / Math.max(bmp.width, bmp.height)), c = document.createElement('canvas'); c.width = Math.round(bmp.width * sc); c.height = Math.round(bmp.height * sc);
+  try { const bmp = await createImageBitmap(blob), sc = Math.min(3, Math.max(2400 / bmp.width, 1), 7000 / bmp.height) /* kleine Schrift (Abrechnung im Screenshot) vergrößern */, c = document.createElement('canvas'); c.width = Math.round(bmp.width * sc); c.height = Math.round(bmp.height * sc);
     const x = c.getContext('2d'); x.drawImage(bmp, 0, 0, c.width, c.height); const im = x.getImageData(0, 0, c.width, c.height), d = im.data; let su = 0;
     for (let i = 0; i < d.length; i += 16) su += .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2];
     const dunkel = su / (d.length / 16) < 110;
@@ -9381,7 +9781,7 @@ function impMalen() {
       ${s.art === 'konto' && s.ende != null ? `<label class="chk"><input type="checkbox" data-k="abgl" ${s.abgl ? 'checked' : ''}><span>Kontostand auf <b>${eur(s.ende)}</b> (${fmtDs(s.endeD)}) abgleichen</span></label>` : ''}</div>`;
   }
   if (kto.length) {
-    h += `<label class="f"><span>Das bin ich (Namen für eigene Überweisungen, mit Komma)</span><input class="in" data-k="namen" value="${esc((S.settings.eigNamen || ''))}" placeholder="${esc(eigeneNamen()[0] || 'z.B. Tom Schwanke, T. Schwanke')}"></label>`;
+    h += `<label class="f"><span>Das bin ich (Namen für eigene Überweisungen, mit Komma)</span><input class="in" data-k="namen" value="${esc((S.settings.eigNamen || ''))}" placeholder="${esc(eigeneNamen()[0] || 'z.B. Max Muster, M. Muster')}"></label>`;
     const rows = kto.flatMap(s => s.rows.map((z, j) => [s, z, j])).sort((a, b) => a[1].date < b[1].date ? 1 : -1);
     const anz = { alle: rows.length, unsicher: rows.filter(r => r[1].flag === 'unsicher').length, umb: rows.filter(r => r[1].typ === 'umb').length, dupe: rows.filter(r => ['dupe', 'paar'].includes(r[1].flag)).length };
     h += `<div class="imp-chips">${[['alle', 'Alle'], ['unsicher', '⚠︎ Prüfen'], ['umb', '⇄ Umbuchungen'], ['dupe', 'Schon da']].filter(([k]) => k === 'alle' || anz[k]).map(([k, l]) => `<button type="button" data-imp="filter" data-v="${k}" class="${IMP.filter === k ? 'on' : ''}">${l} <i>${anz[k]}</i></button>`).join('')}</div>`;
@@ -9940,7 +10340,8 @@ function dpChart(o) {
   const ticks = [];
   if (span <= 3) for (let i = 0; i <= span; i++) { const d = addD(a, i), x = X(d); ticks.push([Math.min(W - 22, Math.max(18, x)), d === t ? 'heute' : d < t ? (dayDiff(d, t) === 1 ? 'gestern' : WD[pd(d).getDay()]) : 'morgen']); }
   else if (span <= 45) { const k = span <= 10 ? 1 : 7; for (let i = k; i < span; i += k) { const d = addD(a, i), x = X(d); if (x > 16 && x < W - 16) ticks.push([x, span <= 10 ? WD[pd(d).getDay()] : fmtDs(d)]); } }
-  else { const mm = span > 500 ? 6 : span > 200 ? 3 : 1; for (let m = addM(a.slice(0, 7), 1); m + '-01' <= to; m = addM(m, mm)) { const x = X(m + '-01'); if (x > 16 && x < W - 16) ticks.push([x, MON[+m.slice(5) - 1].slice(0, 3) + (span > 300 ? ' ' + m.slice(2, 4) : '')]); } }
+  else if (span > 500) { for (let y = +a.slice(0, 4) + 1; `${y}-01-01` <= to; y++) { const x = X(`${y}-01-01`); if (x > 16 && x < W - 16) ticks.push([x, String(y)]); } }
+  else { const mm = span > 200 ? 3 : 1; for (let m = addM(a.slice(0, 7), 1); m + '-01' <= to; m = addM(m, mm)) { const x = X(m + '-01'); if (x > 16 && x < W - 16) ticks.push([x, MON[+m.slice(5) - 1].slice(0, 3) + (span > 300 ? ' ' + m.slice(2, 4) : '')]); } }
   const st = Math.ceil(ticks.length / 5), data = rows.map(r => [r.d, r.v != null ? Math.round(r.v * 100) / 100 : null, r.s != null ? Math.round(r.s) : null, r.p != null ? Math.round(r.p) : null, r.lo != null ? Math.round(r.lo) : null, r.hi != null ? Math.round(r.hi) : null]);
   return `<div class="dpchart" data-pts='${JSON.stringify(data)}' data-a="${a}" data-span="${span}">
     <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" width="100%" height="${H}">
@@ -10706,7 +11107,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 125;
+const APP_V = 126;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -11045,10 +11446,13 @@ function einArt(name, mime, text) {
   const T = text || '', bank = (T.match(/buchungstag|wertstellung|valuta|kontoauszug|alter saldo|neuer saldo|kontostand|finanzstatus|lastschrift|gutschrift|umsatzliste|depotauszug|transaktionsexport/gi) || []).length;
   if (/\.csv$/.test(n)) return /dienst|schicht/i.test(T.slice(0, 400)) && !bank ? 'dienst' : 'konto';
   if (/dienstplan|schichtplan|dienstfolge/i.test(T) && bank < 2) return 'dienst';
+  if (trAbrechnung(T)) return 'beleg';
+  if (/abrechnung|ausf(ü|u)hrung|schlusstag|handelstag|order|dividendengutschrift|aussch(ü|ue)ttung/i.test(T) && T.split('\n').length < 150 && belegAllgemein(T)) return 'beleg';
   if (bank >= 2 && mime === 'application/pdf') return 'konto';
   let p = null; try { p = T.trim().length > 20 ? docParse(T) : null; } catch (e) {}
   if (p && ((p.kind === 'hotel' && (p.in || p.name)) || (p.legs && p.legs.length))) return 'reise';
   if (trBeleg(T)) return 'beleg';
+  const lm = lernPasst(T); if (lm) return lm.art === 'beleg' ? 'beleg' : 'reise';
   return '';
 }
 async function einDatei(f) {
@@ -11061,8 +11465,11 @@ async function einDatei(f) {
   if (!art) return;
   const [ic, ziel, was] = EIN_ARTEN[art]; toast(`${ic} Erkannt: ${was} → ${ziel}`);
   if (art === 'health') return hlImportDatei(f);
-  if (art === 'beleg') { if (!text) { buf = buf || await f.arrayBuffer(); text = await docLesen({ buf, mime }); } const b = trBeleg(text, f.lastModified ? new Date(f.lastModified - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10) : '');
-    if (!b) return ask('Den Beleg konnte ich nicht lesen. Trag den Kauf oder Verkauf bitte im Depot selbst ein.', 'OK', 'Schließen'); UI.tab = 'finanzen'; render(); return trBelegFenster(b); }
+  if (art === 'beleg') { if (!text) { buf = buf || await f.arrayBuffer(); text = await docLesen({ buf, mime }); } const ref = f.lastModified ? new Date(f.lastModified - new Date().getTimezoneOffset() * 6e4).toISOString().slice(0, 10) : today();
+    let b = trBeleg(text, ref) || belegAllgemein(text); const vor = Object.assign({}, b || {});
+    b = lernAnwenden(text, 'beleg', Object.assign({ art: 'kauf', date: ref, leer: !b }, b || {})) || (b ? b : { art: 'kauf', date: ref, leer: true, name: '', qty: 0, kurs: 0, summe: 0, gebuehr: 0 });
+    if (b.leer && (b.summe || b.qty)) b.leer = false;
+    b._lernT = text; b._lernVor = vor; UI.tab = 'finanzen'; render(); return trBelegFenster(b); }
   if (art === 'konto') { if (/^image\//.test(mime)) return ask('Kontoauszüge kann ich nur als PDF oder CSV aus dem Online-Banking einlesen, nicht als Foto.', 'OK', 'Schließen'); return impDateien([f]); }
   if (art === 'dienst') { try { const r = await dpDateiLesen(f); if (!r.gl.length) throw new Error('Ich habe keine Tage mit Kürzeln gefunden.'); dpAssistent(r, f.name); } catch (e) { ask(`Den Dienstplan konnte ich nicht lesen.\n\n${e.message || e}`, 'OK', 'Schließen'); } return; }
   /* Reise: passende Reise über das Datum finden, sonst fragen oder neu anlegen */
@@ -11101,7 +11508,29 @@ document.addEventListener('drop', e => { const k = e.target.closest && e.target.
 
 /* ---------- Trade-Republic-Beleg (Screenshot einer Order oder Dividende) ---------- */
 const MON_KURZ = { jan: 1, feb: 2, mär: 3, mar: 3, apr: 4, mai: 5, jun: 6, jul: 7, aug: 8, sep: 9, okt: 10, nov: 11, dez: 12 };
+/* Trade-Republic-Wertpapierabrechnung (PDF oder Foto/Screenshot davon): Kauf, Verkauf, Sparplan, Dividende */
+function trAbrechnung(T) {
+  if (!T || !/trade\s*republic/i.test(T) || !/wertpapierabrechnung|dividende|aussch(ü|ue)ttung|ertragsgutschrift/i.test(T)) return null;
+  const geld = s => s ? Math.abs(num(String(s).replace(/\.(?=\d{3}\b)/g, ''))) : 0, L = T.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const art = /dividende|aussch(ü|ue)ttung|ertragsgutschrift/i.test(T) && !/wertpapierabrechnung/i.test(T) ? 'div' : /\bverkauf\b/i.test(T) ? 'verk' : /\bkauf\b|sparplan/i.test(T) ? 'kauf' : '';
+  if (!art) return null;
+  /* Positionszeile: „Global Quality Dividends USD (Dist) 11 Stk. 9,666 EUR 106,33 EUR“ */
+  let name = '', qty = 0, kurs = 0, brutto = 0;
+  for (const l of L) { const m = l.match(/^(.{3,}?)\s+(\d+(?:[.,]\d+)?)\s*Stk\.?\s+(?:([\d.]+,\d+)\s*(?:EUR|€)\s+)?([\d.]+,\d{2})\s*(?:EUR|€)/i); if (m) { name = m[1].trim(); qty = num(m[2]); kurs = geld(m[3]); brutto = geld(m[4]); break; } }
+  const im = T.replace(/ISIN[:\s]*/gi, 'ISIN ').match(/ISIN ([A-Z0-9O ]{12,16})/i); let isin = '';
+  if (im) { let c = im[1].replace(/\s+/g, '').toUpperCase().slice(0, 12); const fix = c.slice(0, 2) + c.slice(2, 11) + c.slice(11).replace(/O/g, '0'); isin = isinOk(c) ? c : isinOk(fix) ? fix : isinOk(c.slice(0, 2) + c.slice(2).replace(/O/g, '0')) ? c.slice(0, 2) + c.slice(2).replace(/O/g, '0') : ''; }
+  let geb = 0, st = 0; for (const l of L) { const g = l.match(/(abwicklungspauschale|fremdkostenzuschlag|geb(ü|u)hr|ordergeb(ü|u)hr)\D*?(-?[\d.]+,\d{2})/i); if (g) geb += geld(g[4]);
+    const t = l.match(/(kapitalertrags?steuer|solidarit(ä|a)tszuschlag|kirchensteuer|quellensteuer)\D*?(-?[\d.]+,\d{2})/i); if (t) st += geld(t[3]); }
+  /* Betrag der Buchung (nach Gebühren und Steuern): Zeile mit Wertstellung, sonst das letzte „GESAMT“ */
+  const bu = T.match(/\b(\d{4}-\d{2}-\d{2}|\d{2}\.\d{2}\.\d{4})\s+(-?[\d.]+,\d{2})\s*(?:EUR|€)/); const ges = [...T.matchAll(/GESAMT\D{0,12}?(-?[\d.]+,\d{2})/gi)].pop();
+  const summe = bu ? geld(bu[2]) : ges ? geld(ges[1]) : brutto ? Math.round((brutto + (art === 'kauf' ? geb : -geb - st)) * 100) / 100 : 0;
+  const dm = T.match(/\bam\s+(\d{2}\.\d{2}\.\d{4})/i) || T.match(/DATUM\D{0,20}(\d{2}\.\d{2}\.\d{4})/i) || T.match(/\b(\d{2}\.\d{2}\.\d{4})\b/);
+  if (!kurs && qty && brutto) kurs = Math.round(brutto / qty * 1e4) / 1e4;
+  const r = { art, name, isin, qty, kurs, gebuehr: geb, steuer: st, summe, date: dm ? docDatum(dm[1]) : today(), quelle: 'abrechnung' };
+  return r.summe || r.qty ? r : null;
+}
 function trBeleg(T, bezug) {
+  const ab = trAbrechnung(T); if (ab) return ab;
   if (!T || !/(verkaufen|kaufen|sparplan|dividende|ausschüttung|du hast [\d.,]+ ?€ (erhalten|investiert|gezahlt))/i.test(T) || !/(summe|gesamt|betrag|du hast)/i.test(T)) return null;
   if (/kontoauszug|buchungstag|wertstellung/i.test(T)) return null;
   const geld = s => s ? num(s.replace(/\.(?=\d{3}\b)/g, '')) : 0, L = T.split(/\n+/).map(l => l.trim()).filter(Boolean);
@@ -11121,18 +11550,18 @@ function trBeleg(T, bezug) {
   if (!r.summe && r.qty && r.kurs) r.summe = Math.round((r.qty * r.kurs + (art === 'kauf' ? r.gebuehr : -r.gebuehr)) * 100) / 100;
   return r.summe || r.qty ? r : null;
 }
-const trPosFinden = name => { const n = lowN(name).replace(/[^a-z0-9]+/g, ' ').trim(); if (!n) return null; const w = n.split(' ')[0];
+const trPosFinden = (name, isin) => { if (isin) { const p = S.depot.find(x => (x.isin || '').toUpperCase() === isin); if (p) return p; } const n = lowN(name).replace(/[^a-z0-9]+/g, ' ').trim(); if (!n) return null; const w = n.split(' ')[0];
   return S.depot.find(p => lowN(p.name).replace(/[^a-z0-9]+/g, ' ').trim() === n) || S.depot.find(p => lowN(p.name).replace(/[^a-z0-9]+/g, ' ').includes(n)) || (w.length >= 4 ? S.depot.find(p => lowN(p.name).replace(/[^a-z0-9]+/g, ' ').split(' ')[0] === w) : null); };
 function trBelegFenster(b) {
-  const p = trPosFinden(b.name), depA = S.accounts.find(a => a.kind === 'depot'), cash = S.accounts.find(a => a.kind !== 'depot' && (a.bank === 'Trade Republic' || /trade ?republi/i.test(a.name)));
+  const p = trPosFinden(b.name, b.isin), depA = S.accounts.find(a => a.kind === 'depot'), cash = S.accounts.find(a => a.kind !== 'depot' && (a.bank === 'Trade Republic' || /trade ?republi/i.test(a.name)));
   const T = { verk: ['📉 Verkauf', 'Verkauf im Depot verbuchen'], kauf: ['📈 Kauf', 'Kauf im Depot verbuchen'], div: ['💶 Dividende', 'Dividende buchen'] }[b.art];
   const accOpts = [['', '– kein Konto –'], ...S.accounts.filter(a => a.kind !== 'depot').map(a => [a.id, a.name])];
-  modal(`${T[0]} erkannt`, `<div class="sub" style="margin-bottom:10px">Aus dem Trade-Republic-Beleg gelesen. Bitte kurz prüfen.</div>
+  modal(b.leer ? '📄 Beleg eintragen' : `${T[0]} erkannt`, `<div class="sub" style="margin-bottom:10px">${b.leer ? 'Ich konnte den Beleg nicht sicher lesen. Trag ihn einmal ein. Ich merke mir, wo die Angaben stehen, und lese den nächsten Beleg dieser Art allein.' : b.quelle === 'allgemein' ? 'Aus dem Beleg gelesen. Bitte kurz prüfen.' : 'Aus dem Trade-Republic-Beleg gelesen. Bitte kurz prüfen.'}</div>${b.leer ? fSel('art', 'Was?', [['kauf', '📈 Kauf'], ['verk', '📉 Verkauf'], ['div', '💶 Dividende']], 'kauf') : ''}
     ${fSel('pos', 'Wertpapier', [...S.depot.map(x => [x.id, x.name]), ...(b.art === 'kauf' ? [['neu', '＋ Neu: ' + (b.name || 'Wertpapier')]] : [])], p ? p.id : b.art === 'kauf' ? 'neu' : (S.depot[0] || {}).id)}
     <div class="grid2">${fIn('date', 'Datum', b.date, 'date')}${b.art === 'div' ? '' : fIn('qty', 'Stück', String(b.qty || '').replace('.', ','), 'text', 'inputmode="decimal"')}</div>
     ${b.art === 'div' ? '' : `<div class="grid2">${fMoney('kurs', 'Kurs je Stück (€)', b.kurs)}${fMoney('geb', 'Gebühr (€)', b.gebuehr)}</div>`}
     ${fMoney('summe', b.art === 'kauf' ? 'Summe bezahlt (€)' : 'Summe erhalten (€)', b.summe)}${fSel('acc', b.art === 'kauf' ? 'Bezahlt von' : 'Gutschrift auf', accOpts, cash ? cash.id : '')}`,
-    v => { const pos = v.pos === 'neu' ? null : S.depot.find(x => x.id === v.pos), qty = num(v.qty || '0'), sm = num(v.summe), d = v.date || today();
+    v => { if (v.art) b.art = v.art; const pos = v.pos === 'neu' ? null : S.depot.find(x => x.id === v.pos), qty = num(v.qty || '0'), sm = num(v.summe), d = v.date || today();
       if (b.art !== 'div' && !qty) { toast('Bitte die Stückzahl angeben.'); return false; }
       const imp = `trbeleg|${b.art}|${d}|${lowN(pos ? pos.name : b.name)}|${sm}`; if (S.tx.some(t => t.imp === imp)) { toast('Dieser Beleg ist schon verbucht.'); return false; }
       let msg = '';
@@ -11142,14 +11571,160 @@ function trBelegFenster(b) {
         if (pos.qty) pos.qty = rest; if (pos.value && q) pos.value = Math.round(pos.value * rest / q * 100) / 100;
         const gv = Math.round((sm - abg) * 100) / 100; msg = `${dec(a, a % 1 ? 4 : 0)} × ${pos.name} verkauft, ${gv >= 0 ? 'Gewinn' : 'Verlust'} ${eur(gv)}`;
         if (rest < 1e-6) { S.depot = S.depot.filter(x => x !== pos); S.tx.forEach(t => { if (t.pos === pos.id) delete t.pos; }); msg += '. Die Position ist damit komplett verkauft und aus dem Depot raus'; } }
-      else if (b.art === 'kauf') { let ps = pos; if (!ps) { ps = { id: uid(), name: b.name || 'Wertpapier', isin: '', buys: [], value: 0, valueDate: d }; S.depot.push(ps); }
+      else if (b.art === 'kauf') { let ps = pos; if (!ps) { ps = { id: uid(), name: b.name || 'Wertpapier', isin: b.isin || '', buys: [], value: 0, valueDate: d }; S.depot.push(ps); }
         (ps.buys = ps.buys || []).push({ date: d, amount: sm, qty }); ps.buys.sort((x, y) => x.date < y.date ? -1 : 1); if (ps.qty) ps.qty = Math.round((ps.qty + qty) * 1e6) / 1e6; ps.value = Math.round(((ps.value || 0) + qty * num(v.kurs || '0')) * 100) / 100;
         msg = `${dec(qty, qty % 1 ? 4 : 0)} × ${ps.name} gekauft für ${eur(sm)}`; }
       if (b.art === 'div') { const c = katName('Dividenden'); if (v.acc) S.tx.push({ id: uid(), date: d, type: 'ein', amount: sm, acc: v.acc, cat: c && c.id, note: 'Dividende ' + (pos ? pos.name : b.name), pos: pos ? pos.id : undefined, imp }); msg = `Dividende ${eur(sm)} gebucht`; }
       else if (v.acc && depA) S.tx.push({ id: uid(), date: d, type: 'umb', amount: sm, acc: b.art === 'verk' ? depA.id : v.acc, to: b.art === 'verk' ? v.acc : depA.id, note: `${b.art === 'verk' ? 'Verkauf' : 'Kauf'} ${pos ? pos.name : b.name}`, imp });
       else if (v.acc) S.tx.push({ id: uid(), date: d, type: b.art === 'verk' ? 'ein' : 'aus', amount: sm, acc: v.acc, note: `${b.art === 'verk' ? 'Verkauf' : 'Kauf'} ${pos ? pos.name : b.name}`, imp });
-      setTimeout(() => { toast('✓ ' + msg + '.'); if (typeof jatosAktion === 'function') jatosAktion('Beleg verbucht! 📈'); }, 60); }, { still: true, saveLabel: T[1] });
+      const gel = b._lernT ? lernMerken(b._lernT, 'beleg', { name: pos ? '' : b.name, qty, kurs: num(v.kurs || '0'), summe: sm, gebuehr: num(v.geb || '0'), date: d }, b._lernVor) : 0;
+      setTimeout(() => { toast('✓ ' + msg + '.'); if (typeof jatosAktion === 'function') jatosAktion('Beleg verbucht! 📈'); }, 60); lernToast(gel); }, { still: true, saveLabel: b.leer ? 'Verbuchen' : T[1] });
 }
+
+/* ---------- Bessere Dokument-Erkennung (Toms Wunsch 20.11.) ----------
+   1. Allgemeine Leser für neue Formate: Fahrten mit „Von/Nach“-Feldern oder Pfeil, Depot-Belege anderer Banken.
+   2. Einmal beibringen: Korrigiert man ein ausgelesenes Formular, merkt sich die App, hinter welcher Beschriftung
+      jeder Wert stand. Beim nächsten Dokument desselben Absenders liest sie die Werte dort ab. Alles bleibt auf dem Gerät. */
+
+/* ---- 1a. Fahrten ---- */
+const RX_VON = /^(?:von|ab|abfahrt(?:sort|sbahnhof)?|start(?:bahnhof)?|abreise(?:ort)?|from|origin|departure(?: station| airport| city)?|abflug(?:hafen|ort)?|einstieg|zustieg)\b\s*[:\-–]?\s*/i;
+const RX_NACH = /^(?:nach|bis|an|ankunft(?:sort|sbahnhof)?|ziel(?:bahnhof|ort)?|to|destination|arrival(?: station| airport| city)?|ankunftsflughafen|ausstieg)\b\s*[:\-–]?\s*/i;
+function _ortRein(s) {
+  return (s || '').replace(/\b\d{1,2}[:.]\d{2}\b(\s*uhr)?/gi, ' ').replace(/\b\d{1,2}\.\s?\d{1,2}\.(\s?\d{2,4})?/g, ' ').replace(/\b(mo|di|mi|do|fr|sa|so|mon|tue|wed|thu|fri|sat|sun)\b\.?,?/gi, ' ')
+    .replace(/\b(gleis|gate|terminal|platform|wagen|sitz|platz)\b.*$/i, '').replace(/\b(abfahrt|ankunft|abflug|departure|arrival|uhr|an|ab|um|am)\b\.?/gi, ' ').replace(/[|•·]+/g, ' ').replace(/\s{2,}/g, ' ').replace(/^[\s,:;\-–]+|[\s,:;\-–]+$/g, '').trim();
+}
+function reiseAllgemein(T, L) {
+  if (!T) return null;
+  const kind = RX_ZUG.test(T) || /\bbahn\b|zug|gleis|wagen|sbb|öbb|trenitalia|sncf|renfe|eurostar/i.test(T) ? 'zug' : /flixbus|\bbus\b|blablabus/i.test(T) && !/flug|flight|boarding/i.test(T) ? 'bus' : /fähre|ferry|reederei/i.test(T) ? 'faehre' : 'flug';
+  let von = '', nach = '', dep = '', arr = '';
+  for (let i = 0; i < L.length; i++) {
+    const l = L[i], nx = L[i + 1] || '';
+    if (!von && RX_VON.test(l)) { const r = l.replace(RX_VON, ''); von = _ortRein(r) || (r.trim() ? '' : _ortRein(nx)); const t = (r.match(/\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/) || [])[0]; if (t && !dep) dep = t; }
+    else if (!nach && RX_NACH.test(l)) { const r = l.replace(RX_NACH, ''); nach = _ortRein(r) || (r.trim() ? '' : _ortRein(nx)); const t = (r.match(/\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/) || [])[0]; if (t && !arr) arr = t; }
+    if (!dep) { const m = l.match(/\b(?:abfahrt|abflug|departure|dep\.?|ab)\b\D{0,12}\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/i); if (m) dep = m[1] + ':' + m[2]; }
+    if (!arr) { const m = l.match(/\b(?:ankunft|arrival|arr\.?|an)\b\D{0,12}\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/i); if (m) arr = m[1] + ':' + m[2]; }
+  }
+  /* „Berlin Hbf → München Hbf“, „BER – MUC“, „Berlin (BER) nach Rom (FCO)“ */
+  if (!von || !nach) for (const l of L) {
+    const m = l.match(/^(.{2,40}?)\s*(?:→|->|–|—|>|\bnach\b|\bto\b)\s*(.{2,40})$/i); if (!m) continue;
+    const a = _ortRein(m[1].replace(/\(([A-Z]{3})\)/, ' $1')), b = _ortRein(m[2].replace(/\(([A-Z]{3})\)/, ' $1'));
+    const ia = (a.match(/\b([A-Z]{3})\b/) || [])[1], ib = (b.match(/\b([A-Z]{3})\b/) || [])[1];
+    if ((ia && IATA[ia] && ib && IATA[ib]) || (ortSuche(a, '', true) && ortSuche(b, '', true))) { von = von || (ia && IATA[ia] ? ia : a); nach = nach || (ib && IATA[ib] ? ib : b); break; }
+  }
+  if (!/[a-zäöüß]{3}|\b[A-Z]{3}\b/i.test(von)) von = ''; if (!/[a-zäöüß]{3}|\b[A-Z]{3}\b/i.test(nach)) nach = '';
+  if (!von || !nach || von === nach) return null;
+  const zeiten = [...T.matchAll(/\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/g)].map(m => m[1].padStart(2, '0') + ':' + m[2]);
+  if (!dep && zeiten[0]) dep = zeiten[0]; if (!arr) arr = zeiten.find(z => z !== dep) || '';
+  let date = ''; for (const l of L) { if (/gültig|erstellt|gedruckt|buchungsdatum|kaufdatum|issued|printed/i.test(l)) continue; date = docDatum(l); if (date) break; }
+  const no = (T.match(new RegExp(RX_ZUG.source)) || []).slice(1, 3).join(' ').trim() || ((T.match(/\b([A-Z]{2}|[A-Z]\d|\d[A-Z])\s?(\d{2,4})\b/g) || []).find(x => AIRLINES[x.slice(0, 2)]) || '');
+  const fx = s => (s || '').replace('.', ':').padStart(5, '0');
+  return { kind, legs: [{ from: von, to: nach, date, dep: fx(dep), arrDate: date, arr: arr ? fx(arr) : '', type: kind, no, airline: airlineVon(no), seat: '', gate: '', ref: '', cost: 0 }] };
+}
+
+/* ---- 1b. Depot-Belege anderer Banken (Scalable, ING, comdirect, DKB, Consorsbank …) ---- */
+function belegAllgemein(T) {
+  if (!T) return null;
+  const isin = (T.match(/\b[A-Z]{2}[A-Z0-9]{9}\d\b/g) || []).find(x => isinOk(x)); if (!isin) return null;
+  const art = /dividende|aussch(ü|ue)ttung|ertragsgutschrift|ertr(ä|a)gnisgutschrift/i.test(T) ? 'div' : /\bverkauf|wertpapierverkauf|sell\b/i.test(T) ? 'verk' : /\bkauf|wertpapierkauf|buy\b|sparplan|ausführung/i.test(T) ? 'kauf' : '';
+  if (!art) return null;
+  const geld = s => s ? Math.abs(num(String(s).replace(/\.(?=\d{3}\b)/g, ''))) : 0, L = T.split(/\n+/).map(l => l.trim()).filter(Boolean);
+  const feld = re => { for (const l of L) { const m = l.match(re); if (m) return m; } return null; };
+  const q = feld(/(?:St(ü|u)ck|Stk\.?|Anzahl|Nominale|Menge)\s*[:\s]*([\d.]*\d(?:,\d+)?)/i) || feld(/([\d.]*\d(?:,\d+)?)\s*(?:St(ü|u)ck|Stk\.?)/i);
+  const qty = q ? num((q[2] && /\d/.test(q[2]) ? q[2] : q[1]).replace(/\.(?=\d{3}\b)/g, '')) : 0;
+  const k = feld(/(?:Ausf(ü|u)hrungskurs|Kurs|Preis pro St(ü|u)ck|Preis)\s*[:\s]*(?:EUR|€)?\s*([\d.]+,\d+)/i);
+  const s = [...T.matchAll(/(?:Endbetrag|Ausmachender Betrag|Gesamtbetrag|Betrag zu Ihren (?:Lasten|Gunsten)|Zu Ihren (?:Lasten|Gunsten)|Gesamtsumme|Summe|Gesamt|Total)\D{0,30}?([\d.]+,\d{2})/gi)].pop();
+  let geb = 0; for (const l of L) { const g = l.match(/(provision|geb(ü|u)hr|orderentgelt|transaktionsentgelt|fremdkostenzuschlag|handelsplatzentgelt|abwicklungspauschale)\D*?([\d.]+,\d{2})/i); if (g) geb += geld(g[3]); }
+  const dm = feld(/(?:Schlusstag|Handelstag|Ausf(ü|u)hrungstag|Valuta|Datum|Ex-Tag|Zahltag)\D{0,20}(\d{1,2}\.\d{1,2}\.\d{2,4})/i) || T.match(/\b(\d{1,2}\.\d{1,2}\.\d{4})\b/);
+  const zi = L.findIndex(l => l.includes(isin)); let name = zi >= 0 ? L[zi].replace(isin, '').replace(/\b(ISIN|WKN)\b[:\s]*\w*/gi, '').replace(/[|:]+/g, ' ').trim() : '';
+  if ((!name || name.length < 3) && zi > 0) name = L[zi - 1]; name = name.replace(/\s{2,}.*$/, '').slice(0, 60);
+  const r = { art, name, isin, qty, kurs: k ? geld(k[3]) : 0, gebuehr: geb, steuer: 0, summe: s ? geld(s[1]) : 0, date: dm ? docDatum(dm[dm.length - 1]) : today(), quelle: 'allgemein' };
+  if (!r.kurs && r.qty && r.summe) r.kurs = Math.round((r.summe - (art === 'kauf' ? geb : -geb)) / r.qty * 1e4) / 1e4;
+  return r.summe || r.qty ? r : null;
+}
+
+/* ---- 2. Einmal beibringen ---- */
+const LERN_FELDER = {
+  seg: { from: 't', to: 't', date: 'd', dep: 'z', arr: 'z', no: 't', seat: 't', gate: 't', ref: 't', cost: 'g' },
+  hotel: { name: 't', place: 't', addr: 't', in: 'd', out: 'd', inTime: 'z', outTime: 'z', ref: 't', cost: 'g' },
+  beleg: { name: 't', qty: 'n', kurs: 'g', summe: 'g', gebuehr: 'g', date: 'd' }
+};
+const LERN_STOPP = new Set('und oder der die das mit für von nach bei zum zur ihre ihr ihren sie wir uns ist sind wird werden eine einer einem einen nicht auch sich dass bitte vielen dank seite datum uhr gmbh telefon email www'.split(' '));
+function lernZeilen(T) { return (T || '').split(/\n+/).map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean); }
+/* Fingerabdruck des Absenders: markante Wörter aus dem Kopf des Dokuments (ohne Zahlen, ohne Allerweltswörter) */
+function lernSig(T) {
+  const w = new Set(); for (const l of lernZeilen(T).slice(0, 18)) for (const m of l.toLowerCase().matchAll(/[a-zäöüß]{4,}/g)) if (!LERN_STOPP.has(m[0])) w.add(m[0]);
+  return [...w].slice(0, 30);
+}
+function lernPasst(T, art) {
+  const L = S.lernen || []; if (!L.length || !T) return null; const sig = new Set(lernSig(T)); if (sig.size < 3) return null; let best = null, bs = 0;
+  for (const m of L) { if (art && m.art !== art) continue; const hit = m.sig.filter(x => sig.has(x)).length, sc = hit / Math.min(m.sig.length, sig.size); if (sc > bs) { bs = sc; best = m; } }
+  return bs >= .6 ? best : null;
+}
+/* Wie ein Wert im Text stehen kann (Datum, Uhrzeit, Betrag in deutscher Schreibweise) */
+function lernVarianten(v, typ) {
+  const s = String(v == null ? '' : v).trim(); if (!s) return [];
+  if (typ === 'd' && /^\d{4}-\d\d-\d\d$/.test(s)) { const [y, m, d] = s.split('-'); return [`${d}.${m}.${y}`, `${+d}.${+m}.${y}`, `${d}.${m}.${y.slice(2)}`, `${d}.${m}.`, `${y}-${m}-${d}`, `${d}/${m}/${y}`]; }
+  if (typ === 'z') return [s, s.replace(':', '.'), s.replace(/^0/, '')];
+  if (typ === 'g' || typ === 'n') { const n = num(s); if (!n) return []; const f = n.toFixed(2).replace('.', ','), t = f.replace(/\B(?=(\d{3})+(?!\d))/g, '.'); return [...new Set([t, f, String(n).replace('.', ','), n.toFixed(typ === 'n' ? 4 : 2).replace('.', ',')])]; }
+  return [s];
+}
+function lernMerken(T, art, werte, vorher) {
+  try {
+    const F = LERN_FELDER[art]; if (!F || !T) return 0; const L = lernZeilen(T), low = L.map(l => l.toLowerCase()), anker = {};
+    for (const [k, typ] of Object.entries(F)) {
+      const v = werte[k]; if (v == null || v === '' || v === 0) continue;
+      if (vorher && String(vorher[k] == null ? '' : vorher[k]) === String(v) && !(art === 'beleg' && num(vorher[k]) === num(v) && num(v) === 0)) continue; // nur Korrekturen lernen
+      let hit = null; for (const vv of lernVarianten(v, typ)) { const q = vv.toLowerCase(); for (let i = 0; i < low.length && !hit; i++) { const p = low[i].indexOf(q); if (p >= 0) hit = [i, p]; } if (hit) break; }
+      if (!hit) continue; const [i, p] = hit;
+      let vor = L[i].slice(0, p).replace(/[\s:=\-–]+$/, '').split(/\s+/).slice(-3).join(' ').trim(), zeile = 0;
+      if (vor.length < 2 && i > 0) { vor = L[i - 1].split(/\s+/).slice(-4).join(' ').trim(); zeile = 1; }
+      if (vor.length >= 2 && !/^\d+([.,:]\d+)*$/.test(vor)) anker[k] = { vor, zeile };
+    }
+    if (!Object.keys(anker).length) return 0;
+    S.lernen = S.lernen || []; let m = lernPasst(T, art);
+    if (!m) { m = { id: uid(), art, sig: lernSig(T), f: {}, n: 0 }; S.lernen.push(m); }
+    Object.assign(m.f, anker); if (art === 'seg' && werte.type) m.typ = werte.type; m.n++; m.t = today(); if (S.lernen.length > 60) S.lernen.splice(0, S.lernen.length - 60); save();
+    return Object.keys(anker).length;
+  } catch (e) { return 0; }
+}
+function lernWert(L, a, typ) {
+  const low = a.vor.toLowerCase(); for (let i = 0; i < L.length; i++) {
+    const p = L[i].toLowerCase().indexOf(low); if (p < 0) continue;
+    const roh = a.zeile ? (L[i + 1] || '') : L[i].slice(p + a.vor.length).replace(/^[\s:=\-–]+/, ''); if (!roh) continue;
+    if (typ === 'd') { const d = docDatum(roh); if (d) return d; continue; }
+    if (typ === 'z') { const m = roh.match(/\b([01]?\d|2[0-3])[:.]([0-5]\d)\b/); if (m) return m[1].padStart(2, '0') + ':' + m[2]; continue; }
+    if (typ === 'g' || typ === 'n') { const m = roh.match(/-?[\d.]*\d(?:,\d+)?/); if (m) return Math.abs(num(m[0].replace(/\.(?=\d{3}\b)/g, ''))); continue; }
+    const t = roh.split(/\s{2,}|\t| \| /)[0].replace(/[\s,;:]+$/, '').slice(0, 70); if (t) return t;
+  }
+  return null;
+}
+/* Gelernte Stellen anwenden: überschreibt, was der allgemeine Leser gefunden hat */
+function lernAnwenden(T, art, ziel) {
+  const m = lernPasst(T, art); if (!m) return null; const L = lernZeilen(T), F = LERN_FELDER[art], o = ziel || {}; let n = 0;
+  for (const [k, a] of Object.entries(m.f)) { const v = lernWert(L, a, F[k]); if (v != null && v !== '') { o[k] = v; n++; } }
+  if (n && art === 'seg' && o.no && !o.airline) o.airline = airlineVon(o.no); if (n && m.typ) o._typ = m.typ;
+  return n ? o : null;
+}
+/* Für docParse: gelerntes Muster auf eine Fahrt oder Unterkunft legen */
+function lernReise(T, p) {
+  try {
+    if (p && p.kind === 'hotel') { lernAnwenden(T, 'hotel', p); return p; }
+    const h = !p || !p.legs || !p.legs.length ? lernAnwenden(T, 'hotel', { kind: 'hotel' }) : null; if (h && (h.name || h.in)) return h;
+    if (p && p.legs && p.legs.length > 1) return p;
+    const leg = p && p.legs && p.legs[0] ? p.legs[0] : {}; const r = lernAnwenden(T, 'seg', leg);
+    if (r && r.from && r.to) { r.type = r._typ || r.type || (p && p.legs && p.legs.length && p.kind && p.kind !== 'hotel' ? p.kind : RX_ZUG.test(T) || /zug|bahn|gleis|schiene/i.test(T) ? 'zug' : /\bbus\b|flixbus|fernbus/i.test(T) ? 'bus' : /f[äa]hre|ferry/i.test(T) ? 'faehre' : 'flug'); delete r._typ; if (!r.arrDate) r.arrDate = r.date; return Object.assign(p || {}, { kind: r.type, legs: [r] }); }
+  } catch (e) {}
+  return p;
+}
+/* Nichts erkannt: einmal selbst eintragen lassen und dabei lernen */
+function lernWahl(tr, meta, text) {
+  const m = modal('Was ist das?', `<div class="sub" style="margin-bottom:10px">Ich habe in dem Dokument nichts sicher erkannt. Trag es einmal selbst ein. Ich merke mir dabei, wo die Angaben stehen, und lese das nächste Dokument dieser Art allein.</div>
+    <div class="ein-wahl"><button type="button" class="btn sec" data-lw="seg">🚆 Fahrt oder Flug</button><button type="button" class="btn sec" data-lw="hotel">🏨 Unterkunft</button><button type="button" class="btn sec" data-close>Nur speichern</button></div>`, null);
+  m.el.addEventListener('click', e => { const b = e.target.closest('[data-lw]'); if (!b) return; m.close();
+    if (b.dataset.lw === 'hotel') hotEdit(tr, { in: tr.from || '', out: tr.to || '', place: tr.ort || '', doc: meta.id, _neu: true, _lernT: text, _lernVor: {} });
+    else segEdit(tr, { type: 'zug', doc: meta.id, _neu: true, _lernT: text, _lernVor: {} }); });
+}
+function lernToast(n) { if (n) setTimeout(() => toast(`🧠 Gemerkt: ${n} ${n === 1 ? 'Angabe' : 'Angaben'}. Das nächste Dokument dieser Art lese ich allein.`), 900); }
 
 /* ---------- JATOS, der Zauberer ---------- */
 const OUTFITS = {
