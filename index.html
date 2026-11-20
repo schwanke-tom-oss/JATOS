@@ -10856,7 +10856,7 @@ function c24AusCsv(rows) {
   const anz = {}; for (const r of body) anz[r[c('Kontonummer')]] = (anz[r[c('Kontonummer')]] || 0) + 1;
   const haupt = Object.entries(anz).sort((a, b) => b[1] - a[1])[0]; if (!haupt) throw new Error('Keine Buchungen gefunden.');
   const nr = haupt[0], a = S.accounts.find(x => x.iban && x.iban.replace(/\s/g, '').endsWith(nr.padStart(10, '0')));
-  const main = [], pock = []; let pocket = 0;
+  const main = [], pock = []; let pocket = 0, alt = 0;
   for (const r of body) {
     const typ = r[c('Transaktionstyp')] || '', zw = r[c('Verwendungszweck')] || '', name = r[c('Zahlungsempfänger')] || '';
     const d = datum(r[c('Buchungsdatum')]), v = zahl(r[c('Betrag')]); if (!d || !v) continue;
@@ -10869,10 +10869,12 @@ function c24AusCsv(rows) {
     if (ibanOk(ib)) z.ciban = ib;
     z.c24 = true;
     if (umb) { z.pocketUmb = true; pocket++; }
+    else if (istHaupt && z.ciban && !tr && nameIstIch(name) && !S.accounts.some(x => x.iban === z.ciban)) { z.altUmb = true; alt++; }
     (istHaupt ? main : pock).push(z);
   }
   const q = [{ art: 'konto', bank: 'C24', iban: a ? a.iban : '', kopf: 'C24 ' + (body[0][c('Kontoname')] || ''), rows: main, ende: null, endeD: null, kind: 'giro', pocket, typ: 'Girokonto' }];
   if (pocket || pock.length) q.push({ art: 'konto', bank: 'C24', iban: '', kopf: 'C24 Pockets', rows: pock, ende: null, endeD: null, kind: 'tg', typ: 'Pockets', c24Pockets: true });
+  if (alt) q.push({ art: 'konto', bank: '', iban: '', kopf: 'Alte Konten', rows: [], ende: 0, endeD: main.reduce((m, z) => z.date > m ? z.date : m, ''), kind: 'sonst', typ: 'Alte Konten', altKonten: true });
   return q;
 }
 function auszugAusCsv(txt, fname) {
@@ -11033,6 +11035,7 @@ function impVorschau(quellen, fehler) {
       const frei2 = frei && s.bank && frei.filter(a => a.bank === s.bank || a.name.toLowerCase().includes(s.bank.toLowerCase()));
       s.acc = a ? a.id : frei2 && frei2.length === 1 ? frei2[0].id : frei && frei.length === 1 ? frei[0].id : 'neu';
       s.neuName = s.neuName || `${s.bank ? s.bank + ' ' : ''}${s.typ || ACC_KIND[s.kind] || 'Konto'}${s.iban ? ' ' + ibanKurz(s.iban) : ''}`; s.neuKind = s.kind;
+      if (s.altKonten) { const ak = S.accounts.find(a => a.name === 'Alte Konten'); s.acc = ak ? ak.id : 'neu'; s.neuName = 'Alte Konten'; }
       s.abgl = s.ende != null;
     } else {
       const d = s.bank && S.accounts.find(a => a.kind === 'depot' && (a.bank === s.bank || a.name.toLowerCase().includes(s.bank.toLowerCase().split(' ')[0]))) || S.accounts.find(a => a.kind === 'depot'); s.acc = d ? d.id : 'neu'; s.neuName = `${s.bank ? s.bank + ' ' : ''}Depot`; s.neuKind = 'depot';
@@ -11066,7 +11069,8 @@ function impKlassifizieren() {
       if (z.manuell) continue;
       z.self = self; z.flag = ''; z.on = true; z.ersetzt = null;
       const other = z.ciban && ibanAcc[z.ciban];
-      if (z.pocketUmb) { const pq = konten.find(k => k.c24Pockets); if (pq) { z.typ = 'umb'; z.other = accKey(pq); } else { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); } }
+      if (z.altUmb) { const aq = konten.find(k => k.altKonten); if (aq) { z.typ = 'umb'; z.other = accKey(aq); } else { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); } }
+      else if (z.pocketUmb) { const pq = konten.find(k => k.c24Pockets); if (pq) { z.typ = 'umb'; z.other = accKey(pq); } else { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); } }
       else if (z.trDepot) { const dq = IMP.q.find(x => x.art === 'depot' && x.tr); const dk = dq ? accKey(dq) : (S.accounts.find(a => a.kind === 'depot') || {}).id; if (dk && dk !== self) { z.typ = 'umb'; z.other = dk; } else { z.typ = z.dir < 0 ? 'aus' : 'ein'; z.cat = impKat(z, z.typ); } }
       else if (z.trTyp === 'steuer') { z.typ = z.dir < 0 ? 'aus' : 'ein'; const c = katName('Steuern & Gebühren'); z.cat = c && c.type === z.typ ? c.id : impKat(z, z.typ); }
       else if (z.trTyp === 'div') { z.typ = z.dir < 0 ? 'aus' : 'ein'; const c = katName('Dividenden'); z.cat = c && c.type === z.typ ? c.id : impKat(z, z.typ); }
@@ -11089,6 +11093,8 @@ function impKlassifizieren() {
     const [von, nach] = z.typ === 'umb' ? (z.dir < 0 ? [z.self, z.other] : [z.other, z.self]) : [z.self, null];
     const dup = S.tx.find(t => !benutzt.has(t.id) && (t.date === z.date || (z.typ === 'umb' && t.type === 'umb' && Math.abs(dayDiff(t.date, z.date)) <= 4)) && Math.abs(t.amount - z.amount) < 0.01 && (t.imp === impHash(s, z) || (t.type === 'umb' ? (t.acc === von && t.to === nach) || (t.acc === nach && t.to === von) : t.acc === z.self && t.type === z.typ)));
     if (dup) { z.on = false; z.flag = 'dupe'; benutzt.add(dup.id); continue; }
+    // Ältere Fassung derselben eigenen Überweisung (früher anders zugeordnet) wird durch die genauere ersetzt
+    if (z.altUmb || z.pocketUmb) { const alt = S.tx.find(t => !benutzt.has(t.id) && t.date === z.date && Math.abs(t.amount - z.amount) < 0.01 && (t.acc === z.self || t.to === z.self) && (t.type === 'umb' || nameIstIch(t.note || ''))); if (alt) { z.ersetzt = alt.id; benutzt.add(alt.id); continue; } }
     const geplant = S.tx.find(t => !benutzt.has(t.id) && t.rec && !t.imp && t.acc === (z.typ === 'umb' ? von : z.self) && Math.abs(t.amount - z.amount) <= Math.max(0.01, t.amount * 0.005) && Math.abs(dayDiff(t.date, z.date)) <= 7);
     if (geplant) { z.ersetzt = geplant.id; z.recId = geplant.rec; benutzt.add(geplant.id); if (!z.flag) z.flag = 'rec'; }
   }
@@ -11147,7 +11153,7 @@ function impMalen() {
     const zr = s.rows && s.rows.length ? `${fmtDs(s.rows.reduce((a, z) => z.date < a ? z.date : a, '9999'))}–${fmtDs(s.rows.reduce((a, z) => z.date > a ? z.date : a, '0000'))}` : '';
     h += `<div class="card imp-q" data-q="${s.i}"><div class="row sb"><b class="ell">${s.art === 'depot' ? '📈' : '🏦'} ${esc(s.bank || 'Bank unbekannt')}${s.iban ? ' · ' + esc(s.iban.replace(/(.{4})/g, '$1 ').trim()) : ''}</b></div>
       <div class="sub ell">${esc(s.datei)} · ${s.art === 'konto' ? `${n} Buchungen${zr ? ' · ' + zr : ''}` : `${n} ${s.items[0] && s.items[0].art === 'bestand' ? 'Positionen' : 'Vorgänge'}`} · <b>${neu} neu</b></div>
-      <div class="${s.acc === 'neu' ? 'grid2' : ''}" style="margin-top:8px">${fSel('acc', 'Konto in der App', accOptsImp(s), s.acc, 'data-k="acc"')}${s.acc === 'neu' ? fIn('neuName', 'Name des neuen Kontos', s.neuName, 'text', 'data-k="neuName"') : ''}</div>${s.pocket ? `<div class="sub" style="margin-top:6px">${s.pocket} Buchungen von und zu deinen Pockets werden Umbuchungen auf das Konto „C24 Pockets“, sie zählen nicht als Einnahme oder Ausgabe.</div>` : ''}
+      <div class="${s.acc === 'neu' ? 'grid2' : ''}" style="margin-top:8px">${fSel('acc', 'Konto in der App', accOptsImp(s), s.acc, 'data-k="acc"')}${s.acc === 'neu' ? fIn('neuName', 'Name des neuen Kontos', s.neuName, 'text', 'data-k="neuName"') : ''}</div>${s.pocket ? `<div class="sub" style="margin-top:6px">${s.pocket} Buchungen von und zu deinen Pockets werden Umbuchungen auf das Konto „C24 Pockets“, sie zählen nicht als Einnahme oder Ausgabe.</div>` : ''}${s.altKonten ? `<div class="sub" style="margin-top:6px">Überweisungen an und von deinen alten Konten werden Umbuchungen auf „Alte Konten“. Das Konto steht am Ende auf 0 €.</div>` : ''}
       ${s.acc === 'neu' ? fSel('neuKind', 'Art', Object.entries(ACC_KIND), s.neuKind, 'data-k="neuKind"') : ''}
       ${s.art === 'konto' && s.ende != null ? `<label class="chk"><input type="checkbox" data-k="abgl" ${s.abgl ? 'checked' : ''}><span>Kontostand auf <b>${eur(s.ende)}</b> (${fmtDs(s.endeD)}) abgleichen</span></label>` : ''}</div>`;
   }
@@ -12479,7 +12485,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 131;
+const APP_V = 132;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
