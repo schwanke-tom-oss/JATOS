@@ -10710,7 +10710,7 @@ const ART_RE = /^(sepa[- ]?)?(basis-?)?(nfc kartenzahlung|karteneinsatz im inter
 const EIN_RE = /gutschrift|zahlungseingang|eingang|lohn|gehalt|bezüge|besoldung|rente|zinsgutschrift|erstattung|rückzahlung|dividende|ausschüttung|einzahlung|retoure/i;
 
 function auszugAusZeilen(lines0, fname) {
-  const lines = lines0.map(L => Object.assign({}, L, { t: (L.it.length > 1 && L.it[0].x < 40 && L.it[0].s.trim().length <= 2 && L.it[1].x > 60 ? L.t.slice(L.it[0].s.trim().length) : L.t).trim().replace(/^_{3,}\s*/, '').replace(/^[A-Z0-9]\s+(?=\d{1,2}\.\d{1,2}\.)/, '').trim() }));
+  const lines = lines0.map(L => Object.assign({}, L, { t: (L.it.length > 1 && L.it[0].x < 40 && L.it[0].s.trim().length <= 2 && L.it[1].x > 60 ? L.t.slice(L.it[0].s.trim().length) : L.t).trim().replace(/^_{3,}\s*/, '').replace(/^[A-Z0-9]\s+(?=\d{1,2}\.\d{1,2}\.)/, '').trim().replace(/EBSCS \(CS\)[\s*\d]*?\d{2}\.\d{2}\.\d{4}(\s*\d{1,2}:\d{2}\s*\d+)?\s*/g, '').replace(/^\d{1,2}:\d{2}\s+\d{4,}(?=\s|$)\s*/, '').trim().replace(/^[A-Z0-9 ().*:]*?(\d{2}\.\d{2}\.?)(?=\s+(MO|DI|MI|DO|FR|SA|SO)\s)/, '$1').replace(/^(\d{1,2}\.\d{1,2})(?=\s+(MO|DI|MI|DO|FR|SA|SO)\b)/, '$1.') }));
   const rechts = (L, roh) => { const r = roh.replace(/^[-+−]\s?/, '').replace(/\s?(EUR|€)$/, '').trim(); const it = L.it.find(q => q.s.includes(r)); return it ? it.x + it.w : null; };
   const all = lines.map(l => l.t).join('\n');
   // Bank aus dem Kopf der ersten Seite (im Text weiter unten stehen oft andere Banken, z.B. Trade Republic als Empfänger)
@@ -10729,7 +10729,7 @@ function auszugAusZeilen(lines0, fname) {
   for (let i = 0; i < lines.length; i++) {
     const L = lines[i], t = L.t;
     if (L.p !== seite) { seite = L.p; inTx = false; }
-    for (const it of L.it) { if (/^(soll|belastung(en)?|lastschriften|ausgang|abgang)$/i.test(it.s.trim())) colS = it.x + it.w / 2; if (/^(haben|gutschrift(en)?|eingang|zugang)$/i.test(it.s.trim())) colH = it.x + it.w / 2; }
+    for (const it of L.it) { if (/^(soll|belastung(en)?|lastschriften|ausgang|abgang|ausgaben)$/i.test(it.s.trim())) colS = it.x + it.w / 2; if (/^(haben|gutschrift(en)?|eingang|zugang|einnahmen)$/i.test(it.s.trim())) colH = it.x + it.w / 2; }
     if (/^(datum|buchung|valuta|transaktion|monatsübersicht|kontotyp|seite \d|summe)/i.test(t)) inTx = false;
     const um = !sekt.length && t.match(/^([A-ZÄÖÜ][A-ZÄÖÜa-zäöü .&-]{3,40}?)\s+(\d{8,10})\s+EUR\s+(-?\d{1,3}(?:\.\d{3})*,\d{2})$/);
     if (um) { ueb[um[2].padStart(10, '0')] = { typ: um[1].trim(), saldo: zahl(um[3]) }; continue; }
@@ -12485,7 +12485,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 133;
+const APP_V = 134;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
