@@ -12485,7 +12485,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 132;
+const APP_V = 133;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -12812,11 +12812,35 @@ function spielInit() {
 /* ---------- Dokument-Eingang auf Heute: eine Datei oder ein Foto einwerfen, die App erkennt die Art und sortiert sie ein (alles offline) ---------- */
 const EIN_ARTEN = { reise: ['✈️', 'Reisen', 'Ticket oder Hotel'], konto: ['💶', 'Finanzen', 'Kontoauszug oder Depot'], beleg: ['📈', 'Depot', 'Kauf, Verkauf oder Dividende'], dienst: ['🚓', 'Arbeit', 'Dienstplan'], stunden: ['🕘', 'Arbeit', 'Stundenbericht (Einlegeblatt)'], health: ['🏃', 'Sport', 'Health-Export'] };
 function einKarte() {
-  return `<div class="card ein-k" data-ein-drop><button type="button" class="ein-btn" data-act="einDatei"><span class="ein-ic" aria-hidden="true"><i></i><b>📥</b></span><span class="ein-t"><b>Dokument einwerfen</b><span class="sub">Ticket, Hotel, Kontoauszug, Depot-Beleg, Dienstplan, Stundenbericht oder Health-Export. Ich erkenne es und sortiere es ein.</span></span></button>
-    <div class="ein-chips">${Object.entries(EIN_ARTEN).filter(([k]) => k !== 'beleg' && k !== 'stunden').map(([, v]) => v).map(([i, n]) => `<span>${i} ${n}</span>`).join('')}<button type="button" class="ein-txt" data-act="einText">📋 Text einfügen</button></div></div>`;
+  return `<div class="card ein-k" data-ein-drop><button type="button" class="ein-btn" data-act="einDatei"><span class="ein-ic" aria-hidden="true"><i></i><b>📥</b></span><span class="ein-t"><b>Dokument einwerfen</b><span class="sub">Ticket, Hotel, Kontoauszug, Depot-Beleg, Dienstplan, Stundenbericht oder Health-Export. Ich erkenne es und sortiere es ein. Du kannst auch viele Dateien auf einmal oder einen Ordner als Zip wählen.</span></span></button>
+    <div class="ein-chips">${Object.entries(EIN_ARTEN).filter(([k]) => k !== 'beleg' && k !== 'stunden').map(([, v]) => v).map(([i, n]) => `<span>${i} ${n}</span>`).join('')}<button type="button" class="ein-txt" data-act="einText">📋 Text einfügen</button><button type="button" class="ein-txt" data-act="einOrdner">📂 Ganzer Ordner</button></div></div>`;
 }
-ACT.einDatei = () => { const i = document.createElement('input'); i.type = 'file'; i.accept = '.pdf,.csv,.txt,.xlsx,.zip,.xml,application/pdf,text/csv,text/plain,image/*,application/zip,text/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'; i.style.display = 'none';
-  i.onchange = () => { const f = i.files[0]; i.remove(); if (f) einDatei(f); }; document.body.appendChild(i); i.click(); };
+ACT.einOrdner = () => ACT.einDatei(true);
+ACT.einDatei = ordner => { const i = document.createElement('input'); i.type = 'file'; i.multiple = true; if (ordner === true) i.webkitdirectory = true; i.accept = '.pdf,.csv,.txt,.xlsx,.zip,.xml,application/pdf,text/csv,text/plain,image/*,application/zip,text/xml,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'; i.style.display = 'none';
+  i.onchange = () => { const l = [...i.files]; i.remove(); if (l.length) einDateien(l); }; document.body.appendChild(i); i.click(); };
+/* Mehrere Dateien, ein Ordner oder eine Zip mit Dokumenten: Kontoauszüge kommen zusammen in eine Vorschau (Doppelte werden über alle erkannt), der Rest nacheinander */
+const EIN_MIME = n => /\.pdf$/i.test(n) ? 'application/pdf' : /\.csv$/i.test(n) ? 'text/csv' : /\.txt$/i.test(n) ? 'text/plain' : /\.xlsx$/i.test(n) ? 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' : /\.(png|jpe?g|heic|webp)$/i.test(n) ? 'image/jpeg' : '';
+const einFrei = () => new Promise(res => { let n = 0; const t = setInterval(() => { if (!document.querySelector('.modal') && ++n > 1) { clearInterval(t); setTimeout(res, 250); } else if (document.querySelector('.modal')) n = 0; }, 350); });
+async function einDateien(liste) {
+  let files = [];
+  for (const f of liste) {
+    if (/\.zip$/i.test(f.name) || f.type === 'application/zip') {
+      let ein = null; try { ein = await zipEintraege(f); } catch (e) {}
+      if (!ein || ein.some(e => /(^|\/)export\.xml$/i.test(e.name))) { files.push(f); continue; } // Health-Export bleibt eine Datei
+      for (const e of ein) { const nm = e.name.split('/').pop(); if (!nm || /^\./.test(nm) || /__MACOSX/.test(e.name) || !EIN_MIME(nm)) continue;
+        try { files.push(new File([await new Response(await zipStream(f, e)).arrayBuffer()], nm, { type: EIN_MIME(nm) })); } catch (x) {} }
+    } else if (!/^\./.test(f.name)) files.push(f);
+  }
+  if (!files.length) return toast('Darin habe ich keine Dokumente gefunden.');
+  if (files.length === 1) return einDatei(files[0]);
+  toast(`📂 ${files.length} Dateien, ich sortiere sie …`);
+  const konto = [], rest = [];
+  for (const f of files) { const mime = f.type || EIN_MIME(f.name); let art = einArt(f.name, mime, '');
+    if (!art && mime === 'application/pdf') { try { art = einArt(f.name, mime, await docLesen({ buf: await f.arrayBuffer(), mime })); } catch (e) {} }
+    (art === 'konto' ? konto : rest).push(f); }
+  if (konto.length) { toast(`💶 ${konto.length} Kontoauszüge → Finanzen`); await impDateien(konto); if (rest.length) await einFrei(); }
+  for (let k = 0; k < rest.length; k++) { if (rest.length > 1) toast(`📄 Datei ${k + 1} von ${rest.length}: ${rest[k].name}`); try { await einDatei(rest[k]); } catch (e) {} if (k < rest.length - 1) await einFrei(); }
+}
 ACT.einText = () => modal('📋 Text einfügen', `<div class="sub" style="margin-bottom:8px">Füge den Text aus einer Mail, einem Ticket oder einer Buchung ein. Ich erkenne, wohin er gehört.</div>${fTxt('t', 'Text', '')}`,
   v => { if (!v.t.trim()) return false; const f = new File([v.t], 'Eingefügter Text.txt', { type: 'text/plain' }); setTimeout(() => einDatei(f), 60); }, { still: true, saveLabel: 'Einsortieren' });
 /* Art erkennen: Dateityp zuerst, dann der gelesene Text */
@@ -12887,7 +12911,7 @@ async function einReise(p) {
 /* Am Mac/PC: Datei einfach auf die Karte ziehen */
 document.addEventListener('dragover', e => { const k = e.target.closest && e.target.closest('[data-ein-drop]'); if (k) { e.preventDefault(); k.classList.add('ueber'); } });
 document.addEventListener('dragleave', e => { const k = e.target.closest && e.target.closest('[data-ein-drop]'); if (k) k.classList.remove('ueber'); });
-document.addEventListener('drop', e => { const k = e.target.closest && e.target.closest('[data-ein-drop]'); if (!k) return; e.preventDefault(); k.classList.remove('ueber'); const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) einDatei(f); });
+document.addEventListener('drop', e => { const k = e.target.closest && e.target.closest('[data-ein-drop]'); if (!k) return; e.preventDefault(); k.classList.remove('ueber'); const l = e.dataTransfer ? [...e.dataTransfer.files] : []; if (l.length) einDateien(l); });
 
 /* ---------- Trade-Republic-Beleg (Screenshot einer Order oder Dividende) ---------- */
 const MON_KURZ = { jan: 1, feb: 2, mär: 3, mar: 3, apr: 4, mai: 5, jun: 6, jul: 7, aug: 8, sep: 9, okt: 10, nov: 11, dez: 12 };
