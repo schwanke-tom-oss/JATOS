@@ -3456,6 +3456,19 @@ button.gs3-lm{all:unset;cursor:pointer;font-size:11.5px;font-weight:800;color:#2
 .gs3-dt{margin:9px 2px 0;font-size:11.5px;color:#4d566b;line-height:1.4}
 html .card.gs3,html.g2 .card.gs3{height:clamp(520px,calc(100svh - 190px),680px)}
 @media (min-width:700px){html .card.gs3,html.g2 .card.gs3{height:clamp(560px,calc(100svh - 220px),720px)}.gs3-z{font-size:28px}}
+/* Dienstplan vom Kalenderbild (v_kalbild.js) */
+.kb-kopf,.kb-raster{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.kb-kopf{margin:10px 0 4px;font-size:11px;color:var(--mut,#8a90a0);text-align:center}
+.kb-t{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:2px;padding:5px 0 6px;border-radius:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);min-width:0}
+.kb-t i{font-style:normal;font-size:10px;opacity:.7}
+.kb-t b{font-size:17px;line-height:1;opacity:.35}
+.kb-t.t b,.kb-t.n b{opacity:1}
+.kb-t.t{background:rgba(56,199,214,.16);border-color:rgba(56,199,214,.45)}
+.kb-t.n{background:rgba(79,140,255,.18);border-color:rgba(79,140,255,.5)}
+.kb-t.unsicher{border-style:dashed;border-color:#ffd166}
+.kb-t.fremd{opacity:.55}
+.kb-bild{margin-top:12px}.kb-bild summary{cursor:pointer;font-size:13px;opacity:.8}
+.kb-bild img{display:block;max-width:100%;border-radius:12px;margin-top:8px}
 
 </style>
 </head>
@@ -11375,8 +11388,9 @@ async function dpDateiLesen(f) {
 /* ---------- Assistent ---------- */
 let DPI = null;
 ACT.dpImport = () => {
-  const i = document.createElement('input'); i.type = 'file'; i.accept = '.pdf,.xlsx,.csv,.txt,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv'; i.style.display = 'none';
+  const i = document.createElement('input'); i.type = 'file'; i.accept = '.pdf,.xlsx,.csv,.txt,application/pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv,image/*'; i.style.display = 'none';
   i.onchange = async () => { const f = i.files[0]; i.remove(); if (!f) return; toast('📅 Lese ' + f.name + ' …');
+    if (/^image\//.test(f.type)) { if (!(await kbVersuchen(f))) ask('In diesem Bild habe ich keinen Kalender mit Diensten gefunden. Am besten klappt ein Screenshot der Monatsansicht aus deiner Dienstplan-App.', 'OK', 'Schließen'); return; }
     try { const r = await dpDateiLesen(f); if (!r.gl.length) throw new Error('Ich habe keine Tage mit Kürzeln gefunden.'); dpAssistent(r, f.name); }
     catch (e) { ask(`Den Dienstplan konnte ich nicht lesen.\n\n${e.message || e}\n\nSchick mir so eine Datei, dann bringe ich der App das Format bei.`, 'OK', 'Schließen'); } };
   document.body.appendChild(i); i.click();
@@ -11464,6 +11478,103 @@ function dpUebernehmen() {
   }
   S.settings.dg = DPI.g; const g = DPI.g; DPI = null;
   setTimeout(() => { toast(`✓ ${n} Tage aus ${g} in den Dienstplan übernommen`); if (typeof jatosAktion === 'function') jatosAktion(`Dienstplan eingelesen: ${n} Tage! Jetzt weiß ich, wann du Dienst hast. 🚓`); }, 50);
+}
+
+/* ---------- Dienstplan als Kalenderbild (Screenshot einer Dienstplan-App, z. B. Feuerwehr mit T/N in jedem Tag) ----------
+   Alles offline auf dem Gerät: Gitterlinien suchen, in jedem Tag den Buchstaben über seine Form erkennen (T = breiter Balken oben,
+   N = zwei senkrechte Striche), grau = Tag aus dem Nachbarmonat. Danach prüft man das Raster, und der bekannte Dienstplan-Assistent
+   fragt nach den Zeiten. Vorsilbe kb. */
+let KB = null;
+async function kbBildLaden(f) {
+  const url = URL.createObjectURL(f);
+  try { const img = await new Promise((res, rej) => { const i = new Image(); i.onload = () => res(i); i.onerror = () => rej(new Error('Bild lässt sich nicht öffnen')); i.src = url; });
+    const W = Math.min(900, img.naturalWidth), H = Math.round(img.naturalHeight * W / img.naturalWidth), c = document.createElement('canvas'); c.width = W; c.height = H;
+    const x = c.getContext('2d', { willReadFrequently: true }); x.drawImage(img, 0, 0, W, H); return { W, H, d: x.getImageData(0, 0, W, H).data, url: c.toDataURL('image/jpeg', .7) };
+  } finally { URL.revokeObjectURL(url); }
+}
+/* Gitter: helle, graue, durchgehende Linien. Gibt die Linienmitten zurück */
+function kbLinien(B) {
+  const { W, H, d } = B, grau = i => { const r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b); return mx - mn < 46 && (r + g + b) / 3 > 100 && (r + g + b) / 3 < 240; };
+  const gruppe = (arr, min) => { const out = []; let s = -1; for (let k = 0; k <= arr.length; k++) { const on = k < arr.length && arr[k] >= min; if (on && s < 0) s = k; if (!on && s >= 0) { if (k - s <= 8) out.push((s + k - 1) / 2); s = -1; } } return out; };
+  const zeil = new Array(H).fill(0);
+  for (let y = 0; y < H; y++) { let n = 0; for (let x = 0; x < W; x++) if (grau((y * W + x) * 4)) n++; zeil[y] = n; }
+  let hz = gruppe(zeil, W * 0.45); if (hz.length < 4) return null;
+  // längste Folge mit fast gleichen Abständen (die Kalenderzeilen)
+  let best = null; for (let a = 0; a < hz.length; a++) for (let b = a + 3; b < hz.length; b++) { const st = hz.slice(a, b + 1), ab = st.slice(1).map((v, k) => v - st[k]), m = ab.reduce((s, v) => s + v, 0) / ab.length; if (m < 40 || ab.some(v => Math.abs(v - m) > m * 0.15)) continue; if (!best || st.length > best.length) best = st; }
+  if (!best) return null; hz = best;
+  const y0 = Math.round(hz[0]), y1 = Math.round(hz[hz.length - 1]), spalt = new Array(W).fill(0);
+  for (let x = 0; x < W; x++) { let n = 0; for (let y = y0; y <= y1; y++) if (grau((y * W + x) * 4)) n++; spalt[x] = n; }
+  let vt = gruppe(spalt, (y1 - y0) * 0.6);
+  if (vt.length < 8) return null;
+  if (vt.length > 8) { let b8 = null; for (let a = 0; a + 7 < vt.length; a++) { const st = vt.slice(a, a + 8), ab = st.slice(1).map((v, k) => v - st[k]), m = (st[7] - st[0]) / 7; if (ab.every(v => Math.abs(v - m) < m * 0.15)) { b8 = st; break; } } if (!b8) return null; vt = b8; }
+  return { hz, vt };
+}
+/* Buchstabe in einer Zelle: Maske aus blauen/türkisen oder grau-weißen Pixeln unter der Tageszahl, dann Form prüfen */
+function kbZelle(B, x0, y0, x1, y1) {
+  const { W, d } = B, ix0 = Math.round(x0 + (x1 - x0) * .08), ix1 = Math.round(x1 - (x1 - x0) * .08), iy0 = Math.round(y0 + (y1 - y0) * .3), iy1 = Math.round(y1 - (y1 - y0) * .04);
+  const w = ix1 - ix0, h = iy1 - iy0; if (w < 8 || h < 8) return null;
+  const m = new Uint8Array(w * h); let n = 0, grauN = 0;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = ((iy0 + y) * W + ix0 + x) * 4, r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+    const blau = b > r + 28 && b > 85, grau = mx - mn < 40 && (r + g + b) / 3 > 105; if (blau || grau) { m[y * w + x] = 1; n++; if (!blau) grauN++; } }
+  if (n < w * h * 0.035) return { c: '' };
+  const rz = new Array(h).fill(0), sz = new Array(w).fill(0); for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (m[y * w + x]) { rz[y]++; sz[x]++; }
+  const rMin = Math.max(2, w * 0.05), sMin = Math.max(2, h * 0.05);
+  let t = rz.findIndex(v => v >= rMin), u = h - 1 - [...rz].reverse().findIndex(v => v >= rMin), l = sz.findIndex(v => v >= sMin), r = w - 1 - [...sz].reverse().findIndex(v => v >= sMin);
+  if (t < 0 || l < 0 || u - t < h * 0.25 || r - l < 4) return { c: '' };
+  const bw = r - l + 1, bh = u - t + 1; let mitte = 0, unten = 0, oben = 0, obenBreit = 0;
+  for (let y = t; y <= u; y++) for (let x = l; x <= r; x++) { if (!m[y * w + x]) continue; const fy = (y - t) / bh, fx = (x - l) / bw;
+    if (fy > .4) { unten++; if (fx > .3 && fx < .7) mitte++; } else if (fy < .22) { oben++; } }
+  for (let x = l; x <= r; x++) { let k = 0; for (let y = t; y < t + bh * .22; y++) if (m[y * w + x]) k++; if (k > bh * .05) obenBreit++; }
+  const anteil = unten ? mitte / unten : 0, breit = obenBreit / bw;
+  const c = anteil > .55 && breit > .7 ? 'T' : anteil < .45 ? 'N' : (breit > .8 ? 'T' : 'N');
+  return { c, grau: grauN > n * 0.6, sicher: Math.abs(anteil - .5) > .15 };
+}
+function kbAnalyse(B) {
+  const L = kbLinien(B); if (!L) return null;
+  const { hz, vt } = L, zellen = [];
+  // nur dunkle Kalender-Screenshots (heller Hintergrund = eher ein Foto von Papier, das läuft über die Texterkennung)
+  let hell = 0, n = 0; for (let y = Math.round(hz[0]); y < hz[hz.length - 1]; y += 6) for (let x = Math.round(vt[0]); x < vt[7]; x += 6) { const i = (y * B.W + x) * 4; hell += B.d[i] + B.d[i + 1] + B.d[i + 2]; n++; }
+  if (hell / n / 3 > 110) return null;
+  for (let z = 0; z + 1 < hz.length; z++) for (let s = 0; s < 7; s++) zellen.push(Object.assign({ z, s }, kbZelle(B, vt[s], hz[z], vt[s + 1], hz[z + 1]) || { c: '' }));
+  if (zellen.filter(c => c.c).length < 3) return null;
+  return { reihen: hz.length - 1, zellen, box: [vt[0] / B.W, hz[0] / B.H, vt[7] / B.W, hz[hz.length - 1] / B.H] };
+}
+/* Monat schätzen: graue Buchstaben in der ersten Zeile = Vormonat, der erste farbige ist der 1. */
+function kbMonatRaten(a) {
+  const z0 = a.zellen.filter(c => c.z === 0), ersterFarb = z0.findIndex(c => c.c && !c.grau), grauVor = z0.slice(0, Math.max(0, ersterFarb)).some(c => c.c && c.grau);
+  const t = today(), j0 = +t.slice(0, 4), m0 = +t.slice(5, 7);
+  const kand = []; for (let k = -2; k < 26; k++) { const j = j0 + Math.floor((m0 - 1 + k) / 12), m = (m0 - 1 + k) % 12 + 1; kand.push([j, m]); }
+  const wt = (j, m) => (new Date(j, m - 1, 1).getDay() + 6) % 7, tage = (j, m) => new Date(j, m, 0).getDate();
+  const passt = ([j, m]) => (!grauVor || wt(j, m) === ersterFarb) && Math.ceil((wt(j, m) + tage(j, m)) / 7) === a.reihen;
+  const k = kand.slice(2).find(passt) || kand.find(passt) || kand[3];
+  return `${k[0]}-${String(k[1]).padStart(2, '0')}`;
+}
+function kbDatum(ym, z, s) { const [j, m] = ym.split('-').map(Number), erst = new Date(j, m - 1, 1), wt = (erst.getDay() + 6) % 7; const d = new Date(j, m - 1, 1 - wt + z * 7 + s); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
+async function kbVersuchen(f) {
+  let B; try { B = await kbBildLaden(f); } catch (e) { return false; }
+  const a = kbAnalyse(B); if (!a) return false;
+  KB = { a, ym: kbMonatRaten(a), bild: B.url, fname: f.name }; kbPruefen(); return true;
+}
+function kbPruefen() {
+  const m = modal('📅 Dienstplan vom Bild', '<div id="kbBody"></div>', () => { kbWeiter(); }, { saveLabel: 'Weiter zu den Zeiten', focus: false });
+  m.el.querySelector('.sheet').style.maxWidth = '560px'; KB.body = $('#kbBody', m.el); kbMalen();
+  KB.body.addEventListener('click', e => { const b = e.target.closest('[data-kbz]'); if (!b) return; e.preventDefault(); const c = KB.a.zellen[+b.dataset.kbz]; c.c = c.c === 'T' ? 'N' : c.c === 'N' ? '' : 'T'; c.sicher = true; kbMalen(); });
+  KB.body.addEventListener('change', e => { if (e.target.dataset.k === 'ym') { KB.ym = e.target.value; kbMalen(); } });
+}
+function kbMalen() {
+  const [j, mo] = KB.ym.split('-').map(Number), opts = []; for (let k = -14; k <= 24; k++) { const d = new Date(j, mo - 1 + k, 1), v = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; opts.push([v, MON[d.getMonth()] + ' ' + d.getFullYear()]); }
+  const tage = KB.a.zellen.map((c, i) => { const d = kbDatum(KB.ym, c.z, c.s), fremd = +d.slice(5, 7) !== mo; return `<button type="button" class="kb-t${fremd ? ' fremd' : ''}${c.c ? ' ' + c.c.toLowerCase() : ''}${c.c && !c.sicher ? ' unsicher' : ''}" data-kbz="${i}"><i>${+d.slice(8)}.</i><b>${c.c || '·'}</b></button>`; }).join('');
+  const n = KB.a.zellen.filter(c => c.c).length;
+  KB.body.innerHTML = `<div class="sub" style="margin-bottom:8px">Ich habe ${n} Dienste im Bild gefunden. Stimmt der Monat? Tippe einen Tag an, um ihn zu ändern (T → N → frei).</div>
+    ${fSel('ym', 'Monat im Bild', opts, KB.ym, 'data-k="ym"')}
+    <div class="kb-kopf">${['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map(t => `<span>${t}</span>`).join('')}</div><div class="kb-raster">${tage}</div>
+    <details class="kb-bild"><summary>Originalbild ansehen</summary><img src="${KB.bild}" alt="Dienstplan-Bild"></details>`;
+}
+function kbWeiter() {
+  const g = {}; KB.a.zellen.forEach(c => { if (c.c) g[kbDatum(KB.ym, c.z, c.s)] = c.c; });
+  if (!Object.keys(g).length) { toast('Keine Dienste ausgewählt.'); return false; }
+  const r = { titel: 'Dienstplan vom Bild', gruppen: { Plan: g }, gl: ['Plan'], legende: {} };
+  setTimeout(() => dpAssistent(r, KB.fname || 'Bild'), 80);
 }
 
 /* ---------- Depot: Übersicht nach dem Vorbild des Depot-Dashboards, für jedes Depot und jedes Ziel ---------- */
@@ -12485,7 +12596,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 134;
+const APP_V = 135;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -12865,6 +12976,7 @@ async function einDatei(f) {
   if (f.size > 60e6) return toast('Die Datei ist zu groß.');
   const mime = f.type || (/\.pdf$/i.test(f.name) ? 'application/pdf' : /\.(png|jpe?g|heic|webp)$/i.test(f.name) ? 'image/jpeg' : '');
   let art = einArt(f.name, mime, ''), text = '', buf = null;
+  if (!art && /^image\//.test(mime) && await kbVersuchen(f)) return; // Kalenderbild einer Dienstplan-App (T/N in jedem Tag)
   if (!art) { buf = await f.arrayBuffer(); toast(/^image\//.test(mime) ? '🔍 Lese den Text aus dem Bild …' : '📄 Lese das Dokument …');
     text = await docLesen({ buf, mime }); art = einArt(f.name, mime, text); }
   if (!art) art = await einWahl(text ? 'Ich bin mir nicht sicher, was das ist. Wohin gehört es?' : 'Ich konnte keinen Text darin lesen. Wohin gehört es?');
