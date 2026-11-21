@@ -3702,7 +3702,8 @@ function autoBook() {
   const t = today(); let n = 0;
   for (const r of S.rec) {
     if (!r.auto) continue;
-    const from = r.booked ? addD(r.booked, 1) : r.start;
+    let from = r.booked ? addD(r.booked, 1) : r.start;
+    if (r.imp && from < addD(t, -40)) from = addD(t, -40); // aus Auszügen übernommene Verträge nie weit rückwirkend buchen
     for (const d of recDates(r, from, t)) {
       S.tx.push({ id: uid(), date: d, type: r.type, amount: r.amount, acc: r.acc, to: r.to || null, cat: r.cat, note: r.name, rec: r.id });
       r.booked = d; n++;
@@ -5664,7 +5665,7 @@ FIN.uebersicht = () => {
     h += `</div>`;
     // Kacheln je Konto: Stand heute, Veränderung im aktuellen Monat, Verlauf seit Monatsanfang
     const m0 = t.slice(0, 8) + '01';
-    h += `<div class="konto-kacheln">${S.accounts.map(a => {
+    h += `<div class="konto-kacheln">${S.accounts.filter(a => !(a.aus && Math.abs(accBalance(a.id)) < 0.005)).map(a => {
       const col = a.color || '#4f8cff', s30 = balSeries([a], m0, t), bal = s30.end, dm = bal - s30.startBal;
       return `<div class="konto click${UI.ovAcc === a.id ? ' on' : ''}" data-act="ovAcc" data-id="${a.id}" style="--kc:${col}"><div class="k-l"><i class="dot" style="background:${col}"></i><span class="ell">${esc(a.name)}</span></div>
         <div class="k-v num ${bal < 0 ? 'neg' : ''}">${eur0(bal)}</div>
@@ -5720,7 +5721,8 @@ function txEdit(t) {
     <div data-k="cat">${fSel('cat', 'Kategorie', [], '')}</div>
     <div data-k="to">${fSel('to', 'Auf Konto', accOpts(), t.to || (S.accounts[1] && S.accounts[1].id))}</div>
     ${fIn('note', 'Beschreibung (z.B. Rewe, Tankstelle)', t.note || '', 'text', 'list="notes-dl"')}
-    <datalist id="notes-dl">${[...new Set(S.tx.slice(-300).map(x => x.note).filter(Boolean))].slice(-80).map(n => `<option value="${esc(n)}">`).join('')}</datalist>`;
+    <datalist id="notes-dl">${[...new Set(S.tx.slice(-300).map(x => x.note).filter(Boolean))].slice(-80).map(n => `<option value="${esc(n)}">`).join('')}</datalist>
+    ${!isNew && t.type !== 'umb' ? `<button type="button" class="btn sec" data-recaus style="margin-top:10px;width:100%">📌 Als Vertrag / Fixkosten merken</button>` : ''}`;
   modal(isNew ? 'Neue Buchung' : 'Buchung bearbeiten', html, v => {
     const amount = num(v.amount); if (!amount) { toast('Bitte einen Betrag eingeben.'); return false; }
     if (t.wish) { S.wishes = S.wishes.filter(x => x.id !== t.wish); UI.wishOpen = null; }
@@ -5734,6 +5736,8 @@ function txEdit(t) {
       const upd = () => { const tv = f.type.value; $('[data-k=to]', f).style.display = tv === 'umb' ? '' : 'none'; $('[data-k=cat]', f).style.display = tv === 'umb' ? 'none' : '';
         const sel = f.cat; const cur = sel.value || t.cat; sel.innerHTML = catOpts(tv === 'ein' ? 'ein' : 'aus').map(([v, l]) => `<option value="${v}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`).join(''); };
       $$('input[name=type]', f).forEach(r => r.onchange = () => { f.cat.value = ''; upd(); }); upd();
+      const ra = $('[data-recaus]', f); if (ra) ra.onclick = () => { const d = t.date || today(), [y, m, dd] = d.split('-').map(Number), n = new Date(y, m, Math.min(+dd, 28)), nx = `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
+        f.closest('.modal').querySelector('[data-close]').click(); setTimeout(() => recEdit({ type: t.type, name: t.note || '', amount: t.amount, every: 1, day: Math.min(28, +dd), start: nx, acc: t.acc, cat: t.cat, auto: true }), 80); };
       f.note.addEventListener('change', () => { if (!isNew) return; const prev = [...S.tx].reverse().find(x => x.note === f.note.value && x.type === f.type.value); if (prev && prev.cat) f.cat.value = prev.cat; });
     }
   });
@@ -11142,6 +11146,7 @@ function impVertraege() {
           if (td > 6 && td < 24) ok = false; if (gap > 1) { let fehlt = 0; for (let m = a + 1; m < b; m++) { const ym = `${Math.floor((m - 1) / 12)}-${String((m - 1) % 12 + 1).padStart(2, '0')}`; if (monate.has(ym)) fehlt++; } if (!fehlt) gap = 1; } lu.push(gap); }
         const gl = lu.every(x => x === lu[0]); if (ok && gl) every = { 1: 1, 3: 3, 6: 6, 12: 12 }[lu[0]] || 0; if (every) grund = `${g.length}× gefunden`; }
       if (!every) { if (!(last.lastschrift || VERTR_KARTE.test(last.name))) continue; every = /jährlich|jahresbeitrag|jahresabo/i.test(last.vz) ? 12 : /vierteljähr|quartal/i.test(last.vz) ? 3 : 1; grund = last.lastschrift ? 'Lastschrift, einmal gefunden' : 'sieht nach Abo aus, einmal gefunden'; }
+      if (last.date < addD(today(), -62)) continue; // seit über zwei Monaten nicht mehr bezahlt = beendet, kein Vertrag mehr
       const sicher = g.length >= 2 && !!grund && !/einmal/.test(grund);
       out.push({ key, name: vertrName(last), amount: last.amount, every, day: +last.date.slice(8), last: last.date, acc: last.self, cat: last.cat, sicher, grund, on: alt[key] ?? (sicher || !!last.lastschrift) });
     } }
@@ -11203,7 +11208,8 @@ function impAenderung(el) {
 function impUebernehmen() {
   const map = {}, farben = ['#4f8cff', '#ffd166', '#2ecc8f', '#b07cff', '#ff8a4c', '#38c7d6', '#ff6b9a'];
   for (const s of IMP.q) {
-    if (s.acc === 'neu') { const a = { id: uid(), name: (s.neuName || 'Konto').trim(), kind: s.neuKind || s.kind || 'giro', color: farben[S.accounts.length % farben.length], start: 0, iban: s.iban || undefined, bank: s.bank || undefined, impV: 2 }; S.accounts.push(a); map['neu:' + s.i] = a.id; if (!S.settings.mainAcc && a.kind === 'giro') S.settings.mainAcc = a.id; }
+    if (s.acc === 'neu') { const a = { id: uid(), name: (s.neuName || 'Konto').trim(), kind: s.neuKind || s.kind || 'giro', color: farben[S.accounts.length % farben.length], start: 0, iban: s.iban || undefined, bank: s.bank || undefined, impV: 2 }; if (s.c24Pockets || s.altKonten) a.aus = true; // Hilfskonto, auf 0 € ausgeblendet
+      S.accounts.push(a); map['neu:' + s.i] = a.id; if (!S.settings.mainAcc && a.kind === 'giro') S.settings.mainAcc = a.id; }
     else { map[s.acc] = s.acc; const a = acc(s.acc); if (a && s.iban && !a.iban) a.iban = s.iban; if (a && s.bank && !a.bank) a.bank = s.bank; }
   }
   const R = k => map[k] || k; let nT = 0, nV = 0, nD = 0;
@@ -11227,7 +11233,8 @@ function impUebernehmen() {
   const neuester = {}; for (const s of IMP.q.filter(s => s.art === 'konto' && s.abgl && s.ende != null)) { const id = R(accKey(s)); if (!neuester[id] || (s.endeD || '') >= (neuester[id].endeD || '')) neuester[id] = s; }
   for (const [id, s] of Object.entries(neuester)) { const a = acc(id); if (a && (s.endeD || '') >= (a.standD || '')) { a.stand = s.ende; a.standD = s.endeD || today(); } }
   for (const a of S.accounts) if (a.stand != null && a.standD) a.start = Math.round(((a.start || 0) + a.stand - accBalance(a.id, a.standD)) * 100) / 100;
-  for (const v of IMP.vertr.filter(v => v.on)) { S.rec.push({ id: uid(), type: 'aus', name: v.name, amount: v.amount, every: v.every, day: Math.min(28, v.day), start: v.last, booked: v.last, acc: R(v.acc), cat: v.cat, auto: true }); nV++; }
+  for (const v of IMP.vertr.filter(v => v.on)) { const q = IMP.q.find(s => s.art === 'konto' && accKey(s) === v.acc), bis = q ? q.rows.reduce((m, z) => z.date > m ? z.date : m, v.last) : v.last;
+    S.rec.push({ id: uid(), type: 'aus', name: v.name, amount: v.amount, every: v.every, day: Math.min(28, v.day), start: v.last, booked: bis > v.last ? bis : v.last, acc: R(v.acc), cat: v.cat, auto: true, imp: true }); nV++; }
   for (const s of IMP.q.filter(s => s.art === 'depot')) for (const it of s.items) {
     if (!it.on) continue; nD++;
     let p = S.depot.find(p => (p.isin || '').toUpperCase() === it.isin);
@@ -11268,6 +11275,32 @@ ACT.accAufraeumen = () => {
     kontoLoeschen(ids); toast(`🧹 ${ids.length} ${ids.length === 1 ? 'Konto' : 'Konten'} gelöscht`);
   }, { saveLabel: 'Angehakte löschen' });
 };
+
+/* Reparatur (21.11.2026): aus Auszügen übernommene Verträge wurden rückwirkend bis heute weitergebucht, auch längst beendete.
+   Erfundene Buchungen entfernen: bei beendeten Verträgen (letzte echte Zahlung über zwei Monate her) alles nach der letzten Zahlung
+   und den Vertrag selbst, bei laufenden alles, was in einen schon eingelesenen Zeitraum fällt (dort stehen die echten Buchungen). */
+function hilfsKontenMig() { for (const a of S.accounts) if (!a.iban && (a.name === 'C24 Pockets' || a.name === 'Alte Konten')) a.aus = true; }
+function recReparatur() {
+  if (S.recFix1 || !(S.rec || []).length) return; S.recFix1 = true;
+  const t = today(), grenze = addD(t, -62), neu = {}; let wegTx = 0, wegRec = 0;
+  for (const x of S.tx) if (x.imp) for (const a of [x.acc, x.to]) if (a && x.date > (neu[a] || '')) neu[a] = x.date;
+  const w0 = r => (impKey(r.name).split(' ')[0] || '');
+  S.rec = S.rec.filter(r => {
+    if (!r.auto || r.type !== 'aus') return true;
+    const k = w0(r); if (!k) return true;
+    const echt = S.tx.filter(x => x.imp && x.acc === r.acc && x.type === 'aus' && impKey(x.note || '').split(' ').includes(k) && Math.abs(x.amount - r.amount) <= Math.max(1, r.amount * .1)).map(x => x.date).sort();
+    if (!echt.length) return true; // selbst angelegter Vertrag, nichts anfassen
+    const last = echt[echt.length - 1], bis = neu[r.acc] || last, ende = last < grenze;
+    const weg = new Set(S.tx.filter(x => x.rec === r.id && !x.imp && (ende || x.date <= bis)).map(x => x.id));
+    if (weg.size) { S.tx = S.tx.filter(x => !weg.has(x.id)); wegTx += weg.size; }
+    if (ende) { wegRec++; return false; }
+    if ((r.booked || '') < bis) r.booked = bis; r.imp = true; return true;
+  });
+  // doppelt übernommene Verträge (gleiches Konto, gleicher Name, gleicher Betrag) nur einmal behalten
+  const gesehen = new Set(); S.rec = S.rec.filter(r => { if (!r.imp) return true; const k = r.acc + '|' + impKey(r.name) + '|' + Math.round(r.amount * 100); if (gesehen.has(k)) { wegRec++; S.tx.forEach(x => { if (x.rec === r.id && x.imp) delete x.rec; }); S.tx = S.tx.filter(x => !(x.rec === r.id && !x.imp)); return false; } gesehen.add(k); return true; });
+  save();
+  if (wegTx || wegRec) setTimeout(() => toast(`🧹 Repariert: ${wegTx} falsche automatische Buchungen und ${wegRec} beendete Verträge entfernt`), 1800);
+}
 
 /* ---------- Dienstplan einlesen (Excel, PDF, CSV) ----------
    Erkennt Raster aus Tageszahlen 1…31 und darunter Zeilen mit Kürzeln.
@@ -12596,7 +12629,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 135;
+const APP_V = 136;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -14699,6 +14732,7 @@ function pixelScene() {
   document.addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale != null && e.scale !== 1)) stopp(e); }, { passive: false });
 })();
 load();
+try { hilfsKontenMig(); recReparatur(); } catch (e) {}
 autoBook();
 render();
 hlLaden();
