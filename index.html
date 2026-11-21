@@ -3469,6 +3469,15 @@ html .card.gs3,html.g2 .card.gs3{height:clamp(520px,calc(100svh - 190px),680px)}
 .kb-t.fremd{opacity:.55}
 .kb-bild{margin-top:12px}.kb-bild summary{cursor:pointer;font-size:13px;opacity:.8}
 .kb-bild img{display:block;max-width:100%;border-radius:12px;margin-top:8px}
+/* Wochenrückblick: frühere Wochen */
+.wr3-box{display:flex;flex-direction:column;gap:12px}
+.wr3-karte{background:none;border:0;padding:0}
+.wr3-alt>span{display:block;font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--tx2);margin-bottom:6px}
+.wr3-chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -2px;padding:2px}
+.wr3-chips::-webkit-scrollbar{display:none}
+.wr3-chip{flex:0 0 auto;display:flex;flex-direction:column;align-items:flex-start;gap:1px;padding:7px 11px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:inherit;font:inherit;cursor:pointer}
+.wr3-chip b{font-size:13px}.wr3-chip small{font-size:11px;color:var(--tx2)}
+.wr3-chip:active{transform:scale(.96)}
 
 </style>
 </head>
@@ -5060,13 +5069,14 @@ function wrWoche(bezug) {
   const geldTag = tage.map(d => sum(aus.filter(x => x.date === d), x => x.amount || 0));
   const proKat = {}; for (const x of aus) { const c = cat(x.cat), k = c ? c.name : 'Sonstiges'; proKat[k] = (proKat[k] || 0) + (x.amount || 0); }
   const topKat = Object.entries(proKat).sort((a, b) => b[1] - a[1])[0] || null;
-  let depot = null; try { if ((S.depot || []).length) { const pf = dpPerf(S.depot, addD(t, -7), t); if (pf.v1 > 0) depot = pf; } } catch (e) {}
+  const alt = tage[6] < today(), ende = alt ? tage[6] : today(); // vergangene Woche: Depot von Sonntag zu Sonntag
+  let depot = null; try { if ((S.depot || []).length) { const pf = dpPerf(S.depot, addD(ende, -7), ende); if (pf.v1 > 0) depot = pf; } } catch (e) {}
   const termine = sum(tage, d => dayItems(d).filter(i => ['ev', 'bday', 'jt'].includes(i.k)).length);
   const erledigt = (S.wtasks || []).filter(x => x.done && x.date >= mo && x.date <= tage[6]).length;
   const nw = Array.from({ length: 7 }, (_, i) => addD(mo, 7 + i));
   const nDienste = nw.filter(d => S.shifts[d] && !S.abs[d] && (stype(S.shifts[d].type) || {}).start).length;
   const nTermine = nw.flatMap(d => dayItems(d).filter(i => ['ev', 'bday', 'jt'].includes(i.k)).map(i => ({ d, t: i.t }))).slice(0, 4);
-  return { mo, so: tage[6], tage, arbeit, dienste, ws, sportTag, km, std, aus, geldTag, topKat, depot, termine, erledigt, nDienste, nTermine };
+  return { alt, mo, so: tage[6], tage, arbeit, dienste, ws, sportTag, km, std, aus, geldTag, topKat, depot, termine, erledigt, nDienste, nTermine };
 }
 const wrKurz = d => `${pd(d).getDate()}.${pd(d).getMonth() + 1}.`;
 /* Kleine Säulen Mo–So, wachsen nacheinander */
@@ -5097,16 +5107,19 @@ function wrSeiten(W) {
   seiten.push({ c: '#c58cff', html: `<div class="wr3-k">Planung</div><h2 class="wr3-h"><b class="num wr3-z" data-z="${W.termine}">${W.termine}</b> ${W.termine === 1 ? 'Termin' : 'Termine'}</h2>
     <p class="wr3-p">${W.erledigt ? `${W.erledigt} ${W.erledigt === 1 ? 'Aufgabe' : 'Aufgaben'} erledigt.` : ''}</p>
     <div class="wr3-dots">${W.tage.map((d, i) => { const n = dayItems(d).filter(x => ['ev', 'bday', 'jt'].includes(x.k)).length; return `<span style="--i:${i}" class="${n ? 'an' : ''}"><b>${n || ''}</b><em>${WD[(i + 1) % 7]}</em></span>`; }).join('')}</div>` });
-  seiten.push({ c: '#ff8ad8', html: `<div class="wr3-k">Nächste Woche</div><h2 class="wr3-h">${W.nDienste ? `${W.nDienste} ${W.nDienste === 1 ? 'Dienst' : 'Dienste'}` : 'Dienstfrei'}</h2>
+  if (W.alt) seiten.push({ c: '#ff8ad8', html: `<div class="wr3-k">KW ${kw(W.mo)} · ${wrKurz(W.mo)}–${wrKurz(W.so)}</div><h2 class="wr3-h">Das war die Woche</h2><p class="wr3-p wr3-gruss">Schön, dass du zurückschaust! 🧙</p>` });
+  else seiten.push({ c: '#ff8ad8', html: `<div class="wr3-k">Nächste Woche</div><h2 class="wr3-h">${W.nDienste ? `${W.nDienste} ${W.nDienste === 1 ? 'Dienst' : 'Dienste'}` : 'Dienstfrei'}</h2>
     ${W.nTermine.length ? `<div class="wr3-liste">${W.nTermine.map(x => `<div><em>${WD[pd(x.d).getDay()]} ${wrKurz(x.d)}</em><span>${esc(x.t)}</span></div>`).join('')}</div>` : '<p class="wr3-p">Noch keine Termine eingetragen.</p>'}
     <p class="wr3-p wr3-gruss">Schöne neue Woche! 🧙</p>` });
   return seiten;
 }
 function wrKarte() {
-  const t = today(); if (pd(t).getDay() !== 0) return '';
-  const gesehen = S.settings.wrGesehen === t;
-  return `<button type="button" class="card wr3-karte${gesehen ? ' gesehen' : ''}" data-act="wrOeffnen"><span class="wr3-av"><b class="num">${kw(t)}</b></span><span class="wr3-kt"><b>Dein Wochenrückblick</b><small>KW ${kw(t)} · ${gesehen ? 'noch einmal ansehen' : 'Antippen zum Ansehen'}</small></span><i>›</i></button>`;
+  const t = today(), so = pd(t).getDay() === 0, gesehen = S.settings.wrGesehen === t; // jeden Tag ganz unten, sonntags hervorgehoben
+  const mo = mondayOf(t), wochen = Array.from({ length: 8 }, (_, i) => addD(mo, -7 * (i + 1))); // die letzten 8 Wochen
+  return `<div class="card wr3-box"><button type="button" class="wr3-karte${gesehen || !so ? ' gesehen' : ''}" data-act="wrOeffnen"><span class="wr3-av"><b class="num">${kw(t)}</b></span><span class="wr3-kt"><b>Dein Wochenrückblick</b><small>KW ${kw(t)} · ${so ? (gesehen ? 'noch einmal ansehen' : 'Neu · Antippen zum Ansehen') : 'Deine Woche bis heute'}</small></span><i>›</i></button>
+    <div class="wr3-alt"><span>Frühere Wochen</span><div class="wr3-chips">${wochen.map(d => `<button type="button" class="wr3-chip" data-act="wrWoche" data-d="${d}"><b>KW ${kw(d)}</b><small>${wrKurz(d)}–${wrKurz(addD(d, 6))}</small></button>`).join('')}</div></div></div>`;
 }
+ACT.wrWoche = d => wrZeig(addD(d.d, 6));
 ACT.wrOeffnen = () => wrZeig();
 ACT.wrJetzt = () => { const sh = document.querySelector('.sheet [data-close], .modal [data-close]'); if (sh) sh.click(); setTimeout(() => wrZeig(), 200); };
 function wrZeig(bezug) {
@@ -5188,7 +5201,6 @@ VIEWS.heute = () => {
   h += `<div class="tiles">
     ${schulModus() ? schulKacheln(t, tm) : dienstKacheln()}
     ${notizKachel()}</div>`;
-  h += wrKarte();
   h += einKarte();
 
   // Termine heute & morgen
@@ -5204,6 +5216,7 @@ VIEWS.heute = () => {
 
   // Gewohnheiten
   if (S.habits.length) h += `<div class="card"><h2>🔁 Gewohnheiten heute</h2>${S.habits.map(x => `<div class="ev" style="padding:5px 0"><span class="cb ${x.log[t] ? 'on' : ''}" data-act="habit" data-id="${x.id}" data-d="${t}">${x.log[t] ? '✓' : ''}</span><span class="grow">${esc(x.name)}</span><span class="sub">🔥 ${habitStreak(x)}</span></div>`).join('')}</div>`;
+  h += wrKarte(); // Toms Wunsch 21.11.: immer ganz unten auf Heute
   return h;
 };
 ACT.goto = d => { UI.tab = d.tab; if (d.sub) UI.sub[d.tab] = d.sub; render(); };
@@ -5235,9 +5248,6 @@ ACT.settings = () => {
     <div class="sub" style="margin:-4px 0 8px">Stehen jedes Jahr im Kalender, mit der Zahl der Jahre.</div>
     <div class="jt-liste" id="jtListe">${jtListeHtml()}</div>
     <button type="button" class="btn sec sm" data-act="jtNeu" style="margin:6px 0 12px">+ Jahrestag</button>
-    <h3>🎬 Wochenrückblick</h3>
-    <div class="sub" style="margin:-4px 0 8px">Steht jeden Sonntag auf Heute. Hier kannst du ihn jederzeit ansehen.</div>
-    <button type="button" class="btn sec sm" data-act="wrJetzt" style="margin:0 0 12px">Diese Woche ansehen</button>
     <h3>🎓 Ausbildung</h3>
     ${fChk('schule', 'Ich bin noch in der Schule / Ausbildung', s.schule)}
     <div class="sub" style="margin:-4px 0 10px">Dann bekommt „Arbeit“ einen Reiter Schule (Noten, Prüfungen, Stundenplan). Statt Dienstplan gibt es einen Kalender nur für besondere Ereignisse. Beurteilung und Stunden & DUZ werden ausgeblendet, deine Daten bleiben gespeichert.</div>
@@ -12663,7 +12673,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 137;
+const APP_V = 138;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
