@@ -6001,13 +6001,30 @@ function gsQRoh(t) {
   if (t.gs && gsGibt(t.gs)) return t.gs;
   const r = S.gsRegel && S.gsRegel[gsKey(t)]; if (r && gsGibt(r)) return r;
   const c = cat(t.cat), p = c && c.parent ? cat(c.parent) : null, txt = [c && c.name, p && p.name].filter(Boolean).join(' '), E = gsEigene();
-  for (const q of E) if (q.wre && q.wre.test(t.note || '')) return q.k;
-  for (const q of E) if (q.cat && (t.cat === q.cat || (c && c.parent === q.cat))) return q.k;
-  for (const q of GS_QUELLEN) if (q.re && q.re.test(txt)) return q.k;
-  if (!c) for (const q of GS_QUELLEN) if (q.re && q.k !== 'gehalt' && q.re.test(t.note || '')) return q.k;
+  const reg = k => k === 'gehalt' || k === 'bank' || gsSerie(t) ? k : 'x'; // Gehalt und Bank schwanken im Betrag, alles andere muss regelmäßig sein
+  for (const q of E) if (q.wre && gsWortTrifft(q, t)) return reg(q.k);
+  for (const q of E) if (q.cat && !q.wort.length && (t.cat === q.cat || (c && c.parent === q.cat))) return reg(q.k);
+  for (const q of GS_QUELLEN) if (q.re && q.re.test(txt)) return reg(q.k);
+  if (!c) for (const q of GS_QUELLEN) if (q.re && q.k !== 'gehalt' && q.re.test(t.note || '')) return reg(q.k);
   if (GS_TR.test(t.note || '')) return 'bank'; // Zinsen, Prämien, Saveback, Steuerausgleich usw. mit Kategorie „Sonstige Einnahmen“
-  return 'sonst';
+  return gsSerie(t) ? 'sonst' : 'x';
 }
+/* Regelmäßige Einnahme: dieselbe Person, derselbe Betrag (±2 %), mindestens 3 Mal in verschiedenen Monaten und zuletzt vor höchstens 62 Tagen.
+   Einmalige Überweisungen, eigene Umbuchungen, PayPal und Bargeld zählen nicht (lassen sich über Umsortieren trotzdem zuordnen). */
+const GS_NIE = /paypal|geldautomat|bargeld|einzahlung|interne umbuchung|umbuchung|scalable/i;
+function gsSerie(t) {
+  if (!t.date) return true; // geplante Zahlung (Vertrag)
+  if (GS.serRef !== S.tx || GS.serLen !== S.tx.length) { GS.serRef = S.tx; GS.serLen = S.tx.length; GS.ser = new Map(); GS.serG = new Map();
+    const G = {}; for (const x of S.tx) if (x.type === 'ein' && x.date) { const k = impKey(x.note); if (k) (G[k] = G[k] || []).push(x); }
+    const grenze = addD(today(), -62);
+    for (const k in G) { const L = G[k].sort((a, b) => b.amount - a.amount), gr = [];
+      for (const x of L) { let g = gr.find(g => Math.abs(g[0].amount - x.amount) <= Math.max(1, g[0].amount * .02)); if (!g) gr.push(g = []); g.push(x); }
+      for (const g of gr) { const ok = new Set(g.map(x => x.date.slice(0, 7))).size >= 3 && g.some(x => x.date >= grenze); for (const x of g) { GS.ser.set(x, ok); GS.serG.set(x, g); } } } }
+  if (GS_NIE.test(t.note || '') || (typeof nameIstIch === 'function' && nameIstIch(t.note || ''))) return false;
+  return !!GS.ser.get(t);
+}
+/* Wörter gelten für die ganze Reihe: steht „Familienkasse“ nur in einer Kindergeld-Buchung, gehören alle gleich hohen von diesem Absender dazu */
+const gsWortTrifft = (q, t) => q.wre.test(t.note || '') || (gsSerie(t), (GS.serG.get(t) || []).some(x => q.wre.test(x.note || '')));
 function gsDaten() {
   const m = today().slice(0, 7), sumM = mm => { const o = {}, z = { v: 0 }; for (const t of monthTx(mm)) if (t.type === 'ein') { const k = gsQuelle(t); if (k === 'x') continue; o[k] = (o[k] || 0) + t.amount; if (k === 'gehalt' && /zulage|duz/i.test(((cat(t.cat) || {}).name || '') + ' ' + (t.note || ''))) z.v += t.amount; } return [o, z.v]; };
   const avg = {}, monat = sumM(m)[0], jahr = {}; let n = 0, zul = 0;
@@ -11134,21 +11151,25 @@ function impVertraege() {
   const out = [];
   for (const s of IMP.q) { if (s.art !== 'konto' || s.tr) continue;
     const monate = new Set(s.rows.map(z => z.date.slice(0, 7))), gruppen = {};
-    for (const z of s.rows) { if (!z.on || z.typ !== 'aus' || z.recId) continue; if (VERTR_NICHT.test(z.name + ' ' + (z.art || '')) && !VERTR_ABO.test(z.name)) continue; if (nameIstIch(z.name)) continue;
-      const k = impKey(z.name); if (!k) continue; const g = gruppen[k] = gruppen[k] || [];
-      let c = g.find(c => Math.abs(c[0].amount - z.amount) <= Math.max(1, c[0].amount * .1) && !c.some(x => x.date === z.date)); if (!c) g.push(c = []); c.push(z); }
-    for (const k in gruppen) for (const c of gruppen[k]) {
-      const g = c.sort((a, b) => a.date < b.date ? -1 : 1), last = g[g.length - 1], key = k + '|' + Math.round(last.amount);
-      if (S.rec.some(r => r.type === 'aus' && (impKey(r.name) === k || r.acc === s.acc) && Math.abs(r.amount - last.amount) <= Math.max(1, last.amount * .1))) continue;
+    for (const z of s.rows) { if (!z.on || (z.typ !== 'aus' && z.typ !== 'ein') || z.recId) continue; if (z.typ === 'aus' && VERTR_NICHT.test(z.name + ' ' + (z.art || '')) && !VERTR_ABO.test(z.name)) continue; if (nameIstIch(z.name)) continue;
+      if (z.typ === 'ein' && /paypal|geldautomat|bargeld|umbuchung|scalable|bundeskasse|zinsen|dividende/i.test(z.name + ' ' + (z.vz || ''))) continue;
+      const k = impKey(z.name); if (!k) continue; const g = gruppen[z.typ + ':' + k] = gruppen[z.typ + ':' + k] || [];
+      // derselbe Betrag (±2 %, mind. 1 €) von derselben Person
+      let c = g.find(c => Math.abs(c[0].amount - z.amount) <= Math.max(1, c[0].amount * .02) && !c.some(x => x.date === z.date)); if (!c) g.push(c = []); c.push(z); }
+    for (const gk in gruppen) for (const c of gruppen[gk]) {
+      const typ = gk.slice(0, 3), k = gk.slice(4), g = c.sort((a, b) => a.date < b.date ? -1 : 1), last = g[g.length - 1], key = gk + '|' + Math.round(last.amount);
+      if (S.rec.some(r => r.type === typ && (impKey(r.name) === k || r.acc === s.acc) && Math.abs(r.amount - last.amount) <= Math.max(1, last.amount * .1))) continue;
       let every = 0, grund = '';
       if (g.length >= 2) { const mi = d => +d.slice(0, 4) * 12 + +d.slice(5, 7), lu = []; let ok = true;
         for (let i = 1; i < g.length; i++) { const a = mi(g[i - 1].date), b = mi(g[i].date), td = Math.abs(+g[i].date.slice(8) - +g[i - 1].date.slice(8)); let gap = b - a;
           if (td > 6 && td < 24) ok = false; if (gap > 1) { let fehlt = 0; for (let m = a + 1; m < b; m++) { const ym = `${Math.floor((m - 1) / 12)}-${String((m - 1) % 12 + 1).padStart(2, '0')}`; if (monate.has(ym)) fehlt++; } if (!fehlt) gap = 1; } lu.push(gap); }
         const gl = lu.every(x => x === lu[0]); if (ok && gl) every = { 1: 1, 3: 3, 6: 6, 12: 12 }[lu[0]] || 0; if (every) grund = `${g.length}× gefunden`; }
-      if (!every) { if (!(last.lastschrift || VERTR_KARTE.test(last.name))) continue; every = /jährlich|jahresbeitrag|jahresabo/i.test(last.vz) ? 12 : /vierteljähr|quartal/i.test(last.vz) ? 3 : 1; grund = last.lastschrift ? 'Lastschrift, einmal gefunden' : 'sieht nach Abo aus, einmal gefunden'; }
-      if (last.date < addD(today(), -62)) continue; // seit über zwei Monaten nicht mehr bezahlt = beendet, kein Vertrag mehr
+      // Toms Regel: mehr als zwei Zahlungen mit gleichem Betrag, sonst ist es eine einmalige Überweisung (halb-/jährliche reichen zweimal)
+      const nM = new Set(g.map(z => z.date.slice(0, 7))).size;
+      if (!every || nM < (every >= 6 ? 2 : 3)) continue;
+      if (last.date < addD(today(), every >= 6 ? -400 : every === 3 ? -100 : -62)) continue; // seit über zwei Monaten nicht mehr bezahlt = beendet, kein Vertrag mehr
       const sicher = g.length >= 2 && !!grund && !/einmal/.test(grund);
-      out.push({ key, name: vertrName(last), amount: last.amount, every, day: +last.date.slice(8), last: last.date, acc: last.self, cat: last.cat, sicher, grund, on: alt[key] ?? (sicher || !!last.lastschrift) });
+      out.push({ key, typ, name: vertrName(last), amount: last.amount, every, day: +last.date.slice(8), last: last.date, acc: last.self, cat: last.cat, sicher, grund, on: alt[key] ?? (sicher || !!last.lastschrift) });
     } }
   IMP.vertr = out.sort((a, b) => b.sicher - a.sicher || b.amount - a.amount);
 }
@@ -11164,7 +11185,7 @@ function impMalen() {
   const b = IMP.body; if (!b) return; let h = '';
   const kto = IMP.q.filter(s => s.art === 'konto'), dep = IMP.q.filter(s => s.art === 'depot');
   if (IMP.fehler.length) h += `<div class="sub neg" style="margin-bottom:8px">Nicht lesbar: ${IMP.fehler.map(esc).join(' · ')}</div>`;
-  if (IMP.vertr.length) h += `<div class="card imp-vertr"><h3 style="margin-top:0">📌 Sind das Verträge?</h3><div class="sub" style="margin-bottom:8px">Diese Zahlungen kommen regelmäßig. Angehakte kommen in deine monatlichen Fixkosten und werden künftig automatisch geplant.</div><div class="list tight">${IMP.vertr.map((v, k) => `<label class="it"><input type="checkbox" data-k="vertr" data-v="${k}" ${v.on ? 'checked' : ''}><div class="grow" style="min-width:0"><div class="t ell">${esc(v.name)}</div><div class="s">${{ 1: 'monatlich', 3: 'vierteljährlich', 6: 'halbjährlich', 12: 'jährlich' }[v.every]} am ${v.day}. · ${esc(v.grund)}</div></div><span class="num">${eur(v.amount)}</span></label>`).join('')}</div></div>`;
+  if (IMP.vertr.length) h += `<div class="card imp-vertr"><h3 style="margin-top:0">📌 Sind das Verträge?</h3><div class="sub" style="margin-bottom:8px">Diese Zahlungen kamen mindestens dreimal mit gleichem Betrag von derselben Stelle. Angehakte kommen in deine monatlichen Fixkosten und werden künftig automatisch geplant.</div><div class="list tight">${IMP.vertr.map((v, k) => `<label class="it"><input type="checkbox" data-k="vertr" data-v="${k}" ${v.on ? 'checked' : ''}><div class="grow" style="min-width:0"><div class="t ell">${esc(v.name)}</div><div class="s">${v.typ === 'ein' ? '💶 Einnahme · ' : ''}${{ 1: 'monatlich', 3: 'vierteljährlich', 6: 'halbjährlich', 12: 'jährlich' }[v.every]} am ${v.day}. · ${esc(v.grund)}</div></div><span class="num${v.typ === 'ein' ? ' pos' : ''}">${v.typ === 'ein' ? '+' : ''}${eur(v.amount)}</span></label>`).join('')}</div></div>`;
   const accOptsImp = s => [...S.accounts.filter(a => s.art !== 'depot' || a.kind === 'depot' || true).map(a => [a.id, a.name + (a.iban ? ' ' + ibanKurz(a.iban) : '')]), ['neu', '➕ Neues Konto anlegen']];
   for (const s of IMP.q) {
     const n = s.art === 'konto' ? s.rows.length : s.items.length, neu = s.rows ? s.rows.filter(z => z.on).length : s.items.filter(i => i.on).length;
@@ -11234,7 +11255,7 @@ function impUebernehmen() {
   for (const [id, s] of Object.entries(neuester)) { const a = acc(id); if (a && (s.endeD || '') >= (a.standD || '')) { a.stand = s.ende; a.standD = s.endeD || today(); } }
   for (const a of S.accounts) if (a.stand != null && a.standD) a.start = Math.round(((a.start || 0) + a.stand - accBalance(a.id, a.standD)) * 100) / 100;
   for (const v of IMP.vertr.filter(v => v.on)) { const q = IMP.q.find(s => s.art === 'konto' && accKey(s) === v.acc), bis = q ? q.rows.reduce((m, z) => z.date > m ? z.date : m, v.last) : v.last;
-    S.rec.push({ id: uid(), type: 'aus', name: v.name, amount: v.amount, every: v.every, day: Math.min(28, v.day), start: v.last, booked: bis > v.last ? bis : v.last, acc: R(v.acc), cat: v.cat, auto: true, imp: true }); nV++; }
+    S.rec.push({ id: uid(), type: v.typ || 'aus', name: v.name, amount: v.amount, every: v.every, day: Math.min(28, v.day), start: v.last, booked: bis > v.last ? bis : v.last, acc: R(v.acc), cat: v.cat, auto: true, imp: true }); nV++; }
   for (const s of IMP.q.filter(s => s.art === 'depot')) for (const it of s.items) {
     if (!it.on) continue; nD++;
     let p = S.depot.find(p => (p.isin || '').toUpperCase() === it.isin);
@@ -11280,6 +11301,19 @@ ACT.accAufraeumen = () => {
    Erfundene Buchungen entfernen: bei beendeten Verträgen (letzte echte Zahlung über zwei Monate her) alles nach der letzten Zahlung
    und den Vertrag selbst, bei laufenden alles, was in einen schon eingelesenen Zeitraum fällt (dort stehen die echten Buchungen). */
 function hilfsKontenMig() { for (const a of S.accounts) if (!a.iban && (a.name === 'C24 Pockets' || a.name === 'Alte Konten')) a.aus = true; }
+/* Einmalig (S.recFix2): früher erkannte Verträge, die keine drei gleich hohen Zahlungen haben, wieder entfernen (Toms Regel 21.11.) */
+function recReparatur2() {
+  if (S.recFix2 || !(S.rec || []).length) return; S.recFix2 = true; let weg = 0;
+  S.rec = S.rec.filter(r => {
+    if (!r.imp || !r.auto) return true;
+    const k = (impKey(r.name).split(' ')[0] || ''); if (!k) return true;
+    const m = new Set(S.tx.filter(x => x.imp && x.acc === r.acc && x.type === r.type && impKey(x.note || '').split(' ').includes(k) && Math.abs(x.amount - r.amount) <= Math.max(1, r.amount * .02)).map(x => x.date.slice(0, 7)));
+    if (m.size >= ((r.every || 1) >= 6 ? 2 : 3)) return true;
+    S.tx = S.tx.filter(x => !(x.rec === r.id && !x.imp)); S.tx.forEach(x => { if (x.rec === r.id) delete x.rec; }); weg++; return false;
+  });
+  save();
+  if (weg) setTimeout(() => toast(`🧹 ${weg} Verträge entfernt, die nur ein- oder zweimal bezahlt wurden`), 2600);
+}
 function recReparatur() {
   if (S.recFix1 || !(S.rec || []).length) return; S.recFix1 = true;
   const t = today(), grenze = addD(t, -62), neu = {}; let wegTx = 0, wegRec = 0;
@@ -12629,7 +12663,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 136;
+const APP_V = 137;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -14732,7 +14766,7 @@ function pixelScene() {
   document.addEventListener('touchmove', e => { if (e.touches.length > 1 || (e.scale != null && e.scale !== 1)) stopp(e); }, { passive: false });
 })();
 load();
-try { hilfsKontenMig(); recReparatur(); } catch (e) {}
+try { hilfsKontenMig(); recReparatur(); recReparatur2(); } catch (e) {}
 autoBook();
 render();
 hlLaden();
