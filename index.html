@@ -3646,6 +3646,139 @@ html .card.gs3,html.g2 .card.gs3{height:clamp(520px,calc(100svh - 190px),680px)}
 .gs3-ware.hat{background:#eef8f1}
 .gs3-ware.hat>i{background:#d7f0de}
 .gs3-wk.aus{background:#2fa36b;color:#fff;font-size:13px;min-width:32px}
+/* ---------- Geld-Stadt Runde 4 (gsz): Zeitreise, Hochhaus, Parks, Rekord, Minus, Abzeichen ---------- */
+.gs3-links{display:flex;gap:6px;align-items:center;min-width:0}
+.gsz-fb i{background:#eef1f6!important;color:#1c2333!important;font-size:13px!important}
+.gsz-fb span{white-space:nowrap}
+@media (max-width:520px){.gsz-fb span:not(.num){display:none}.gsz-fb{padding:5px!important}.gs3-marke:not(.gsz-fb) .gs3-vi{display:none}}
+@media (max-width:440px){.gs3-w .gs3-links .gs3-marke:not(.gsz-fb){font-size:0;gap:0;padding:5px!important}.gs3-w .gs3-links .gs3-marke:not(.gsz-fb) i{font-size:12px}.gs3-modus button{padding:6px 9px}}
+.gsz-zeit .gs3-modus,.gsz-zeit .gs3-hinweis{opacity:0;pointer-events:none!important}
+.gsz-zeit .gs3-modus *{pointer-events:none!important}
+.gsz-fe.gsz-gold{background:#fff8e1}
+.gsz-fe.gsz-rot{background:#fff1ee}
+.gsz-leiste{position:absolute;left:12px;right:12px;bottom:calc(56px + env(safe-area-inset-bottom,0px) * var(--gs3-sb,0));z-index:3;padding:8px 10px 6px;border-radius:15px;background:var(--gs3-glas);box-shadow:var(--gs3-schatten);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);animation:gs3Auf .3s ease-out;max-width:560px;margin:0 auto}
+.gs3-hat-det .gsz-leiste{opacity:0;pointer-events:none}
+.gsz-kopf{display:flex;align-items:center;gap:8px;min-width:0}
+.gsz-kopf>b{font-size:12px;font-weight:800;flex:none}
+.gsz-mon{flex:1;min-width:0;font-size:11.5px;color:var(--gs3-mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gsz-mon b{color:#1c2333}
+.gsz-kopf .gs3-k2{flex:none;padding:5px 10px;font-size:11px;background:#1c2333;color:#fff}
+.gsz-kopf .gs3-x{width:26px;height:26px}
+.gsz-kopf .gs3-x svg{width:14px;height:14px}
+.gsz-bars{display:flex;align-items:flex-end;gap:2px;height:52px;margin-top:6px;touch-action:none;cursor:pointer;outline:none;border-radius:8px}
+.gsz-bars:focus-visible{box-shadow:0 0 0 2px #5f8fe8}
+.gsz-bars span{flex:1;height:100%;display:flex;align-items:flex-end;position:relative;border-radius:4px}
+.gsz-bars i{display:block;width:100%;border-radius:3px 3px 1px 1px;background:#c9d3e4;transition:background .15s,transform .15s;transform-origin:bottom}
+.gsz-bars span.jetzt i{background:repeating-linear-gradient(135deg,#c9d3e4 0 3px,#dfe5ef 3px 6px)}
+.gsz-bars span.rek i{background:linear-gradient(#ffd75a,#e2a913)}
+.gsz-bars span.minus::after{content:"";position:absolute;left:50%;bottom:-5px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:#e8584a}
+.gsz-bars span.sel i{background:#1c2333}
+.gsz-bars span.rek.sel i{background:linear-gradient(#c58d00,#8a6200)}
+.gsz-bars span.vor i{background:#5f8fe8;transform:scaleX(1.15)}
+.gsz-bars em{margin:auto;font-size:11px;color:var(--gs3-mut);font-style:normal}
+.gsz-achse{display:flex;gap:2px;margin-top:6px}
+.gsz-achse span{flex:1;font-size:9px;font-weight:700;color:var(--gs3-mut);white-space:nowrap;overflow:visible;min-width:0}
+.gsz-damals .gs3-haupt{box-shadow:0 0 0 2px #5f8fe8,var(--gs3-schatten)}
+.gsz-damals .gs3-c{filter:sepia(.18) saturate(.92)}
+.gsz-gross{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin-top:10px;padding:12px 14px;border-radius:14px;background:#f4f6fa}
+.gsz-gross b{font-size:28px;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.gsz-gross span{font-size:12px;color:var(--gs3-mut)}
+.gsz-gross.gruen{background:#eaf7e4}.gsz-gross.gruen b{color:#2f8a3c}
+.gsz-gross.rot{background:#fdeeeb}.gsz-gross.rot b{color:#c7402f}
+.gsz-gross.gold{background:#fff6dc}.gsz-gross.gold b{color:#a87a00}
+.gsz-stock{display:flex;flex-direction:column;gap:3px;margin:10px auto 2px;width:120px}
+.gsz-stock i{display:flex;align-items:center;justify-content:center;height:15px;border-radius:4px;border:1px dashed #b9c4d8;font-style:normal}
+.gsz-stock i span{font-size:9px;font-weight:700;color:#9aa4b8}
+.gsz-stock i.an{background:#cfe2f6;border:1px solid #9cc0e4}
+.gsz-stock i.an.gold{background:#ffe7a3;border-color:#e2b23c}
+.gsz-stock i.an span{color:#2b4a72}
+.gsz-stock i.teil{background:repeating-linear-gradient(135deg,#ffd9a8 0 4px,#fff1dc 4px 8px);border:1px solid #f19a2c}
+.gsz-ver{display:flex;flex-direction:column;gap:2px;margin-top:4px}
+.gsz-ver>div{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:9px;background:#f6f8fb;font-size:12px}
+.gsz-ver>div i{font-style:normal;width:18px;height:18px;border-radius:6px;display:grid;place-items:center;background:#d8f0e3;color:#227a4c;font-size:11px;font-weight:800;flex:none}
+.gsz-ver>div span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.gsz-ver>div.offen{background:none;border:1px dashed #cdd5e3}
+.gsz-ver>div.offen i{background:#eef1f6;color:#6a7286}
+.gsz-gut b{color:#2f8a3c}
+.gsz-abz{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:6px;margin-top:10px}
+.gsz-ab{display:flex;flex-direction:column;align-items:center;text-align:center;gap:3px;padding:10px 6px 9px;border-radius:12px;background:#f4f6fa;opacity:.55}
+.gsz-ab i{font-style:normal;font-size:22px;width:42px;height:42px;border-radius:50%;display:grid;place-items:center;background:#e3e7ee}
+.gsz-ab b{font-size:11.5px;font-weight:800;line-height:1.2}
+.gsz-ab small{font-size:10px;color:var(--gs3-mut);line-height:1.25}
+.gsz-ab em{font-style:normal;font-size:9.5px;font-weight:700;color:#a87a00}
+.gsz-ab.an{opacity:1;background:#fff8e6}
+.gsz-ab.an i{background:radial-gradient(circle at 35% 30%,#fff6cf,#f2c230 60%,#c58d00);box-shadow:0 3px 8px rgba(197,141,0,.35)}
+.gsz-abzr{all:unset;box-sizing:border-box;cursor:pointer;display:flex;flex-wrap:wrap;align-items:center;gap:4px;width:100%;padding:8px;border-radius:12px;background:#f4f6fa}
+.gsz-abzr i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:13px;background:#e3e7ee;color:#9aa4b8}
+.gsz-abzr i.an{background:#ffe7a3}
+.gsz-abzr span{margin-left:auto;font-size:11px;font-weight:800;color:#3d5ea8}
+.gsz-schalter{all:unset;box-sizing:border-box;cursor:pointer;display:flex;align-items:center;gap:10px;width:100%;padding:10px 12px;border-radius:12px;background:#f4f6fa}
+.gsz-schalter span{flex:1;min-width:0}
+.gsz-schalter b{display:block;font-size:12.5px;font-weight:800}
+.gsz-schalter small{display:block;font-size:10.5px;color:var(--gs3-mut)}
+.gsz-schalter>i{flex:none;width:40px;height:24px;border-radius:12px;background:#cdd3de;position:relative;transition:background .2s}
+.gsz-schalter>i::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.gsz-schalter.an>i{background:#16935f}
+.gsz-schalter.an>i::after{transform:translateX(16px)}
+.gsz-schalter:focus-visible,.gsz-abzr:focus-visible{box-shadow:0 0 0 2px #5f8fe8}
+.gsz-leiste [hidden]{display:none!important}
+.gs3-tag .gsz-tz{display:block;margin-top:2px;font-size:9.5px;font-weight:700;color:#1d7a4a;white-space:nowrap}
+.gs3-links>*{flex-shrink:0}
+/* ---------- Lauf-Welt ---------- */
+.lw{position:relative;width:100%;aspect-ratio:1/1.02;max-height:62vh;border-radius:16px;overflow:hidden;background:#dde8f4;margin-bottom:8px;touch-action:none;user-select:none;-webkit-user-select:none}
+.lw canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none}
+.lw-top{position:absolute;left:10px;right:10px;top:10px;display:flex;gap:6px;pointer-events:none}
+.lw-chip{background:rgba(255,255,255,.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);color:#1c2333;font-size:11.5px;font-weight:800;padding:6px 10px;border-radius:10px;box-shadow:0 2px 10px rgba(20,30,60,.15);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.lw-kn{position:absolute;left:10px;right:10px;bottom:10px;display:flex;gap:6px;justify-content:space-between}
+.lw-kn button{all:unset;cursor:pointer;background:rgba(255,255,255,.92);color:#1c2333;font-weight:800;font-size:13px;min-width:36px;height:36px;padding:0 10px;box-sizing:border-box;border-radius:11px;display:grid;place-items:center;box-shadow:0 2px 10px rgba(20,30,60,.18);-webkit-tap-highlight-color:transparent}
+.lw-kn .lw-play{flex:1;background:#1c2333;color:#fff}
+.lw-hud{position:absolute;left:10px;right:10px;top:44px;display:flex;flex-wrap:wrap;gap:6px;pointer-events:none}
+.lw-hud>div{background:rgba(28,35,51,.86);color:#fff;border-radius:10px;padding:5px 9px;display:flex;flex-direction:column;min-width:52px}
+.lw-hud b{font-size:15px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}.lw-hud b small{font-size:10px;opacity:.7}
+.lw-hud span{font-size:9.5px;opacity:.75;text-transform:uppercase;letter-spacing:.05em}
+.lw-iv{align-self:center;font-size:11px;font-weight:800;padding:5px 9px;border-radius:9px;background:#6b7a99;color:#fff}.lw-iv.hart{background:#e8553f}.lw-iv.ein,.lw-iv.aus{background:#3a7bfd}
+.lw.lw-voll{position:fixed;inset:0;z-index:2000;max-height:none;aspect-ratio:auto;border-radius:0;margin:0}
+.lw.lw-voll .lw-top{top:calc(10px + env(safe-area-inset-top,0px))}.lw.lw-voll .lw-kn{bottom:calc(10px + env(safe-area-inset-bottom,0px))}.lw.lw-voll .lw-hud{top:calc(44px + env(safe-area-inset-top,0px))}
+html.lw-offen,html.lw-offen body{overflow:hidden}
+/* Intervalle, Runden */
+.lw-ivs{display:grid;grid-template-columns:repeat(auto-fit,minmax(70px,1fr));gap:6px;margin-bottom:8px}
+.lw-ivs>div{background:var(--card2,rgba(255,255,255,.05));border-radius:10px;padding:7px 9px;display:flex;flex-direction:column}.lw-ivs b{font-size:15px;font-variant-numeric:tabular-nums}.lw-ivs span{font-size:10.5px;color:var(--tx3)}
+.lw-ivl{display:flex;flex-direction:column;gap:3px;margin-bottom:12px}
+.lw-ivl>div{display:grid;grid-template-columns:62px 1fr 52px 48px 66px;align-items:center;gap:6px;font-size:12px;padding:3px 0}
+.lw-ivl span{color:var(--tx3);font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lw-ivl em{font-style:normal;color:var(--tx3);text-align:right;font-variant-numeric:tabular-nums}
+.lw-ivl b{text-align:right;font-variant-numeric:tabular-nums}.lw-ivl small{color:var(--tx3);text-align:right;font-size:10.5px;font-variant-numeric:tabular-nums}
+.lw-ivb{height:8px;border-radius:5px;background:rgba(255,255,255,.06);overflow:hidden}.lw-ivb i{display:block;height:100%;border-radius:5px;background:#6b7a99}
+.lw-ivl .hart .lw-ivb i{background:#e8553f}.lw-ivl .hart span{color:#ff8a72;font-weight:800}.lw-ivl .ein .lw-ivb i,.lw-ivl .aus .lw-ivb i{background:#3a7bfd}.lw-ivl .gleich .lw-ivb i{background:#5fb3ff}
+.lw-ivl .best b{color:#3ddc97}.lw-ivl .best .lw-ivb i{background:#3ddc97}
+@media (max-width:380px){.lw-ivl>div{grid-template-columns:52px 1fr 44px 44px;}.lw-ivl small{display:none}}
+/* Deine Runde */
+.lw-rd{padding:12px}.lw-rdk{display:flex;align-items:baseline;gap:8px}.lw-rdk b{font-size:22px}.lw-rdk span{font-size:12px;color:var(--tx3)}
+.lw-rdv{font-size:13px;margin:6px 0 10px}.lw-rdb{display:flex;align-items:flex-end;gap:3px;height:56px}.lw-rdb i{flex:1;border-radius:4px 4px 2px 2px;background:rgba(95,179,255,.35)}.lw-rdb i.best{background:#3ddc97}.lw-rdb i.ich{background:#5fb3ff;box-shadow:0 0 0 2px rgba(95,179,255,.35)}
+.lw-rdf{display:flex;justify-content:space-between;font-size:10.5px;color:var(--tx3);margin-top:4px}
+/* Was der Lauf gebracht hat */
+.lw-gew{margin:4px 0 12px}
+.lw-gk{display:flex;gap:10px;align-items:center;background:linear-gradient(135deg,rgba(255,214,90,.16),rgba(95,179,255,.1));border:1px solid rgba(255,214,90,.25);border-radius:14px;padding:10px 12px}
+.lw-gp{display:flex;flex-direction:column;align-items:center;min-width:70px}.lw-gp b{font-size:26px;font-weight:900;color:#ffd65a;line-height:1;font-variant-numeric:tabular-nums;animation:lwPop .7s cubic-bezier(.2,1.6,.4,1) both}.lw-gp span{font-size:10px;color:var(--tx3);text-transform:uppercase;letter-spacing:.06em;margin-top:3px}
+.lw-gr{flex:1;min-width:0}.lw-gr span{font-size:12px;font-weight:800;color:var(--rc)}.lw-gr .bar{position:relative;margin-top:6px}.lw-gr .bar i{position:absolute;top:0;bottom:0;left:0;border-radius:inherit}.lw-gr .bar i.neu{animation:lwWachs 1.1s .3s ease-out both;transform-origin:left}
+.lw-auf{margin-top:8px;text-align:center;font-weight:900;color:var(--rc);background:color-mix(in srgb,var(--rc) 16%,transparent);border-radius:11px;padding:8px;animation:lwPop .8s .4s cubic-bezier(.2,1.6,.4,1) both}
+.lw-gl{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.lw-gl>div{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:11px;background:rgba(255,255,255,.04);animation:lwRein .4s ease-out both}
+.lw-gl>div:nth-child(2){animation-delay:.08s}.lw-gl>div:nth-child(3){animation-delay:.16s}.lw-gl>div:nth-child(4){animation-delay:.24s}.lw-gl>div:nth-child(5){animation-delay:.32s}.lw-gl>div:nth-child(6){animation-delay:.4s}
+.lw-gl i{font-style:normal;font-size:18px;width:24px;text-align:center}.lw-gl>div>div{flex:1;min-width:0;display:flex;flex-direction:column}.lw-gl b{font-size:13px}.lw-gl small{font-size:10.5px;color:var(--tx3)}
+.lw-gl em{font-style:normal;font-weight:800;font-size:13px;white-space:nowrap;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:5px}.lw-gl em u{text-decoration:none;font-size:10px}
+.lw-gl .auf em u{color:#3ddc97}.lw-gl .ab em u{color:#ff6b6b}.lw-gl .gl em u{color:var(--tx3)}
+@keyframes lwPop{from{transform:scale(.4);opacity:0}to{transform:none;opacity:1}}@keyframes lwWachs{from{transform:scaleX(0)}to{transform:none}}@keyframes lwRein{from{transform:translateY(6px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.lw-gp b,.lw-auf,.lw-gl>div,.lw-gr .bar i.neu{animation:none}}
+/* Sportarten im Laufen-Reiter */
+.lw-arten{display:flex;gap:6px;overflow-x:auto;margin-bottom:12px;scrollbar-width:none}.lw-arten::-webkit-scrollbar{display:none}
+.lw-arten button{all:unset;cursor:pointer;flex:none;padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:700;background:rgba(255,255,255,.06);color:var(--tx2,#ccd)}.lw-arten button.on{background:var(--spo);color:#fff}
+/* Laufziele */
+.lz-heute{padding:12px}.lz-hg{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}.lz-hg>div{display:flex;flex-direction:column;background:rgba(255,255,255,.05);border-radius:10px;padding:7px 8px;min-width:0}.lz-hg span{font-size:10.5px;color:var(--tx3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.lz-hg b{font-size:15px;font-variant-numeric:tabular-nums}
+@media (max-width:380px){.lz-hg{grid-template-columns:repeat(2,1fr)}}
+.lz-z{padding:12px;cursor:pointer}.lz-bar{position:relative;height:12px;border-radius:7px;background:rgba(255,255,255,.07);margin:12px 0 4px}.lz-bar i{display:block;height:100%;border-radius:7px;background:linear-gradient(90deg,#3a7bfd,#3ddc97)}
+.lz-bar span{position:absolute;top:-19px;transform:translateX(-50%);font-size:10.5px;font-weight:800;background:#3ddc97;color:#08130d;padding:1px 6px;border-radius:6px;white-space:nowrap}
+.lz-zl{display:flex;justify-content:space-between;font-size:10.5px;color:var(--tx3)}
+.lw-det{margin-bottom:12px}.lw-det summary{cursor:pointer;font-size:13px;font-weight:700;color:var(--spo);padding:6px 0;list-style:none}.lw-det summary::-webkit-details-marker{display:none}.lw-det .lw-ivl{margin-top:6px}
 
 </style>
 </head>
@@ -6182,7 +6315,7 @@ function gsEigene() {
       wre: w.length ? new RegExp(w.map(x => x.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|'), 'i') : null, blk: GS_PLAETZE[i], blkW: GS_PLAETZE_W[i] }; });
 }
 const gsAlle = () => [...GS_QUELLEN, ...gsEigene(), ...gshQ()];
-const gsSig = d => JSON.stringify([d.avg, d.monat, d.jahr, GS.weit, (S.gsQ || []).map(e => [e.id, e.typ, e.name, e.cat, e.wort, e.betrag]), S.gsWeg || [], UI.gsStV || 0, S.gsName || '', gsStufeAus(d.verm || 0, GS_STADT.map(x => x.ab)), typeof gshSig === 'function' ? gshSig() : '']);
+const gsSig = d => JSON.stringify([d.avg, d.monat, d.jahr, GS.weit, (S.gsQ || []).map(e => [e.id, e.typ, e.name, e.cat, e.wort, e.betrag]), S.gsWeg || [], UI.gsStV || 0, S.gsName || '', gsStufeAus(d.verm || 0, GS_STADT.map(x => x.ab)), typeof gshSig === 'function' ? gshSig() : '', GS.zeit || '']);
 /* Absender-Schlüssel einer Buchung: Text ohne Zahlen, damit „Zinsen 11/2026“ und „Zinsen 12/2026“ zusammengehören */
 const gsKey = t => String(t.note || (cat(t.cat) || {}).name || '').toLowerCase().replace(/[0-9.,:/€%-]+/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 40);
 const GS_TR = /^\s*(zinsen|zinsgutschrift|habenzinsen|dividende|aussch(ü|ue)ttung|steuerausgleich|steuergutschrift|vorabpauschale|saveback|bonus|aktien-?prämie|barausgleich)\b/i; // Trade-Republic-Posten
@@ -6217,14 +6350,14 @@ function gsSerie(t) {
 /* Wörter gelten für die ganze Reihe: steht „Familienkasse“ nur in einer Kindergeld-Buchung, gehören alle gleich hohen von diesem Absender dazu */
 const gsWortTrifft = (q, t) => q.wre.test(t.note || '') || (gsSerie(t), (GS.serG.get(t) || []).some(x => q.wre.test(x.note || '')));
 function gsDaten() {
-  const m = today().slice(0, 7), sumM = mm => { const o = {}, z = { v: 0 }; for (const t of monthTx(mm)) if (t.type === 'ein') { const k = gsQuelle(t); if (k === 'x') continue; o[k] = (o[k] || 0) + t.amount; if (k === 'gehalt' && /zulage|duz/i.test(((cat(t.cat) || {}).name || '') + ' ' + (t.note || ''))) z.v += t.amount; } return [o, z.v]; };
+  const m = GS.zeit || today().slice(0, 7), sumM = mm => { const o = {}, z = { v: 0 }; for (const t of monthTx(mm)) if (t.type === 'ein') { const k = gsQuelle(t); if (k === 'x') continue; o[k] = (o[k] || 0) + t.amount; if (k === 'gehalt' && /zulage|duz/i.test(((cat(t.cat) || {}).name || '') + ' ' + (t.note || ''))) z.v += t.amount; } return [o, z.v]; };
   const avg = {}, monat = sumM(m)[0], jahr = {}; let n = 0, zul = 0;
-  for (let i = 1; i <= 3; i++) { const [o, z] = sumM(addM(m, -i)); if (Object.keys(o).length) { n++; zul += z; for (const k in o) avg[k] = (avg[k] || 0) + o[k]; } }
+  for (let i = GS.zeit ? 0 : 1; i <= (GS.zeit ? 2 : 3); i++) { const [o, z] = sumM(addM(m, -i)); /* in der Zeitreise: Stand am Monatsende, also mit dem gewählten Monat */ if (Object.keys(o).length) { n++; zul += z; for (const k in o) avg[k] = (avg[k] || 0) + o[k]; } }
   if (n) { for (const k in avg) avg[k] /= n; zul /= n; } else { Object.assign(avg, monat); zul = sumM(m)[1]; }
   for (let i = 0; i < +m.slice(5); i++) { const [o] = sumM(m.slice(0, 5) + String(i + 1).padStart(2, '0')); for (const k in o) jahr[k] = (jahr[k] || 0) + o[k]; }
   for (const q of gsEigene()) if (q.betrag > 0) { avg[q.k] = q.betrag; monat[q.k] = q.betrag; jahr[q.k] = q.betrag * +m.slice(5); } // fester Betrag pro Monat
   const tot = o => Object.values(o).reduce((a, b) => a + b, 0);
-  return { avg, monat, jahr, zul, total: tot(avg), totMonat: tot(monat), totJahr: tot(jahr), verm: gsVermoegen() };
+  return { avg, monat, jahr, zul, total: tot(avg), totMonat: tot(monat), totJahr: tot(jahr), verm: GS.zeit ? gszVermAm(GS.zeit) : gsVermoegen() };
 }
 function gsKarte() {
   return `<div class="card gs3"><div class="gs3-b" id="gs3b"><div class="gs3-leer">Deine Geld-Stadt wird gebaut …</div></div></div>`;
@@ -6360,7 +6493,7 @@ function gsTipp(e) {
   const hit = rc.intersectObjects(GS.huellen || [], false)[0];
   gsFokus(hit ? hit.object.userData.k : null);
 }
-function gsFlug(nach, d) { const k = GS.kam; k.flug = { von: { az: k.az, el: k.el, zoom: k.zoom, ziel: k.ziel.clone() }, nach, t0: performance.now(), d: g2Ruhig() ? 1 : d }; k.vAz = 0; k.ruhe = performance.now(); gsLauf(); }
+function gsFlug(nach, d) { const k = GS.kam; k.flug = { von: { az: k.az, el: k.el, zoom: k.zoom, ziel: k.ziel.clone() }, nach, t0: performance.now(), d: gsRuhig() ? 1 : d }; k.vAz = 0; k.ruhe = performance.now(); gsLauf(); }
 /* Kameraflug zu einem Gebäude (schräg von vorn) und zurück zur ganzen Stadt */
 function gsFokus(k) {
   GS.detStadt = false; if (k === 'schild') { gsStadtDetail(); return; }
@@ -6730,6 +6863,7 @@ function gsStadt(d) {
   GS.aufstock = []; GS.fluegel = []; GS.helis = []; GS.trams = []; GS.yachten = []; GS.aufbau = null; GS.lampen = []; GS.schein = [];
   // Stufe (wie modern) und Ausdehnung (wie viele Ringe); die Stadt reicht mindestens bis zu allen Geld-Gebäuden
   const st = GS.st = gsStadtStufe(d), P = GS_PAL[st - 1];
+  GS.zk = gszKz(d); GS.parks = []; GS.hoch = null; // Runde 4: Hochhaus, Parks, Rekord, Minus
   const sonderBlk = {}; gsAlle().forEach(q => { if (!(S.gsWeg || []).includes(q.k)) sonderBlk[(GS.weit ? q.blkW : q.blk).join()] = q; });
   let R = gsReich(st, d); for (const key in sonderBlk) for (const v of key.split(',')) R = Math.max(R, Math.abs(+v));
   R = GS.reich = Math.min(4, R);
@@ -6757,6 +6891,7 @@ function gsStadt(d) {
   const bauBlk = GS.weit ? '-2,2' : '2,-2';
   const kircheBlk = st <= 2 ? ['1,2', '-2,1', '2,1', '-1,2', '2,-1', '-2,-1'].find(k => !sonderBlk[k] && k !== bauBlk) : null;
   const muehleBlk = st <= 2 && R < 4 ? `${R + 1},-1` : null;
+  const parkBlk = gszParkBlocks(sonderBlk, bauBlk, kircheBlk, R);
   for (const i of [-4, -3, -2, -1, 1, 2, 3, 4]) for (const j of [-4, -3, -2, -1, 1, 2, 3, 4]) {
     const [x0, x1] = gsBlock(i), [z0, z1] = gsBlock(j), cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, w = x1 - x0, dd = z1 - z0;
     const ringN = Math.max(Math.abs(i), Math.abs(j)), innen = ringN <= R, key = i + ',' + j, q = sonderBlk[key], eckBlk = Math.abs(i) === 1 && Math.abs(j) === 1;
@@ -6769,9 +6904,10 @@ function gsStadt(d) {
     if (Math.abs(j) === 1) { const z = j > 0 ? z0 + .2 : z1 - .2; for (let v = x0 + .8; v < x1 - .5; v += 1.7) if (Math.hypot(v, z) > GS_PLATZ + 1.2) gsBaum(baeume, v, z, .75, zf); }
     if (q && (q.k !== 'sonst' || (d.avg.sonst || 0) > .5)) { gsSonder(W, q, d, x0, x1, z0, z1, baeume, zf, [i, j]); continue; }
     if (!innen) { gsAussen(T, baeume, x0, x1, z0, z1, zf, st, W, key === muehleBlk); continue; }
-    if (key === bauBlk) { const g = new THREE.Group(); g.position.set(cx, P.geh ? .075 : 0, cz); W.add(g); gsBaustelle(g, w - 1.4, dd - 1.4, 5.2); continue; }
+    if (key === bauBlk) { const g = new THREE.Group(); g.position.set(cx, P.geh ? .075 : 0, cz); W.add(g); gszHochhaus(g, w - 1.4, dd - 1.4); continue; }
     const frei = eckBlk ? GS_PLATZ + .9 : 0;
     if (key === kircheBlk) { if (st === 1) { gsKirche(T, cx, cz - .5, .72); for (let k = 0; k < 8; k++) { const x = x0 + .6 + zf() * (w - 1.2), z = z0 + .6 + zf() * (dd - 1.2); if (Math.abs(x - cx) > 1 || Math.abs(z - cz) > 2.1) gsBaum(baeume, x, z, .9, zf); } } else gsKleinBlock(T, baeume, x0, x1, z0, z1, zf, frei, true); continue; }
+    if (parkBlk.includes(key)) { gszPark(W, T, baeume, x0, x1, z0, z1, zf); continue; }
     const art = arten[Math.floor(zf() * arten.length)];
     if (st === 1) gsDorfBlock(T, baeume, x0, x1, z0, z1, zf, frei);
     else if (st === 2) gsKleinBlock(T, baeume, x0, x1, z0, z1, zf, frei, false);
@@ -6795,6 +6931,7 @@ function gsStadt(d) {
   gsTagsFuellen();
   gsStufenMerken(st);
   gsxAufbau();
+  gszAufbau();
 }
 
 /* Eines der Geld-Gebäude auf seinem farbigen Grundstück (oder eine Baustelle, solange noch nichts kommt) */
@@ -6964,17 +7101,17 @@ function gsAutosSetzen(dt) {
 
 /* Schilder über den Gebäuden (weiß wie im Video, HTML, damit die Schrift gestochen scharf bleibt) */
 function gsTagsFuellen() {
-  const d = GS.d, m = UI.gsModus || 'live', mon = MON[+today().slice(5, 7) - 1];
+  const d = GS.d, m = GS.zeit ? 'monat' : UI.gsModus || 'live', mon = MON[+(GS.zeit || today()).slice(5, 7) - 1];
   const wert = k => m === 'live' ? d.avg[k] || 0 : m === 'monat' ? d.monat[k] || 0 : d.jahr[k] || 0;
   const zus = m === 'live' ? '/ Monat' : m === 'monat' ? 'im ' + mon : 'in ' + today().slice(0, 4);
   GS.el.tags.innerHTML = Object.values(GS.geb).map(g => gskSchild(g, wert(g.q.k), zus)).join('');
   GS.tagEl = {}; GS.el.tags.querySelectorAll('.gs3-tag').forEach(t => { GS.tagEl[t.dataset.k] = t; if (GS.fokus === t.dataset.k) t.classList.add('fokus'); });
   const n = new Date(), ms = new Date(n.getFullYear(), n.getMonth(), 1), tage = new Date(n.getFullYear(), n.getMonth() + 1, 0).getDate();
   GS.rate = d.total / (tage * 86400); GS.ms0 = ms.getTime();
-  GS.el.zl.textContent = m === 'live' ? `seit 1. ${mon} verdient` : m === 'monat' ? `im ${mon} gebucht` : `${today().slice(0, 4)} bisher gebucht`;
+  GS.el.zl.textContent = GS.zeit ? `im ${mon} ${GS.zeit.slice(0, 4)} verdient` : m === 'live' ? `seit 1. ${mon} verdient` : m === 'monat' ? `im ${mon} gebucht` : `${today().slice(0, 4)} bisher gebucht`;
   GS.el.rate.innerHTML = m === 'live' ? (d.total ? `+ ${GS.rate.toLocaleString('de-DE', { minimumFractionDigits: 6, maximumFractionDigits: 6 })} € pro Sekunde` : 'Sobald Einnahmen gebucht sind, wächst deine Stadt') : `Ø ${eur0(d.total)} im Monat`;
   const nb = GS.wrap.querySelectorAll('.gs3-neben');
-  nb[0].querySelector('b').textContent = eur0(d.total); nb[0].querySelector('span').textContent = 'Schnitt der letzten 3 Monate';
+  nb[0].querySelector('b').textContent = eur0(d.total); nb[0].querySelector('span').textContent = GS.zeit ? 'Schnitt der 3 Monate bis dahin' : 'Schnitt der letzten 3 Monate';
   GS.zaehlAb = performance.now(); GS.zaehlVon = m === 'live' ? null : 0;
   GS.wrap.classList.toggle('gs3-fest', m !== 'live'); gskKachel(); gsStufeZeile(); gsTagsMin();
 }
@@ -6986,7 +7123,7 @@ const gsIstDiv = t => /dividend|aussch(ü|ue)tt/i.test(((cat(t.cat) || {}).name 
 const gsIstZins = t => /zins/i.test(((cat(t.cat) || {}).name || '') + ' ' + (t.note || ''));
 function gsDetail(k) {
   if (k === 'haus') return gshDetail();
-  const g = GS.geb[k], d = GS.d, q = g.q, el = GS.el.det, mon = MON[+today().slice(5, 7) - 1];
+  const g = GS.geb[k], d = GS.d, q = g.q, el = GS.el.det, mon = MON[+(GS.zeit || today()).slice(5, 7) - 1];
   const kopf = (b, s) => `<div class="gs3-dk"><i style="--c:${q.col}">${q.icon}</i><div><b>${b}</b><small>${s}</small></div><button type="button" class="gs3-x" data-gs="heim" aria-label="Schließen">${GS_SVG.zu}</button></div>`;
   GS.el.dl = null; el.scrollTop = 0;
   if (!g.aktiv && q.eigen) { el.innerHTML = kopf(esc(q.ort), 'noch keine Einnahmen') + `<p class="gs3-dt">Sobald eine Einnahme passt, fließt hier Geld über die Straße zum Brunnen.</p>` + gskKontenBlock(k) + gsZuordnung(q); el.hidden = false; gsVersatz(); return; }
@@ -6999,6 +7136,7 @@ function gsDetail(k) {
     <div class="gs3-dr num">+ ${gs6(r)} € pro Sekunde</div><div class="gs3-dr2 num">${eur(r * 3600)} pro Stunde · ${eur(r * 86400)} pro Tag</div></div>`;
   h += `<div class="gs3-dz"><div><small>Ø pro Monat</small><b class="num">${eur0(d.avg[k])}</b></div><div><small>Im ${mon}</small><b class="num">${eur0(d.monat[k])}</b></div><div><small>${today().slice(0, 4)} bisher</small><b class="num">${eur0(d.jahr[k])}</b></div></div>`;
   h += gsStufeInfo(g);
+  if (k === 'bank') h += gszDivBlock(d);
   h += gskKontenBlock(k);
   if (k === 'gehalt' && d.zul > 1) h += `<p class="gs3-dt">Davon im Schnitt <b class="num">${eur0(d.zul)}</b> Zulagen und DUZ.</p>`;
   h += `<div class="gs3-zs">${gsZeitBlock(k)}</div>`;
@@ -7197,7 +7335,7 @@ const _gsV = typeof THREE !== 'undefined' ? new THREE.Vector3() : null, _gsO = t
 if (typeof THREE !== 'undefined') { GS.muenzG = new THREE.CylinderGeometry(.3, .3, .07, 22); const mf = new THREE.MeshLambertMaterial({ color: 0xffcf3a, emissive: 0x6b4a00, emissiveIntensity: .35 }); GS.muenzM = [new THREE.MeshLambertMaterial({ color: 0xc98f10, emissive: 0x3a2800, emissiveIntensity: .3 }), mf, mf]; GS.muenzM.forEach(m => { m.userData.bleibt = true; }); }
 function gsBild() {
   GS.raf = 0; if (GS.weg || !GS.wrap.isConnected || document.hidden || GS.sicht === false) return;
-  const dt = Math.min(.05, GS.uhr.getDelta()), ruhig = g2Ruhig(), jetzt = performance.now(); GS.t += dt; const t = GS.t, k = GS.kam;
+  const dt = Math.min(.05, GS.uhr.getDelta()), ruhig = gsRuhig(), jetzt = performance.now(); GS.t += dt; const t = GS.t, k = GS.kam;
   // Kamera
   if (k.flug) { const f = k.flug, p = Math.min(1, (jetzt - f.t0) / f.d), e = p < .5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
     k.az = f.von.az + (f.nach.az - f.von.az) * e; k.el = f.von.el + (f.nach.el - f.von.el) * e; k.zoom = f.von.zoom + (f.nach.zoom - f.von.zoom) * e; k.ziel.lerpVectors(f.von.ziel, f.nach.ziel, e); if (p >= 1) { k.flug = null; gsSpeichern(); } }
@@ -7214,7 +7352,7 @@ function gsBild() {
     for (let i = GS.puls.length - 1; i >= 0; i--) { const p = GS.puls[i]; p.a += dt; const e = p.a / 1.1; p.m.scale.setScalar(.6 + e * (GS.st === 1 ? .95 : 1.6)); p.m.material.opacity = .8 * (1 - e); if (e >= 1) { GS.mitte.remove(p.m); p.m.geometry.dispose(); p.m.material.dispose(); GS.puls.splice(i, 1); } }
     for (const o of GS.dreher) { if (o.userData.blink !== undefined) { o.visible = (t + o.userData.blink) % .8 < .4; continue; } if (o.userData.dreht) o.rotation.y += dt * o.userData.dreht; if (o.userData.schwebt) o.position.y = o.userData.schwebt[0] + Math.sin(t * 1.6 + o.id) * o.userData.schwebt[1]; }
     for (const f of GS.fahnen) { const a = f.geometry.attributes.position, b = f.userData.weht.basis, s = f.userData.weht.s; for (let i = 0; i < a.count; i++) { const x = b[i * 3]; a.array[i * 3 + 2] = Math.sin(x / s * 7 - t * 5 - f.id) * .05 * s * (x / s / .56); } a.needsUpdate = true; }
-    for (const kr of GS.kraene) { const u = kr.userData.kran, ph = u.phase; u.arm.rotation.y = ph + Math.sin(t * .22 + ph) * .9; u.haken.position.y = -1.7 + Math.sin(t * .7 + ph) * .45; u.seil.geometry.attributes.position.array[4] = u.haken.position.y + .13; u.seil.geometry.attributes.position.needsUpdate = true; u.lampe.visible = (t + ph) % 1.2 < .6; }
+    if (!GS.kranStop) for (const kr of GS.kraene) { const u = kr.userData.kran, ph = u.phase; u.arm.rotation.y = ph + Math.sin(t * .22 + ph) * .9; u.haken.position.y = -1.7 + Math.sin(t * .7 + ph) * .45; u.seil.geometry.attributes.position.array[4] = u.haken.position.y + .13; u.seil.geometry.attributes.position.needsUpdate = true; u.lampe.visible = (t + ph) % 1.2 < .6; }
     for (const r of GS.raender) r.material.opacity = .6 + .35 * Math.sin(t * 2.2);
   }
   gs2Bild(dt, t, ruhig);
@@ -7224,20 +7362,22 @@ function gsBild() {
     if (Math.abs(v[0] - z[0]) + Math.abs(v[1] - z[1]) > .3) { v[0] += (z[0] - v[0]) * f; v[1] += (z[1] - v[1]) * f; gsAusschnitt(); } }
   GS.r.render(GS.scene, GS.cam);
   // Schilder mitführen
-  const W = GS.W, H = GS.H, maxY = H - (GS.fokus ? 150 : 64);
+  const W = GS.W, H = GS.H, maxY = H - (GS.fokus ? 150 : UI.gszOffen ? 196 : 64);
   const L = [];
   for (const key in GS.geb) { const g = GS.geb[key], el = GS.tagEl && GS.tagEl[key]; if (!el) continue;
     _gsV.set(g.group.position.x, (g.hTag || g.h) + .5, g.group.position.z).project(GS.cam);
     if (_gsV.z > 1) { el.style.opacity = 0; continue; }
     const hb = (GS.tagB[key] || 120) / 2, x = Math.max(hb + 8, Math.min(W - 8 - hb, (_gsV.x + 1) / 2 * W)), y = Math.min(maxY, Math.max(GS.tagMinY || 0, (1 - _gsV.y) / 2 * H)); // nicht aus dem Bild, unter die Kachel oder das Infofeld rutschen
     L.push({ el, x, y, hb, ht: (GS.tagHt || {})[key] || 44 }); }
+  for (const s of GS.schweber || []) { const p = s.pos(); if (!p || s.alpha === 0) { s.el.style.opacity = 0; continue; } _gsV.set(p[0], p[1], p[2]).project(GS.cam); if (_gsV.z > 1) { s.el.style.opacity = 0; continue; } // auch die schwebenden Schilder (Transporter, Ziel-Hochhaus …) weichen mit aus
+    if (!s.bw) { s.bw = s.el.offsetWidth / 2; s.bh = s.el.offsetHeight + 8; } const x = Math.max(s.bw + 8, Math.min(W - 8 - s.bw, (_gsV.x + 1) / 2 * W)), y = Math.min(maxY, Math.max(GS.tagMinY || 0, (1 - _gsV.y) / 2 * H)); L.push({ el: s.el, x, y, hb: s.bw, ht: s.bh, op: s.alpha === undefined ? 1 : s.alpha }); }
   // Schilder, die sich überdecken, schieben sich auseinander: das vordere bleibt, das hintere weicht nach oben (oder nach unten, wenn oben kein Platz ist)
   L.sort((a, b) => b.y - a.y);
-  for (let i = 1; i < L.length; i++) for (let j = 0; j < i; j++) { const a = L[i], b = L[j], ab = Math.max(a.ht, b.ht); if (Math.abs(a.x - b.x) < a.hb + b.hb + 6 && Math.abs(a.y - b.y) < ab) { const hoch = b.y - b.ht; a.y = hoch >= (GS.tagMinY || 0) ? hoch : b.y + a.ht; } }
-  for (const a of L) { a.el.style.opacity = ''; a.el.style.transform = `translate3d(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px,0) translate(-50%,-100%)`; }
-  if (GS.schweber && GS.schweber.length) gsxSchilder();
+  { const minY = GS.tagMinY || 0, P = [], frei = (a, y) => !P.some(b => Math.abs(a.x - b.x) < a.hb + b.hb + 6 && y - a.ht < b.y && b.y - b.ht < y);
+    for (const a of L) { if (!frei(a, a.y)) { const C = []; for (const b of P) C.push(b.y - b.ht, b.y + a.ht); C.sort((u, v) => Math.abs(u - a.y) - Math.abs(v - a.y)); const c = C.find(y => y >= minY && y <= maxY + 40 && frei(a, y)); if (c !== undefined) a.y = c; } P.push(a); } }
+  for (const a of L) { a.el.style.opacity = a.op || ''; a.el.style.transform = `translate3d(${a.x.toFixed(1)}px,${a.y.toFixed(1)}px,0) translate(-50%,-100%)`; }
   // Zähler
-  const m = UI.gsModus || 'live', d = GS.d;
+  const m = GS.zeit ? 'monat' : UI.gsModus || 'live', d = GS.d;
   if (GS.fokus && GS.el.dl) gsDetZahl(GS.detRate * (Date.now() - GS.ms0) / 1000);
   if (m === 'live') gsZahlSetzen(GS.rate * (Date.now() - GS.ms0) / 1000);
   else { const ziel = m === 'monat' ? d.totMonat : d.totJahr, p = Math.min(1, (jetzt - GS.zaehlAb) / 900), e = 1 - Math.pow(1 - p, 3); gsZahlSetzen((GS.zaehlVon || 0) + (ziel - (GS.zaehlVon || 0)) * e); }
@@ -7641,6 +7781,7 @@ function gsStadtDetail() {
   const geb = Object.values(GS.geb).filter(g => g.aktiv);
   if (geb.length) h += `<div class="gs3-h">Deine Gebäude</div><div class="gs3-li">${geb.map(g => { const L = gsGebAb(g.q), s = gsStufeAus(g.v, L), n = L[s]; return `<div class="gs3-lz gs3-lh"><span class="gs3-lo gs3-loh" style="--c:${g.q.col}">${g.q.icon}</span><span class="gs3-ln"><b>${esc(g.q.ort)} · Stufe ${s} von 6</b><small>${n ? `noch ${eur0(n - g.v)} im Monat bis Stufe ${s + 1}` : 'höchste Stufe erreicht'}</small><em><i style="width:${n ? Math.max(3, (g.v - L[s - 1]) / (n - L[s - 1]) * 100).toFixed(0) : 100}%;background:${g.q.col}"></i></em></span><b class="num">${eur0(g.v)}</b></div>`; }).join('')}</div>`;
   h += gsxPanel();
+  h += gszStadtTeil();
   h += `<div class="gs3-h">Name deiner Stadt</div><div class="gs3-stname"><input name="gsname" maxlength="24" value="${esc(name)}" autocomplete="off" enterkeyhint="done"><button type="button" class="gs3-k2" data-gs="stname">Speichern</button></div>`;
   el.innerHTML = h; el.hidden = false; el.scrollTop = 0;
   gsFlug({ az: GS.kam.az, el: .8, zoom: 1.05, ziel: new THREE.Vector3(0, .5, 0) }, 900);
@@ -7666,7 +7807,7 @@ function gsBanner(html, ms = 7000) {
 const gsMitArt = (st, gross) => st === 1 ? (gross ? 'Ein Dorf' : 'ein Dorf') : (gross ? 'Eine ' : 'eine ') + GS_STADT[st - 1].n;
 /* Nach dem Aufbau: Stufen merken, beim Aufstieg feiern und die Häuser neu hochziehen */
 function gsStufenMerken(st) {
-  if (UI.gsStV) return;
+  if (UI.gsStV || GS.zeit) return;
   const alt = S.gsStadtSt, s = GS_STADT[st - 1], name = esc(gsStadtName());
   if (!alt) setTimeout(() => gsBanner(`<i class="gs3-bi">${s.ico}</i><div><b>Willkommen in ${name}!</b><span>Deine Stadt ist gerade ${gsMitArt(st)}. Mit mehr passivem Einkommen wächst sie bis zur Weltstadt.</span></div><button type="button" class="gs3-k2" data-gs="stadt">Mehr</button>`, 8000), 900);
   else if (st > alt) { GS.aufbau = { t: 0 }; if (GS.fueller) GS.fueller.scale.y = .02; setTimeout(() => gsBanner(`<i class="gs3-bi">${s.ico}</i><div><b>Aufstieg!</b><span>Aus ${alt === 1 ? 'deinem Dorf' : 'deiner ' + GS_STADT[alt - 1].n} wurde ${gsMitArt(st)}.</span></div><button type="button" class="gs3-k2" data-gs="stadt">Ansehen</button>`, 8000), 500); }
@@ -7715,9 +7856,9 @@ function gsxEtikett(html, cls, klick) {
 }
 function gsxSchweber(el, pos) { const s = { el, pos }; GS.schweber.push(s); return s; }
 function gsxSchweberWeg(s) { if (!s) return; s.el.remove(); GS.schweber = GS.schweber.filter(x => x !== s); }
-function gsxSchilder() {
+function gsxSchilder() { /* seit Runde 4 legt gsBild alle Schilder gemeinsam aus */ return;
   const W = GS.W, H = GS.H;
-  for (const s of GS.schweber) { const p = s.pos(); if (!p) { s.el.style.opacity = 0; continue; } _gsV.set(p[0], p[1], p[2]).project(GS.cam);
+  for (const s of GS.schweber) { if (s.lay) continue; const p = s.pos(); if (!p) { s.el.style.opacity = 0; continue; } _gsV.set(p[0], p[1], p[2]).project(GS.cam);
     if (_gsV.z > 1) { s.el.style.opacity = 0; continue; }
     if (!s.bw) s.bw = s.el.offsetWidth / 2; const x = Math.max(s.bw + 8, Math.min(W - 8 - s.bw, (_gsV.x + 1) / 2 * W)); // nicht über den Rand
     s.el.style.opacity = s.alpha === undefined ? 1 : s.alpha; s.el.style.transform = `translate3d(${x.toFixed(1)}px,${((1 - _gsV.y) / 2 * H).toFixed(1)}px,0) translate(-50%,-100%)`; }
@@ -8013,8 +8154,8 @@ function gsxAufbau() {
   GS.schweber = []; GS.trans = []; GS.flug = []; GS.besuch = null; GS.liefer = []; GS.leute = null; GS.bus = null; GS.nass = null; GS.besuchT = 9;
   if (GS.fw) GS.fw.plan.length = GS.fw.p.length = 0;
   GS.boden = GS.welt.children.find(o => o.geometry && o.geometry.type === 'CircleGeometry' && o.position.y === 0);
-  gsxLeute(); gsxLieferwagen(); gsxHimmel();
-  if (!g2Ruhig()) gsxNeueEinnahmen(); else if (!UI.gsStV) { S.gsSeen = S.tx.filter(x => x.type === 'ein' && x.date >= addD(today(), -14)).map(x => x.id); save(); }
+  gsxLeute(); if (!GS.zeit) gsxLieferwagen(); gsxHimmel();
+  if (GS.zeit) { /* Zeitreise: keine neuen Einnahmen abspielen */ } else if (!gsRuhig()) gsxNeueEinnahmen(); else if (!UI.gsStV) { S.gsSeen = S.tx.filter(x => x.type === 'ein' && x.date >= addD(today(), -14)).map(x => x.id); save(); }
 }
 function gsxBild(dt, t, ruhig) {
   if (!GS.welt || !GS.schweber) return;
@@ -8996,7 +9137,7 @@ function gsVermoegen() { if (!S.accounts || !S.accounts.length) return 0; const 
 const gskSichtbar = () => (S.accounts || []).filter(a => !(a.aus && Math.abs(accBalance(a.id)) < .005));
 /* Werte aller Konten einmal je Aufbau (und wenn sich etwas ändert) */
 function gskWerte() {
-  const t = today(), W = {}; for (const a of S.accounts || []) { try { W[a.id] = balSeries([a], t, t).end; } catch (e) { W[a.id] = 0; } }
+  const t = GS.zeit ? gszEnde(GS.zeit) : today(), W = {}; for (const a of S.accounts || []) { try { W[a.id] = balSeries([a], t, t).end; } catch (e) { W[a.id] = 0; } }
   return W;
 }
 function gskStart() { // beim ersten Öffnen: Trade Republic und Depot zur Bank, das Hauptkonto zum Bundestag
@@ -9036,7 +9177,8 @@ function gskSchild(g, wert, zus) {
 /* Vermögen oben in der Kachel */
 function gskKachel() {
   const el = GS.wrap && GS.wrap.querySelector('.gs3-vmw'); if (!el) return;
-  const v = GS.verm = gsVermoegen(); el.textContent = eur(v);
+  const v = GS.verm = GS.zeit ? gszVermAm(GS.zeit) : gsVermoegen(); el.textContent = eur(v);
+  const lb = el.closest('.gs3-vm').querySelector('small'); if (lb) lb.textContent = GS.zeit ? `Vermögen Ende ${gszMon(GS.zeit)} ${GS.zeit.slice(0, 4)}` : 'Vermögen';
   el.closest('.gs3-vm').classList.toggle('leer', !(S.accounts || []).length);
 }
 /* Nur die Zahlen haben sich geändert (neue Kurse, neue Buchung auf einem Konto): Schilder und Kachel neu, ohne die Stadt neu zu bauen */
@@ -9731,6 +9873,349 @@ function gsdEcke(c, x, z, was, A, st) {
   if (was === 'wasser') { const P = gsiP(T.fl, x, z); P.box(0, 0, 0, .16, .42, .16, '#e9ecf0'); P.box(0, .3, .081, .06, .04, .01, '#3a3f4b'); P.geo(gsiZyl(.07, .07, .2, 12), 0, .52, 0, '#9fd3f2'); P.geo(gsiZyl(.03, .07, .04, 12), 0, .44, 0, '#9fd3f2'); return; }
   gsiPflanze(T.fl, x, z, 1, '#c9734f', true);
 }
+
+/* ---------- Geld-Stadt, Runde 4: die Geschichte deines Geldes (Vorsilbe gsz) ----------
+   Zeitreise durch die Monate, Ziel-Hochhaus (passives Einkommen in % der Ausgaben), Dividenden-Schild an der Bank,
+   Rekordmonat mit Krone, Sparparks je 10 % Sparquote, Minus-Monat mit Rissen und stillen Kränen, Abzeichen, ruhiger Modus. */
+
+/* Ruhiger Modus nur für die Geld-Stadt (zusätzlich zur App-Einstellung): die Stadt steht still und spart Akku */
+const gsRuhig = () => g2Ruhig() || !!S.gsRuhig;
+const gszMon = m => MON[+m.slice(5, 7) - 1];
+const gszMonK = m => MON[+m.slice(5, 7) - 1].slice(0, 3);
+const gszEnde = m => { const e = `${m}-${pad(dim(+m.slice(0, 4), +m.slice(5, 7)))}`, t = today(); return e > t ? t : e; };
+function gszVermAm(m) { if (!S.accounts || !S.accounts.length) return 0; const e = gszEnde(m); try { return balSeries(S.accounts, e, e).end; } catch (x) { return 0; } }
+
+/* Alle Monate seit der ersten Buchung: Einnahmen der Stadt (je Gebäude) und Ein/Aus wie in Finanzen */
+function gszMonate() {
+  const cur = today().slice(0, 7), M = {}; let erst = null;
+  for (const t of S.tx || []) { if (t.type !== 'ein' && t.type !== 'aus') continue; const m = t.date.slice(0, 7); if (m > cur) continue; if (!erst || m < erst) erst = m;
+    const o = M[m] || (M[m] = { m, stadt: 0, q: {}, ein: 0, aus: 0 });
+    if (t.type === 'ein') { o.ein += t.amount; const k = gsQuelle(t); if (k !== 'x') { o.stadt += t.amount; o.q[k] = (o.q[k] || 0) + t.amount; } }
+    else o.aus += t.amount; }
+  const L = []; if (!erst) return L;
+  for (let m = erst, n = 0; m <= cur && n < 240; m = addM(m, 1), n++) L.push(M[m] || { m, stadt: 0, q: {}, ein: 0, aus: 0 });
+  return L;
+}
+/* Wie viele Monate in Folge (bis zum letzten abgeschlossenen) mehr rein als raus */
+function gszFolge(L, bis) { let n = 0; for (let i = L.length - 1; i >= 0; i--) { const o = L[i]; if (o.m > bis) continue; if (o.ein > o.aus && o.ein > 0) n++; else break; } return n; }
+
+/* Die Bank (Dividenden, Zinsen) bezahlt Verträge: vom kleinsten an, so viele wie möglich */
+function gszDiv(v) {
+  const t = today(), R = (S.rec || []).filter(r => r.type === 'aus' && r.amount > 0 && (!r.end || r.end >= t)).map(r => ({ n: (r.name || 'Vertrag').trim(), m: r.amount / (r.every || 1) })).sort((a, b) => a.m - b.m);
+  let rest = v; const ok = []; let next = null;
+  for (const r of R) { if (r.m <= rest + .005) { ok.push(r); rest -= r.m; } else { next = Object.assign({ fehlt: r.m - rest }, r); break; } }
+  return { v, ok, next, alle: R.length, rest };
+}
+
+/* Kennzahlen je Aufbau: Bezugsmonat (heute oder der Monat der Zeitreise), Hochhaus, Rekord, Sparquote, Minus */
+function gszKz(d) {
+  const L = gszMonate(), cur = today().slice(0, 7), M = {}; L.forEach(o => { M[o.m] = o; });
+  const bezug = GS.zeit || cur, fertig = GS.zeit || addM(cur, -1);
+  let aus = 0, n = 0; for (let i = GS.zeit ? 0 : 1; i <= (GS.zeit ? 2 : 3); i++) { const o = M[addM(bezug, -i)]; if (o && (o.aus || o.ein)) { aus += o.aus; n++; } }
+  aus = n ? aus / n : (M[bezug] || {}).aus || 0;
+  const pas = gsPassiv(d), pct = aus > 0 ? pas / aus : 0;
+  const vor = m => L.filter(o => o.m < m);
+  const pruef = m => { const o = M[m]; if (!o || o.stadt <= 0) return null; const A = vor(m).filter(x => x.stadt > 0 && x.m !== L[0].m); if (A.length < 3) return null; /* der erste Monat ist meist nur halb gebucht */ const b = Math.max(...A.map(x => x.stadt)); return o.stadt > b ? { m, v: o.stadt, vorher: b } : null; };
+  const rek = GS.zeit ? pruef(GS.zeit) : (pruef(cur) || pruef(addM(cur, -1)));
+  const rekQ = {}; if (rek) for (const k in M[rek.m].q) { const A = vor(rek.m).filter(o => o.q[k] > 0); if (A.length >= 2 && M[rek.m].q[k] > Math.max(...A.map(o => o.q[k]))) rekQ[k] = true; }
+  const f = M[fertig] || { m: fertig, ein: 0, aus: 0 }, spar = f.ein > 0 ? (f.ein - f.aus) / f.ein : 0;
+  const parks = spar >= .05 ? Math.min(4, Math.max(1, Math.floor(spar * 10 + 1e-9))) : 0;
+  const minus = f.aus > f.ein && f.aus > 0 ? { m: fertig, v: f.ein - f.aus } : null;
+  const best = L.reduce((a, o) => o.stadt > (a ? a.stadt : 0) ? o : a, null);
+  return { L, M, cur, bezug, fertig, aus, pas, pct, rek, rekQ, spar, parks, sparM: f, minus, best, div: gszDiv(d.avg.bank || 0) };
+}
+
+/* ---------- Ziel-Hochhaus auf dem Bauplatz: 10 Stockwerke, jedes = 10 % der Ausgaben, die passiv gedeckt sind ---------- */
+function gszHochhaus(g, w, dd) {
+  const z = GS.zk || { pct: 0 }, p = Math.max(0, Math.min(1, z.pct || 0)), voll = Math.min(10, Math.floor(p * 10 + 1e-9)), teil = p * 10 - voll, H = .62, N = 10;
+  const T = gsTeile(), bw = Math.min(2.5, w * .48), bd = Math.min(2.3, dd * .48), bx = -w * .1, bz = -dd * .08, y0 = .25;
+  gsBox(T.fl, 0, 0, 0, w, .09, dd, '#e3e7ee', { ao: false });
+  gsBox(T.fl, bx, .09, bz, bw + .55, .16, bd + .55, '#cdd3de');
+  for (let i = 0; i < voll; i++) { const y = y0 + i * H, gold = i % 5 === 4 || i === N - 1;
+    gsBox(T.fl, bx, y, bz, bw, H - .1, bd, '#f6f7fa');
+    gsBox(T.li, bx, y + .13, bz, bw + .025, H - .34, bd + .025, '#9cc0e4');
+    gsBox(T.fl, bx, y + H - .1, bz, bw + .1, .1, bd + .1, gold ? '#e2b23c' : '#dde2ea'); }
+  const top = y0 + voll * H;
+  if (voll < N) {
+    // Stockwerk im Bau: Decke, Stützen so hoch wie der Fortschritt, Gerüst
+    const hh = Math.max(.12, (H - .1) * Math.min(1, .15 + teil));
+    gsBox(T.fl, bx, top, bz, bw, .08, bd, '#d6d9e0');
+    for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1], [0, -1], [0, 1]]) gsBox(T.fl, bx + sx * (bw / 2 - .06), top + .08, bz + sz * (bd / 2 - .06), .1, hh, .1, '#c3c8d2');
+    gsBox(T.fl, bx, top + .05, bz + bd / 2 + .2, bw + .3, .04, .24, '#f19a2c', { ao: false }); gsBox(T.fl, bx + bw / 2 + .2, top + .05, bz, .24, .04, bd + .3, '#f19a2c', { ao: false });
+    for (let s = 0; s <= 4; s++) { const u = -bw / 2 - .1 + s * (bw + .2) / 4; gsBox(T.fl, bx + u, .09, bz + bd / 2 + .32, .035, top + .55, .035, '#f4f5f8', { ao: false }); }
+  } else {
+    gsBox(T.fl, bx, top, bz, bw * .7, .35, bd * .7, '#f6f7fa'); gsBox(T.fl, bx, top + .35, bz, bw * .74, .06, bd * .74, '#e2b23c');
+  }
+  // Container und Material neben dem Turm
+  gsBox(T.fl, w / 2 - .7, .09, dd / 2 - .45, 1.0, .45, .42, '#3f6fd6'); gsBox(T.fl, -w / 2 + .6, .09, dd / 2 - .4, .9, .45, .42, '#e9edf3');
+  gsTeileFertig(g, T);
+  // Noch fehlende Stockwerke als feine Umrisse bis zur Zielhöhe
+  if (voll < N - 1) { const P = [], a = bw / 2, b = bd / 2, ya = top + H, yb = y0 + N * H;
+    for (let i = voll + 1; i <= N; i++) { const y = y0 + i * H; P.push(bx - a, y, bz - b, bx + a, y, bz - b, bx + a, y, bz - b, bx + a, y, bz + b, bx + a, y, bz + b, bx - a, y, bz + b, bx - a, y, bz + b, bx - a, y, bz - b); }
+    for (const [sx, sz] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) P.push(bx + sx * a, ya, bz + sz * b, bx + sx * a, yb, bz + sz * b);
+    const lg = new THREE.BufferGeometry(); lg.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+    g.add(new THREE.LineSegments(lg, new THREE.LineBasicMaterial({ color: 0x7d93bb, transparent: true, opacity: .5 }))); }
+  // Ziel oben: goldener Ring, der sich dreht (bei 100 % eine Krone)
+  const zy = y0 + N * H + .45;
+  if (voll >= N) gszKrone(g, bx, top + .75, bz, 1.1);
+  else { const r = gsMesh(g, new THREE.TorusGeometry(.32, .06, 10, 28), gszGold(), bx, zy, bz, false); r.userData.dreht = .8; r.userData.schwebt = [zy, .06]; GS.dreher.push(r); }
+  if (voll < N) gsKran(g, bx + bw / 2 + .85, bz - bd / 2 - .45, top + H + 2.1, Math.min(2.8, w * .45));
+  GS.hoch = { x: g.position.x + bx, z: g.position.z + bz, h: zy + .35, top, voll, p };
+  return zy;
+}
+function gszGold() { if (!GS.goldM) { GS.goldM = new THREE.MeshLambertMaterial({ color: 0xf2c230, emissive: 0x7a5200, emissiveIntensity: .45, side: THREE.DoubleSide }); GS.goldM.userData.bleibt = true; } return GS.goldM; }
+function gszKrone(par, x, y, z, s = 1) {
+  const g = new THREE.Group(); g.position.set(x, y, z); par.add(g); const m = gszGold();
+  const band = new THREE.Mesh(new THREE.CylinderGeometry(.3 * s, .26 * s, .16 * s, 24, 1, true), m); g.add(band);
+  for (let i = 0; i < 5; i++) { const a = i / 5 * Math.PI * 2, sp = new THREE.Mesh(new THREE.ConeGeometry(.075 * s, .24 * s, 6), m); sp.position.set(Math.cos(a) * .27 * s, .19 * s, Math.sin(a) * .27 * s); g.add(sp);
+    const k = new THREE.Mesh(new THREE.SphereGeometry(.04 * s, 8, 6), m); k.position.set(Math.cos(a) * .27 * s, .33 * s, Math.sin(a) * .27 * s); g.add(k); }
+  const st = new THREE.Mesh(new THREE.OctahedronGeometry(.06 * s), new THREE.MeshLambertMaterial({ color: 0xe8413a, emissive: 0x5a0d0a })); st.position.y = .02 * s; st.position.z = .29 * s; g.add(st);
+  g.traverse(o => { if (o.isMesh) o.castShadow = true; });
+  g.userData.dreht = .7; g.userData.schwebt = [y, .07 * s]; GS.dreher.push(g); return g;
+}
+
+/* ---------- Sparparks: pro volle 10 % Sparquote ein Park (ab 5 % der erste), mit Teich, Beeten, Bänken und Sparschwein ---------- */
+const GSZ_PARK_REIHE = ['1,2', '-1,-2', '2,1', '-2,-1', '-1,2', '1,-2', '-2,1', '2,-1'];
+function gszParkBlocks(sonderBlk, bau, kirche, R) { const n = (GS.zk || {}).parks || 0; if (!n) return []; return GSZ_PARK_REIHE.filter(k => !sonderBlk[k] && k !== bau && k !== kirche && k.split(',').every(v => Math.abs(+v) <= R)).slice(0, n); }
+function gszPark(W, T, baeume, x0, x1, z0, z1, zf) {
+  const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, w = x1 - x0, d = z1 - z0;
+  gsBox(T.fl, cx, 0, cz, w - .3, .085, d - .3, '#a3dc8e', { ao: false });
+  gsBox(T.fl, cx, .085, cz, w - 1.1, .014, .5, '#eadbb3', { ao: false }); gsBox(T.fl, cx, .086, cz, .5, .014, d - 1.1, '#eadbb3', { ao: false });
+  // Teich mit Rand
+  const tx = cx + w * .23, tz = cz - d * .22;
+  gsMesh(W, new THREE.CircleGeometry(1, 30).rotateX(-Math.PI / 2), gsL('#7ec6ec'), tx, .105, tz, false).scale.set(1.15, 1, .85);
+  gsMesh(W, new THREE.RingGeometry(1, 1.13, 30).rotateX(-Math.PI / 2), gsL('#d8ceb6'), tx, .108, tz, false).scale.set(1.15, 1, .85);
+  // Beete an der Kreuzung
+  const farben = ['#ff7aa8', '#ffd24a', '#ff6b5b', '#b48cff'];
+  [[-1, -1], [1, 1], [-1, 1]].forEach(([sx, sz], i) => { const bx = cx + sx * 1.05, bz = cz + sz * 1.05; gsBox(T.fl, bx, .085, bz, .9, .1, .62, '#8a6646');
+    for (let k = 0; k < 6; k++) gsBox(T.fl, bx - .3 + (k % 3) * .3, .185, bz - .14 + Math.floor(k / 3) * .28, .13, .07, .13, farben[(i + k) % 4], { ao: false }); });
+  // Bänke
+  for (const [bx, bz, quer] of [[-.95, .5, 0], [.5, -1.6, 1], [-1.9, -.5, 1]]) { const ww = quer ? .18 : .62, dw = quer ? .62 : .18;
+    gsBox(T.fl, cx + bx, .17, cz + bz, ww, .05, dw, '#a77b52'); gsBox(T.fl, cx + bx + (quer ? -.08 : 0), .22, cz + bz + (quer ? 0 : -.08), quer ? .04 : ww, .16, quer ? dw : .04, '#8f6644');
+    for (const s of [-1, 1]) gsBox(T.fl, cx + bx + (quer ? 0 : s * .25), .085, cz + bz + (quer ? s * .25 : 0), .05, .09, .05, '#4a4f5c'); }
+  // Sparschwein auf dem Sockel in der Mitte
+  gsBox(T.fl, cx, .1, cz, .5, .22, .5, '#e9edf3');
+  const P = '#ff9fbf', y = .32;
+  gsBox(T.fl, cx, y + .08, cz, .44, .28, .3, P); gsBox(T.fl, cx + .26, y + .14, cz, .14, .16, .2, P); gsBox(T.fl, cx + .34, y + .15, cz, .04, .08, .12, '#ff86ad');
+  for (const s of [-1, 1]) { gsBox(T.fl, cx + .22, y + .3, cz + s * .07, .06, .06, .05, '#ff86ad'); gsBox(T.fl, cx + s * .13, y, cz + .09, .07, .1, .07, P); gsBox(T.fl, cx + s * .13, y, cz - .09, .07, .1, .07, P); }
+  gsBox(T.fl, cx - .02, y + .36, cz, .14, .015, .03, '#3a2b33', { ao: false });
+  // Bäume am Rand, nicht auf Wegen und nicht im Teich
+  for (let k = 0; k < 26; k++) { const x = x0 + .55 + zf() * (w - 1.1), z = z0 + .55 + zf() * (d - 1.1);
+    if (Math.abs(x - cx) < .65 || Math.abs(z - cz) < .65) continue; if (Math.hypot((x - tx) / 1.3, (z - tz) / 1.05) < 1.25) continue; if (Math.abs(x - cx) < 1.7 && Math.abs(z - cz) < 1.7) continue;
+    gsBaum(baeume, x, z, .85 + zf() * .35, zf); }
+  (GS.parks || (GS.parks = [])).push([cx, cz]);
+}
+
+/* ---------- Minus-Monat: Risse im Platz und auf den Alleen, die Kräne stehen still ---------- */
+function gszRisseTex() {
+  if (GS.risseTex) return GS.risseTex;
+  const t = GS.risseTex = gsTex(512, 512, (c, w) => { c.clearRect(0, 0, w, w); c.lineCap = 'round'; c.lineJoin = 'round'; const z = gsZufall(4711);
+    const riss = (x, y, a, n, lw) => { c.lineWidth = lw; c.beginPath(); c.moveTo(x, y); for (let s = 0; s < n; s++) { a += (z() - .5) * 1.2; x += Math.cos(a) * 12; y += Math.sin(a) * 12; c.lineTo(x, y); if (z() < .16 && lw > 1.4) { c.stroke(); riss(x, y, a + (z() < .5 ? 1 : -1) * (.6 + z()), 5 + Math.floor(z() * 5), lw * .6); c.lineWidth = lw; c.beginPath(); c.moveTo(x, y); } } c.stroke(); };
+    c.strokeStyle = 'rgba(70,58,52,.8)'; for (let k = 0; k < 11; k++) { const a = z() * 6.283, r = 70 + z() * 150; riss(w / 2 + Math.cos(a) * r, w / 2 + Math.sin(a) * r, a + (z() - .5), 9 + Math.floor(z() * 8), 2.4 + z() * 1.6); } });
+  t.userData = { bleibt: true }; return t;
+}
+function gszRisse(W) {
+  const tex = gszRisseTex(), mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+  const s = GS_PLATZ * 2 + 4; gsMesh(W, new THREE.PlaneGeometry(s, s).rotateX(-Math.PI / 2), mat, 0, .03, 0, false).receiveShadow = false;
+  for (const [x, z, ry] of [[GS_PLATZ + 3.4, .2, 0], [-.3, -GS_PLATZ - 3.2, 1.57], [-GS_PLATZ - 3.6, -.1, 3.1]]) { const m = gsMesh(W, new THREE.PlaneGeometry(4, 2.4).rotateX(-Math.PI / 2), mat, x, .031, z, false); m.rotation.y = ry; m.receiveShadow = false; }
+}
+
+/* ---------- Nach jedem Aufbau: Krone, Goldring, Risse, Schilder an Hochhaus, Bank, Park und Brunnen ---------- */
+function gszAufbau() {
+  const z = GS.zk, W = GS.welt; if (!z || !W) return;
+  gszEinbau();
+  GS.kranStop = !!z.minus;
+  if (z.minus) gszRisse(W);
+  if (z.rek) { gszKrone(GS.mitte, 0, GS.st === 1 ? 2.2 : 2.75, 0, 1.25);
+    const ring = gsMesh(W, new THREE.RingGeometry(GS_PLATZ + .05, GS_PLATZ + .5, 64).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xf2c230, transparent: true, opacity: .8, depthWrite: false }), 0, .02, 0, false); ring.receiveShadow = false; GS.raender.push(ring);
+    for (const k in z.rekQ) { const g = GS.geb[k]; if (!g || !g.aktiv) continue; const p = g.group.position; gszKrone(W, p.x, g.h + .6, p.z, .85); g.hTag = g.h + 1.15; } }
+  GS.r.shadowMap.needsUpdate = true;
+  // Schilder
+  const H = GS.hoch;
+  if (H) { const pct = Math.round((z.pct || 0) * 100), el = gsxEtikett(`<i style="--c:#fdeab0">🏢</i><div><b>Ziel-Hochhaus · ${pct > 999 ? '999+' : pct} %</b><small>${z.aus > 0 ? `${H.voll} von 10 Stockwerken` : 'noch keine Ausgaben gebucht'}</small></div>`, 'gsz-fe', ['gszHoch']); gsxSchweber(el, () => [H.x, H.h, H.z]).lay = true; }
+  if ((GS.parks || []).length) { const [px, pz] = GS.parks[0];
+    const el = gsxEtikett(`<i style="--c:#dff3d6">🌳</i><div><b>${GS.parks.length === 1 ? 'Sparpark' : GS.parks.length + ' Sparparks'}</b><small>${Math.round(z.spar * 100)} % gespart im ${gszMon(z.sparM.m)}</small></div>`, 'gsz-fe', ['gszSpar']); gsxSchweber(el, () => [px, 1.6, pz]).lay = true; }
+  if (z.minus) { const el = gsxEtikett(`<i style="--c:#fde1dc">📉</i><div><b>Minus-Monat</b><small>${eur0(z.minus.v)} im ${gszMon(z.minus.m)}</small></div>`, 'gsz-fe gsz-rot', ['gszMinus']); gsxSchweber(el, () => [GS_PLATZ * .7, .6, GS_PLATZ * .7]).lay = true; }
+  if (z.rek) { const el = gsxEtikett(`<i style="--c:#fdeab0">👑</i><div><b>Rekordmonat!</b><small>${eur0(z.rek.v)} im ${gszMon(z.rek.m)}</small></div>`, 'gsz-fe gsz-gold', ['gszRekord']); gsxSchweber(el, () => [0, GS.st === 1 ? 3.0 : 3.6, 0]).lay = true; }
+  gszLeisteFuellen();
+  gszHinweise();
+  gszBankZeile();
+}
+/* Dividenden-Zeile direkt im Bank-Schild statt eines eigenen Schildes */
+function gszBankZeile() {
+  const z = GS.zk, el = GS.tagEl && GS.tagEl.bank, g = GS.geb.bank; if (!z || !el || !g || !g.aktiv || !z.div.ok.length || el.querySelector('.gsz-tz')) return;
+  const ok = z.div.ok, gr = ok[ok.length - 1];
+  (el.querySelector('.gs3-tgx') || el).insertAdjacentHTML('beforeend', `<small class="gsz-tz">💸 zahlt ${esc(gr.n)}${ok.length > 1 ? ` + ${ok.length - 1}` : ''}</small>`);
+  if (GS.tagB) { GS.tagB.bank = el.offsetWidth; GS.tagHt.bank = el.offsetHeight + 8; }
+}
+{ const tf = gsTagsFuellen; gsTagsFuellen = function () { tf(); gszBankZeile(); }; }
+
+/* Banner einmal je Monat (Rekord, Minus) und neue Abzeichen; nie in der Zeitreise oder der Stufen-Vorschau */
+function gszHinweise() {
+  const z = GS.zk; if (!z) return;
+  if (GS.zeit) { if (z.rek) setTimeout(() => gsBanner(`<i class="gs3-bi">👑</i><div><b>Rekordmonat im ${gszMon(z.rek.m)}</b><span>${eur0(z.rek.v)}, mehr als in jedem Monat davor.</span></div>`, 5000), 700); return; }
+  if (UI.gsStV) return;
+  const neu = gszAbzPruefen(); let warte = S.gsStadtSt ? 1400 : 9500;
+  if (z.rek && S.gszRekord !== z.rek.m) { S.gszRekord = z.rek.m; save(); setTimeout(() => gsBanner(`<i class="gs3-bi">👑</i><div><b>Rekordmonat!</b><span>Im ${gszMon(z.rek.m)} kamen ${eur0(z.rek.v)} rein, so viel wie noch nie. Vorher war das Beste ${eur0(z.rek.vorher)}.</span></div><button type="button" class="gs3-k2" data-gs="gszRekord">Ansehen</button>`, 8000), warte); warte += 8600; }
+  else if (z.minus && S.gszMinus !== z.minus.m) { S.gszMinus = z.minus.m; save(); setTimeout(() => gsBanner(`<i class="gs3-bi">📉</i><div><b>Minus-Monat</b><span>Im ${gszMon(z.minus.m)} ging ${eur0(-z.minus.v)} mehr raus als rein. Bis zum nächsten Plus-Monat stehen die Kräne still.</span></div><button type="button" class="gs3-k2" data-gs="gszMinus">Warum?</button>`, 8000), warte); warte += 8600; }
+  if (neu.length) setTimeout(() => gsBanner(`<i class="gs3-bi">${neu[0].ico}</i><div><b>Neues Abzeichen: ${neu[0].n}</b><span>${neu[0].txt}${neu.length > 1 ? ` · und ${neu.length - 1} weitere` : ''}</span></div><button type="button" class="gs3-k2" data-gs="gszAbz">Alle ansehen</button>`, 8000), warte);
+}
+
+/* ---------- Abzeichen ---------- */
+const GSZ_ABZ = [
+  { id: 'grund', ico: '🧱', n: 'Grundstein', txt: 'Die erste Einnahme fließt in deine Stadt.', ok: c => c.d.total > 0 },
+  { id: 'vier', ico: '🏘️', n: 'Vielfalt', txt: 'Vier Gebäude mit Einnahmen.', ok: () => Object.values(GS.geb).filter(g => g.aktiv && g.q.k !== 'haus').length >= 4 },
+  { id: 'st2', ico: '🏡', n: 'Kleinstadt', txt: 'Aus dem Dorf wird eine Kleinstadt.', ok: c => c.st >= 2 },
+  { id: 'st4', ico: '🏙️', n: 'Großstadt', txt: 'Stadtstufe 4 erreicht.', ok: c => c.st >= 4 },
+  { id: 'st6', ico: '🌆', n: 'Weltstadt', txt: 'Die höchste Stadtstufe.', ok: c => c.st >= 6 },
+  { id: 'treue', ico: '📅', n: 'Halbes Jahr', txt: 'Sechs Monate mit Einnahmen in der Stadt.', ok: c => c.z.L.filter(o => o.stadt > 0).length >= 6 },
+  { id: 'rekord', ico: '👑', n: 'Rekordmonat', txt: 'So viel Einnahmen wie nie in einem Monat.', ok: c => !!c.z.rek },
+  { id: 'plus3', ico: '📈', n: 'Dreimal im Plus', txt: 'Drei Monate in Folge mehr rein als raus.', ok: c => gszFolge(c.z.L, addM(c.z.cur, -1)) >= 3 },
+  { id: 'spar20', ico: '🌳', n: 'Gärtner', txt: 'Ein Monat mit mindestens 20 % Sparquote.', ok: c => c.z.L.some(o => o.m < c.z.cur && o.ein > 0 && (o.ein - o.aus) / o.ein >= .2) },
+  { id: 'div1', ico: '💸', n: 'Erster Vertrag bezahlt', txt: 'Die Bank zahlt einen Vertrag komplett.', ok: c => c.z.div.ok.length >= 1 },
+  { id: 'div3', ico: '🧾', n: 'Drei Verträge', txt: 'Die Bank zahlt drei Verträge komplett.', ok: c => c.z.div.ok.length >= 3 },
+  { id: 'hoch1', ico: '🏗️', n: 'Erstes Stockwerk', txt: 'Passives Einkommen deckt 10 % der Ausgaben.', ok: c => c.z.pct >= .1 },
+  { id: 'hoch5', ico: '🏢', n: 'Halbe Höhe', txt: 'Passives Einkommen deckt 50 % der Ausgaben.', ok: c => c.z.pct >= .5 },
+  { id: 'hoch10', ico: '🏆', n: 'Finanziell frei', txt: 'Passives Einkommen deckt alle Ausgaben.', ok: c => c.z.pct >= 1 },
+  { id: 'haus', ico: '🏠', n: 'Eigenheim', txt: 'Mein Haus steht in der Stadt.', ok: () => typeof gshAn === 'function' && gshAn() },
+  { id: 'zeit', ico: '🕰️', n: 'Zeitreisender', txt: 'Mit der Zeitreise in die Vergangenheit geschaut.', ok: () => !!UI.gszWarDa }
+];
+function gszAbzPruefen() {
+  if (GS.zeit || UI.gsStV || !GS.zk || !GS.d) return [];
+  const A = S.gszAbz || (S.gszAbz = {}), c = { d: GS.d, st: gsStadtEcht(GS.d), z: GS.zk }, neu = [];
+  for (const a of GSZ_ABZ) if (!A[a.id]) { let ok = false; try { ok = a.ok(c); } catch (e) { ok = false; } if (ok) { A[a.id] = today(); neu.push(a); } }
+  if (neu.length) save();
+  return neu;
+}
+function gszAbzKachel() { const A = S.gszAbz || {}, n = GSZ_ABZ.filter(a => A[a.id]).length; return `${n}/${GSZ_ABZ.length}`; }
+
+/* ---------- Fenster (wie das Stadt-Fenster unten bzw. rechts) ---------- */
+function gszFenster(ico, col, titel, unter, h, ziel) {
+  const el = GS.el.det; GS.fokus = null; GS.detStadt = true; GS.form = null; GS.el.dl = null;
+  GS.el.tags.classList.add('hat-fokus'); GS.el.tags.querySelectorAll('.gs3-tag').forEach(t => t.classList.remove('fokus')); GS.wrap.classList.add('gs3-hat-det');
+  el.innerHTML = `<div class="gs3-dk"><i style="--c:${col}">${ico}</i><div><b>${titel}</b><small>${unter}</small></div><button type="button" class="gs3-x" data-gs="heim" aria-label="Schließen">${GS_SVG.zu}</button></div>` + h;
+  el.hidden = false; el.scrollTop = 0;
+  if (ziel) gsFlug(ziel, 1000);
+  requestAnimationFrame(gsVersatz);
+}
+const gszZiel = (x, y, z, zoom) => ({ az: GS.kam.az, el: .62, zoom, ziel: new THREE.Vector3(x, y, z) });
+function gszHochFenster() {
+  const z = GS.zk, H = GS.hoch || { voll: 0 }, pct = z.pct || 0, fehlt = z.aus > 0 && H.voll < 10 ? (H.voll + 1) / 10 * z.aus - z.pas : 0;
+  let h = `<div class="gsz-gross"><b class="num">${Math.round(pct * 100)} %</b><span>deiner Ausgaben zahlt dein Geld schon selbst</span></div>`;
+  h += `<div class="gsz-stock">${Array.from({ length: 10 }, (_, i) => `<i class="${i < H.voll ? 'an' : i === H.voll && pct * 10 > H.voll ? 'teil' : ''}${i % 5 === 4 ? ' gold' : ''}"><span>${(i + 1) * 10} %</span></i>`).reverse().join('')}</div>`;
+  h += `<div class="gs3-dz"><div><small>Passiv Ø im Monat</small><b class="num">${eur0(z.pas)}</b></div><div><small>Ausgaben Ø</small><b class="num">${z.aus > 0 ? eur0(z.aus) : '–'}</b></div><div><small>Stockwerke</small><b class="num">${H.voll} von 10</b></div></div>`;
+  h += `<p class="gs3-dt">Passives Einkommen sind Dividenden, Zinsen und Miete, also Geld, für das du nicht arbeiten musst. Die Ausgaben sind der Schnitt der letzten drei Monate${GS.zeit ? ` vor dem ${gszMon(GS.zeit)}` : ''}. Jedes Stockwerk steht für 10 %, die schon gedeckt sind.</p>`;
+  if (z.aus <= 0) h += `<p class="gs3-dt">Sobald Ausgaben gebucht sind, wächst das Hochhaus.</p>`;
+  else if (H.voll >= 10) h += `<p class="gs3-dt gsz-gut"><b>Geschafft!</b> Dein Geld verdient so viel, wie du ausgibst. Das nennt man finanziell frei.</p>`;
+  else h += `<p class="gs3-dt">Für das nächste Stockwerk fehlen noch <b class="num">${eur0(Math.max(1, fehlt))}</b> passives Einkommen im Monat. Ganz oben, bei 100 %, bist du finanziell frei.</p>`;
+  gszFenster('🏢', '#fdeab0', 'Ziel-Hochhaus', 'Passives Einkommen gegen deine Ausgaben', h, GS.hoch ? gszZiel(GS.hoch.x, 3, GS.hoch.z, .62) : null);
+}
+function gszDivBlock(d) {
+  const z = GS.zk; if (!z || !z.div.alle) return '';
+  const D = z.div; let h = `<div class="gs3-h">Was deine Bank schon bezahlt</div>`;
+  if (!D.ok.length) h += `<p class="gs3-dt">Noch zahlt die Bank keinen Vertrag ganz. ${D.next ? `Am nächsten dran ist <b>${esc(D.next.n)}</b>: Es fehlen noch <b class="num">${eur(D.next.fehlt)}</b> im Monat.` : ''}</p>`;
+  else h += `<div class="gsz-ver">${D.ok.map(r => `<div><i>✓</i><span>${esc(r.n)}</span><b class="num">${eur(r.m)}</b></div>`).join('')}${D.next ? `<div class="offen"><i>…</i><span>${esc(D.next.n)}</span><b class="num">noch ${eur(D.next.fehlt)}</b></div>` : ''}</div>
+    <p class="gs3-dt">Ø ${eur0(D.v)} im Monat aus Dividenden und Zinsen bezahlen ${D.ok.length} von ${D.alle} Verträgen komplett, angefangen beim kleinsten.</p>`;
+  return h;
+}
+function gszSparFenster() {
+  const z = GS.zk, f = z.sparM, q = Math.round(z.spar * 100), n = (GS.parks || []).length, nx = n >= 4 ? null : n === 0 ? 5 : (n + 1) * 10;
+  let h = `<div class="gsz-gross gruen"><b class="num">${q} %</b><span>gespart im ${gszMon(f.m)} ${f.m.slice(0, 4)}</span></div>`;
+  h += `<div class="gs3-dz"><div><small>Eingenommen</small><b class="num">${eur0(f.ein)}</b></div><div><small>Ausgegeben</small><b class="num">${eur0(f.aus)}</b></div><div><small>Übrig</small><b class="num">${eur0(f.ein - f.aus)}</b></div></div>`;
+  h += `<p class="gs3-dt">Für jede volle 10 % Sparquote entsteht in der Stadt ein Park, ab 5 % der erste, höchstens vier. Gezählt wird der letzte abgeschlossene Monat${GS.zeit ? ' (in der Zeitreise der gewählte)' : ''}.</p>`;
+  h += `<p class="gs3-dt">${n ? `Gerade ${n === 1 ? 'steht ein Park' : `stehen ${n} Parks`}.` : 'Noch steht kein Park.'} ${nx ? `Ab ${nx} % kommt ${n ? 'der nächste' : 'der erste'} dazu.` : 'Mehr Parks gibt es nicht. Stark!'}</p>`;
+  const p = (GS.parks || [])[0];
+  gszFenster('🌳', '#dff3d6', 'Sparparks', 'Deine Sparquote als Grünflächen', h, p ? gszZiel(p[0], .6, p[1], .5) : null);
+}
+function gszMinusFenster() {
+  const z = GS.zk, mi = z.minus; if (!mi) return;
+  const tx = (S.tx || []).filter(t => t.type === 'aus' && t.date.startsWith(mi.m)), K = {};
+  for (const t of tx) { const c = cat(t.cat), n = c ? (typeof topCat === 'function' ? topCat(c).name : c.name) : 'Ohne Kategorie'; K[n] = (K[n] || 0) + t.amount; }
+  const top = Object.entries(K).sort((a, b) => b[1] - a[1]).slice(0, 4), f = z.M[mi.m];
+  let h = `<div class="gsz-gross rot"><b class="num">${eur0(mi.v)}</b><span>im ${gszMon(mi.m)} ${mi.m.slice(0, 4)}: mehr ausgegeben als eingenommen</span></div>`;
+  h += `<div class="gs3-dz"><div><small>Eingenommen</small><b class="num">${eur0(f.ein)}</b></div><div><small>Ausgegeben</small><b class="num">${eur0(f.aus)}</b></div></div>`;
+  if (top.length) h += `<div class="gs3-h">Wohin am meisten ging</div><div class="gsz-ver">${top.map(([n, v]) => `<div><i>•</i><span>${esc(n)}</span><b class="num">${eur0(v)}</b></div>`).join('')}</div>`;
+  h += `<p class="gs3-dt">Darum hat der Platz Risse und die Kräne stehen still. Mit dem nächsten Monat im Plus ist alles wieder heil.</p>`;
+  gszFenster('📉', '#fde1dc', 'Minus-Monat', 'Mehr raus als rein', h, gszZiel(0, .5, 0, .55));
+}
+function gszRekordFenster() {
+  const z = GS.zk, r = z.rek; if (!r) return;
+  const qs = Object.keys(z.rekQ).map(k => GS.geb[k]).filter(Boolean);
+  let h = `<div class="gsz-gross gold"><b class="num">${eur0(r.v)}</b><span>Einnahmen im ${gszMon(r.m)} ${r.m.slice(0, 4)}${r.m === z.cur ? ' (bis jetzt)' : ''}</span></div>`;
+  h += `<p class="gs3-dt">So viel kam noch in keinem Monat rein. Der bisher beste Monat brachte ${eur0(r.vorher)}, also <b class="num">${eur0(r.v - r.vorher)}</b> weniger.</p>`;
+  if (qs.length) h += `<div class="gs3-h">Auch ein Rekord für</div><div class="gsz-ver">${qs.map(g => `<div><i>👑</i><span>${esc(g.q.ort)}</span><b class="num">${eur0(z.M[r.m].q[g.q.k])}</b></div>`).join('')}</div>`;
+  h += `<p class="gs3-dt">Darum trägt der Brunnen eine Krone und der Platz einen goldenen Ring.</p>`;
+  gszFenster('👑', '#fdeab0', 'Rekordmonat', 'So viel wie nie', h, gszZiel(0, 1.5, 0, .5));
+}
+function gszAbzFenster() {
+  gszAbzPruefen();
+  const A = S.gszAbz || {}, n = GSZ_ABZ.filter(a => A[a.id]).length;
+  let h = `<div class="gsz-abz">${GSZ_ABZ.map(a => { const d = A[a.id]; return `<div class="gsz-ab${d ? ' an' : ''}"><i>${d ? a.ico : '🔒'}</i><b>${a.n}</b><small>${a.txt}</small>${d ? `<em>${fmtDs(d)}</em>` : ''}</div>`; }).join('')}</div>`;
+  gszFenster('🏅', '#fdeab0', 'Abzeichen', `${n} von ${GSZ_ABZ.length} gesammelt`, h);
+}
+/* Im Stadt-Fenster: Abzeichen, Hochhaus und ruhiger Modus */
+function gszStadtTeil() {
+  const A = S.gszAbz || {}, an = GSZ_ABZ.filter(a => A[a.id]);
+  let h = `<div class="gs3-h">Abzeichen · ${an.length} von ${GSZ_ABZ.length}</div><button type="button" class="gsz-abzr" data-gs="gszAbz">${GSZ_ABZ.map(a => `<i class="${A[a.id] ? 'an' : ''}">${A[a.id] ? a.ico : '·'}</i>`).join('')}<span>Alle ansehen</span></button>`;
+  h += `<div class="gs3-h">Ruhiger Modus</div><button type="button" class="gsz-schalter${S.gsRuhig ? ' an' : ''}" data-gs="gszRuhig" role="switch" aria-checked="${S.gsRuhig ? 'true' : 'false'}"><span><b>Stadt steht still</b><small>Autos und Leute bleiben stehen, keine Animationen. Spart Akku.</small></span><i></i></button>`;
+  return h;
+}
+
+/* ---------- Zeitreise: Leiste mit einem Balken je Monat ---------- */
+function gszEinbau() {
+  const w = GS.wrap; if (!w || w.querySelector('.gsz-leiste')) return;
+  const L = w.querySelector('.gs3-links');
+  if (L) L.insertAdjacentHTML('beforeend', `<button type="button" class="gs3-marke gsz-fb" data-gs="gszZeit" aria-label="Zeitreise"><i>🕰</i><span>Zeitreise</span></button><button type="button" class="gs3-marke gsz-fb gsz-abk" data-gs="gszAbz" aria-label="Abzeichen"><i>🏅</i><span class="num">0/0</span></button>`);
+  const z = document.createElement('div'); z.className = 'gsz-leiste'; z.hidden = true;
+  z.innerHTML = `<div class="gsz-kopf"><b>Zeitreise</b><span class="gsz-mon"></span><button type="button" class="gs3-k2 gsz-heute" data-gs="gszHeute">Heute</button><button type="button" class="gs3-x" data-gs="gszZeit" aria-label="Zeitreise schließen">${GS_SVG.zu}</button></div><div class="gsz-bars" tabindex="0" role="slider" aria-label="Monat für die Zeitreise"></div><div class="gsz-achse"></div>`;
+  w.querySelector('.gs3-fuss').before(z);
+  const bars = z.querySelector('.gsz-bars');
+  const idx = e => { const b = bars.getBoundingClientRect(), n = (GS.zlM || []).length; return Math.max(0, Math.min(n - 1, Math.floor((e.clientX - b.left) / b.width * n))); };
+  let zieh = false;
+  bars.addEventListener('pointerdown', e => { zieh = true; bars.setPointerCapture(e.pointerId); gszZeigen(idx(e)); e.preventDefault(); });
+  bars.addEventListener('pointermove', e => { if (zieh) gszZeigen(idx(e)); });
+  const los = e => { if (!zieh) return; zieh = false; const i = idx(e); gszGehe(GS.zlM[i]); };
+  bars.addEventListener('pointerup', los); bars.addEventListener('pointercancel', () => { zieh = false; gszLeisteFuellen(); });
+  bars.addEventListener('keydown', e => { const M = GS.zlM || [], i = M.indexOf(GS.zeit || today().slice(0, 7)); if (e.key === 'ArrowLeft' && i > 0) { gszGehe(M[i - 1]); e.preventDefault(); } if (e.key === 'ArrowRight' && i < M.length - 1) { gszGehe(M[i + 1]); e.preventDefault(); } });
+}
+function gszLeisteFuellen() {
+  const w = GS.wrap, z = GS.zk; if (!w || !z) return;
+  const ab = w.querySelector('.gsz-abk span'); if (ab) ab.textContent = gszAbzKachel();
+  const el = w.querySelector('.gsz-leiste'); if (!el) return;
+  el.hidden = !UI.gszOffen; w.classList.toggle('gsz-zeit', !!UI.gszOffen); w.classList.toggle('gsz-damals', !!GS.zeit);
+  if (!UI.gszOffen) return;
+  const cur = z.cur, L = z.L.slice(-24), M = GS.zlM = L.map(o => o.m), mx = Math.max(1, ...L.map(o => o.stadt)), sel = GS.zeit || cur, best = z.best && z.best.m;
+  el.querySelector('.gsz-bars').innerHTML = L.length ? L.map(o => `<span class="${o.m === sel ? 'sel' : ''}${o.m === best ? ' rek' : ''}${o.m === cur ? ' jetzt' : ''}${o.aus > o.ein && o.aus > 0 ? ' minus' : ''}" title="${gszMon(o.m)} ${o.m.slice(0, 4)}: ${eur0(o.stadt)}"><i style="height:${Math.max(4, o.stadt / mx * 100).toFixed(1)}%"></i></span>`).join('') : '<em>Noch keine Buchungen</em>';
+  const schritt = L.length > 16 ? 4 : L.length > 8 ? 2 : 1;
+  el.querySelector('.gsz-achse').innerHTML = L.map((o, i) => `<span>${i % schritt === 0 || o.m === cur ? (o.m === cur ? 'jetzt' : gszMonK(o.m) + (o.m.slice(5) === '01' || i === 0 ? ' ' + o.m.slice(2, 4) : '')) : ''}</span>`).join('');
+  gszMonText(sel);
+  el.querySelector('.gsz-heute').hidden = !GS.zeit;
+  el.querySelector('.gsz-bars').setAttribute('aria-valuetext', `${gszMon(sel)} ${sel.slice(0, 4)}`);
+}
+function gszMonText(m) { const el = GS.wrap.querySelector('.gsz-mon'), z = GS.zk; if (!el || !z) return; const o = z.M[m] || { stadt: 0 };
+  el.innerHTML = m === z.cur ? `<b>Heute</b> · ${eur0(o.stadt)} im ${gszMonK(m)}` : `<b>${gszMonK(m)} ${m.slice(0, 4)}</b> · ${eur0(o.stadt)}`; }
+function gszZeigen(i) { const M = GS.zlM || [], m = M[i]; if (!m) return; GS.wrap.querySelectorAll('.gsz-bars span').forEach((s, k) => s.classList.toggle('vor', k === i)); gszMonText(m); }
+function gszGehe(m) {
+  if (!m) return; const neu = m === today().slice(0, 7) ? null : m;
+  if (neu === (GS.zeit || null)) { gszLeisteFuellen(); return; }
+  GS.zeit = neu; if (neu) UI.gszWarDa = true;
+  if (GS.fokus || GS.detStadt) gsFokus(null);
+  const d = gsDaten(); GS.d = d; GS.sig = gsSig(d); gsStadt(d);
+  GS.aufbau = { t: 0 }; if (GS.fueller) GS.fueller.scale.y = .02; // Häuser wachsen neu aus dem Boden
+  GS.kw = null; gsModusZeigen(); gskKachel(); gsLauf();
+}
+function gszZeitUmschalten() { UI.gszOffen = !UI.gszOffen; if (!UI.gszOffen && GS.zeit) gszGehe(today().slice(0, 7)); else gszLeisteFuellen(); if (UI.gszOffen) gsFokus(null); }
+
+Object.assign(GS_KLICK, {
+  gszZeit: () => gszZeitUmschalten(),
+  gszHeute: () => gszGehe(today().slice(0, 7)),
+  gszHoch: () => gszHochFenster(),
+  gszSpar: () => gszSparFenster(),
+  gszMinus: () => gszMinusFenster(),
+  gszRekord: () => gszRekordFenster(),
+  gszAbz: () => gszAbzFenster(),
+  gszRuhig: () => { S.gsRuhig = !S.gsRuhig; save(); toast(S.gsRuhig ? '🌙 Ruhiger Modus an: Die Stadt steht still.' : 'Ruhiger Modus aus: Die Stadt lebt wieder.'); const d = gsDaten(); GS.d = d; GS.sig = gsSig(d); gsStadt(d); gsStadtDetail(); gsLauf(); }
+});
 
 /* ---------- Arbeit ---------- */
 VIEWS.arbeit = () => {
@@ -11505,6 +11990,8 @@ const HK = {
   gehtempo: ['WalkingSpeed', 'avg'], gehschritt: ['WalkingStepLength', 'avg'], asym: ['WalkingAsymmetryPercentage', 'avg', 100], stabil: ['AppleWalkingSteadiness', 'avg', 100]
 };
 const HK_TYP = {}; for (const k in HK) HK_TYP['HKQuantityTypeIdentifier' + HK[k][0]] = k;
+/* Trainings mit Strecke: höchste plausible Geschwindigkeit in m/s, um GPS-Sprünge zu erkennen */
+const LW_ROUTE_TYP = { Running: 11, Walking: 6, Hiking: 6, Cycling: 25, Swimming: 4, Wheelchair: 12, Paddling: 8, Rowing: 8, CrossCountrySkiing: 12, SkatingSports: 15 };
 const HK_WO = { Running: 'Laufen', Walking: 'Gehen', Hiking: 'Wandern', Cycling: 'Radfahren', Swimming: 'Schwimmen', JumpRope: 'Seilspringen', Rowing: 'Rudern', CrossTraining: 'Cross-Training', HighIntensityIntervalTraining: 'HIIT', Yoga: 'Yoga', Elliptical: 'Crosstrainer', StairClimbing: 'Treppensteigen', Soccer: 'Fußball', Tennis: 'Tennis', Boxing: 'Boxen', MartialArts: 'Kampfsport', Dance: 'Tanzen', Pilates: 'Pilates', CoreTraining: 'Core-Training', Flexibility: 'Dehnen', Cooldown: 'Cool-down', Climbing: 'Klettern', TraditionalStrengthTraining: 'Krafttraining', FunctionalStrengthTraining: 'Funktionelles Krafttraining', MixedCardio: 'Cardio', Basketball: 'Basketball', Volleyball: 'Volleyball', SkatingSports: 'Skaten', DownhillSkiing: 'Ski', Snowboarding: 'Snowboard', Paddling: 'Paddeln', SurfingSports: 'Surfen', Badminton: 'Badminton', TableTennis: 'Tischtennis', Golf: 'Golf', Other: 'Training' };
 const BE_DIST = [[100, '100 m'], [200, '200 m'], [400, '400 m'], [800, '800 m'], [1000, '1 km'], [1609.34, '1 Meile'], [3000, '3 km'], [5000, '5 km'], [10000, '10 km'], [21097.5, 'Halbmarathon'], [42195, 'Marathon']];
 
@@ -11542,7 +12029,7 @@ async function zipText(file, e) { const r = (await zipStream(file, e)).pipeThrou
 const hkAt = (s, k) => { const i = s.indexOf(k + '="'); if (i < 0) return ''; const a = i + k.length + 2; return s.slice(a, s.indexOf('"', a)); };
 async function hlXmlLesen(stream, total, fort) {
   const sums = new Map(), avgs = new Map(), hr = new Map(), sleep = new Map(), wos = []; let me = {}, cur = null, gelesen = 0, buf = '';
-  const tagRe = /<(\/?)(Record|Workout|WorkoutStatistics|MetadataEntry|FileReference|Me)\b([^>]*)>/g;
+  const tagRe = /<(\/?)(Record|Workout|WorkoutStatistics|WorkoutEvent|MetadataEntry|FileReference|Me)\b([^>]*)>/g;
   const verarbeite = txt => {
     tagRe.lastIndex = 0; let m;
     while ((m = tagRe.exec(txt))) {
@@ -11575,6 +12062,12 @@ async function hlXmlLesen(stream, total, fort) {
         const k = hkAt(a, 'key'), v = hkAt(a, 'value');
         if (k === 'HKElevationAscended') cur.hm = Math.round(parseFloat(v) / (/cm/.test(v) ? 100 : 1));
         if (k === 'HKIndoorWorkout') cur.indoor = v === '1';
+        if (k === 'HKLapLength') cur.bahn = Math.round(parseFloat(v) * (/yd/.test(v) ? .9144 : 1));
+        if (k === 'HKSwimmingLocationType') cur.ort = v === '1' ? 'becken' : v === '2' ? 'freiwasser' : '';
+      } else if (cur && tag === 'WorkoutEvent') { /* Runden-Marken der Uhr (Intervalle, Bahnen beim Schwimmen) und Pausen */
+        const ty = hkAt(a, 'type'), t0 = hkDate(cur.start), t = hkDate(hkAt(a, 'date')); if (!t0 || !t) continue; const rel = Math.round((t - t0) / 100) / 10;
+        if (ty === 'HKWorkoutEventTypeLap') { const du = parseFloat(hkAt(a, 'duration')) || 0, un = hkAt(a, 'durationUnit'); (cur.laps = cur.laps || []).push([rel, Math.round((un === 'min' ? du * 60 : un === 'hr' ? du * 3600 : du) * 10) / 10]); }
+        else if (ty === 'HKWorkoutEventTypePause' || ty === 'HKWorkoutEventTypeResume') (cur.pausen = cur.pausen || []).push([ty.endsWith('Pause') ? 0 : 1, rel]);
       } else if (cur && tag === 'FileReference') cur.route = hkAt(a, 'path');
       else if (tag === 'Me') me = { geb: hkAt(a, 'HKCharacteristicTypeIdentifierDateOfBirth'), sex: /Female/.test(hkAt(a, 'HKCharacteristicTypeIdentifierBiologicalSex')) ? 'w' : /Male/.test(hkAt(a, 'HKCharacteristicTypeIdentifierBiologicalSex')) ? 'm' : '' };
     }
@@ -11600,7 +12093,7 @@ async function hlXmlLesen(stream, total, fort) {
 const hkDate = s => { if (!s) return 0; const t = Date.parse(s.replace(' ', 'T').replace(' ', '').replace(/([+-]\d\d)(\d\d)$/, '$1:$2')); return isFinite(t) ? t : 0; };
 
 /* --- GPX: Strecke, Bestzeiten, Kilometer-Splits, Höhenmeter, verkleinerte Route --- */
-function gpxAuswerten(txt, sollKm) {
+function gpxAuswerten(txt, sollKm, maxV = 11) {
   const pts = [], re = /<trkpt\s+(?:lon="([-\d.]+)"\s+lat="([-\d.]+)"|lat="([-\d.]+)"\s+lon="([-\d.]+)")[^>]*>([\s\S]*?)<\/trkpt>/g; let m;
   while ((m = re.exec(txt))) { const lon = +(m[1] || m[4]), lat = +(m[2] || m[3]), inner = m[5], tm = /<time>([^<]+)</.exec(inner), el = /<ele>([^<]+)</.exec(inner), acc = /<hAcc>([^<]+)</.exec(inner); if (!tm) continue; if (acc && +acc[1] > 30) continue; pts.push([lat, lon, el ? +el[1] : null, Date.parse(tm[1]) / 1000]); }
   if (pts.length < 5) return null;
@@ -11608,7 +12101,7 @@ function gpxAuswerten(txt, sollKm) {
   const keep = [pts[0]];
   for (let i = 1; i < pts.length; i++) {
     const a = keep[keep.length - 1], b = pts[i], dLat = (b[0] - a[0]) * rad, dLon = (b[1] - a[1]) * rad, x = Math.sin(dLat / 2) ** 2 + Math.cos(a[0] * rad) * Math.cos(b[0] * rad) * Math.sin(dLon / 2) ** 2, dd = 2 * R * Math.asin(Math.sqrt(x)), dt = b[3] - a[3];
-    if (dt <= 0) continue; if (dd / dt > 11) continue; // GPS-Sprünge raus
+    if (dt <= 0) continue; if (dd / dt > maxV) continue; // GPS-Sprünge raus (beim Rad schneller erlaubt)
     keep.push(b); D.push(D[D.length - 1] + dd); T.push(b[3] - t0);
   }
   let n = keep.length, dist = D[n - 1];
@@ -11623,10 +12116,10 @@ function gpxAuswerten(txt, sollKm) {
   }
   const splits = []; let km = 1000, tPrev = 0; for (let j = 1; j < n; j++) while (D[j] >= km) { const t = zeitBei(j, km); splits.push(Math.round(t - tPrev)); tPrev = t; km += 1000; }
   let hm = 0, eAlt = null; const els = keep.map(p => p[2]); for (let i = 0; i < n; i++) { if (els[i] == null) continue; let s = 0, c = 0; for (let k = Math.max(0, i - 3); k <= Math.min(n - 1, i + 3); k++) if (els[k] != null) { s += els[k]; c++; } const e = s / c; if (eAlt == null) eAlt = e; else if (e - eAlt > 1) { hm += e - eAlt; eAlt = e; } else if (eAlt - e > 1) eAlt = e; }
-  const step = Math.max(1, Math.ceil(n / 450)), route = [];
+  const step = Math.max(1, Math.ceil(n / Math.min(1500, Math.max(450, dist / 20)))), route = []; // lange Strecken etwas feiner, damit ihre Form erhalten bleibt
   for (let i = 0; i < n; i += step) route.push(Math.round(keep[i][0] * 1e5), Math.round(keep[i][1] * 1e5), Math.round(T[i]), Math.round(D[i]), keep[i][2] == null ? -9999 : Math.round(keep[i][2]));
   if ((n - 1) % step) route.push(Math.round(keep[n - 1][0] * 1e5), Math.round(keep[n - 1][1] * 1e5), Math.round(T[n - 1]), Math.round(D[n - 1]), keep[n - 1][2] == null ? -9999 : Math.round(keep[n - 1][2]));
-  return { be, splits, hm: Math.round(hm), route, gpsKm: dist / 1000 };
+  return { be, splits, hm: Math.round(hm), route, gpsKm: dist / 1000, t0: keep[0][3] };
 }
 
 /* --- Import-Ablauf --- */
@@ -11647,11 +12140,11 @@ async function hlImportDatei(file) {
       erg = await hlXmlLesen(await zipStream(file, x), x.us, p => set(`Gesundheitsdaten werden gelesen … ${Math.round(p * 100)} %`, p * .85));
     } else erg = await hlXmlLesen(file.stream(), file.size, p => set(`Gesundheitsdaten werden gelesen … ${Math.round(p * 100)} %`, p * .85));
     /* Routen der Läufe */
-    const laeufe = erg.wos.filter(w => w.typ === 'Running'); let i = 0;
+    const laeufe = erg.wos.filter(w => w.route && LW_ROUTE_TYP[w.typ]); let i = 0; // Läufe, Rad, Wandern, Gehen, Schwimmen im Freiwasser
     if (eintr) for (const w of laeufe) {
       i++; if (!w.route) continue; const name = w.route.replace(/^\//, ''), e = eintr.find(z => z.name.endsWith(name)); if (!e) continue;
-      set(`Laufstrecken werden ausgewertet … ${i} von ${laeufe.length}`, .85 + .13 * i / laeufe.length);
-      try { const g = gpxAuswerten(await zipText(file, e), w.dist); if (g) w.gpx = g; } catch (err) {}
+      set(`Strecken werden ausgewertet … ${i} von ${laeufe.length}`, .85 + .13 * i / laeufe.length);
+      try { const g = gpxAuswerten(await zipText(file, e), w.dist, LW_ROUTE_TYP[w.typ]); if (g) { if (w.typ !== 'Running') g.be = {}; w.gpx = g; } } catch (err) {}
     }
     set('Fertig gelesen', 1);
     m.close(); hlImportFrage(erg);
@@ -11669,8 +12162,9 @@ function hlImportFrage(erg) {
         const lauf = w.typ === 'Running', geh = w.typ === 'Walking' || w.typ === 'Hiking', kr = /Strength/.test(w.typ);
         if ((lauf && !v.laeufe) || (geh && !v.geh) || (kr && !v.kraft) || (!lauf && !geh && !kr && !v.rest)) continue;
         const date = w.start.slice(0, 10), o = { kind: lauf ? 'lauf' : kr ? 'kraft' : 'sonst', name: lauf ? 'Lauf' : HK_WO[w.typ] || w.typ, date, zeit: w.start.slice(11, 16), dur: w.dur, hk: w.start, src: 'health' };
-        if (w.dist) o.dist = Math.round(w.dist * 100) / 100; for (const k of ['kcal', 'hr', 'hrMax', 'watt', 'hm', 'steps', 'indoor']) if (w[k] != null) o[k] = w[k];
-        if (w.gpx) { o.be = w.gpx.be; o.splits = w.gpx.splits; if (!o.hm && w.gpx.hm) o.hm = w.gpx.hm; o.route = 1; }
+        if (w.dist) o.dist = Math.round(w.dist * 100) / 100; for (const k of ['kcal', 'hr', 'hrMax', 'watt', 'hm', 'steps', 'indoor', 'laps', 'pausen', 'bahn', 'ort']) if (w[k] != null) o[k] = w[k];
+        o.typ = w.typ;
+        if (w.gpx) { if (lauf) { o.be = w.gpx.be; o.splits = w.gpx.splits; } else if (w.gpx.splits.length) o.splits = w.gpx.splits; if (!o.hm && w.gpx.hm) o.hm = w.gpx.hm; o.route = 1; o.rt0 = Math.round(w.gpx.t0 - hkDate(w.start) / 1000); }
         let x = S.workouts.find(z => z.hk === w.start) || (lauf ? S.workouts.find(z => !z.hk && z.kind === 'lauf' && z.date === date && Math.abs((z.dist || 0) - (o.dist || 0)) < .3) : null);
         if (x) { Object.assign(x, o, { name: x.name || o.name, note: x.note }); akt++; } else { x = Object.assign({ id: uid() }, o); if (kr) x.ex = []; S.workouts.push(x); neu++; }
         if (w.gpx) await hlPut('r:' + x.id, w.gpx.route);
@@ -11685,6 +12179,735 @@ function hlRoute(id) { return hlGet("r:" + id); }
 const hlReihe = (k, von) => { const o = HL && HL.d && HL.d[k] || {}; return Object.keys(o).filter(d => !von || d >= von).sort().map(d => ({ x: d, y: Array.isArray(o[d]) ? o[d][1] : o[d] })); };
 const hlLetzter = k => { const r = hlReihe(k); return r.length ? r[r.length - 1] : null; };
 function hlAlter() { const g = HL && HL.me && HL.me.geb; if (!g) return null; const t = today(); let a = +t.slice(0, 4) - +g.slice(0, 4); if (t.slice(5) < g.slice(5, 10)) a--; return a; }
+
+/* ---------- Lauf-Welt: aus der echten Strecke eine kleine 3D-Welt, ganz ohne Internet (Vorsilbe lw) ----------
+   Die Welt hängt am echten Ort, nicht an der Strecke: Wer dieselbe Runde läuft (auch mit 10 m mehr oder andersherum),
+   sieht dieselben Häuser und Bäume. Größen sind echt (1 Einheit = 1 Meter), die Strecke liegt in ihrer echten Form drin.
+   Dazu: 400-m-Bahn erkennen (Stadion mit Rundenzeiten), gleiche Strecken erkennen, Intervalle (Uhr-Marken oder automatisch),
+   Rad (Felder und Dörfer), Schwimmen (Becken mit Bahnen oder Freiwasser mit Bojen). */
+
+const LW = { an: false };
+
+/* Sportart eines Trainings */
+function lwArt(w) {
+  const t = w.typ || '';
+  if (w.kind === 'lauf' || t === 'Running') return 'lauf';
+  if (t === 'Cycling' || /^rad/i.test(w.name || '')) return 'rad';
+  if (t === 'Swimming' || /schwimm/i.test(w.name || '')) return 'schwimmen';
+  if (t === 'Walking' || t === 'Hiking' || /^(gehen|wandern)/i.test(w.name || '')) return 'gehen';
+  return 'sonst';
+}
+const LW_ART = { lauf: ['Lauf', 'Läufe', '🏃'], rad: ['Radfahrt', 'Radfahrten', '🚴'], schwimmen: ['Schwimmen', 'Schwimmeinheiten', '🏊'], gehen: ['Spaziergang', 'Spaziergänge', '🚶'] };
+
+/* ---------- Strecke in Meter umrechnen ----------
+   Weltweit gleiches Raster: x nach Osten, z nach Süden. Der Breitengrad für die Umrechnung ist auf 0,5° gerundet,
+   damit dieselbe Gegend immer exakt dieselben Koordinaten bekommt. */
+const lwBreite = lat => Math.round(lat * 2) / 2;
+function lwXZ(lat, lon, latR) { return [lon * 111320 * Math.cos(latR * Math.PI / 180), -lat * 110574]; }
+function lwPunkte(r) {
+  if (!r || r.length < 25) return null;
+  const n = r.length / 5, latR = lwBreite(r[0] / 1e5), X = [], Z = [], T = [], D = [], E = [];
+  let eOk = 0;
+  for (let i = 0; i < n; i++) { const [x, z] = lwXZ(r[i * 5] / 1e5, r[i * 5 + 1] / 1e5, latR); X.push(x); Z.push(z); T.push(r[i * 5 + 2]); D.push(r[i * 5 + 3]); const e = r[i * 5 + 4]; E.push(e > -9999 ? e : null); if (e > -9999) eOk++; }
+  /* Höhe glätten, Lücken füllen */
+  const Eg = new Array(n).fill(0);
+  if (eOk > n / 2) { let last = E.find(e => e != null); for (let i = 0; i < n; i++) { if (E[i] == null) E[i] = last; else last = E[i]; }
+    for (let i = 0; i < n; i++) { let s = 0, c = 0; for (let k = Math.max(0, i - 4); k <= Math.min(n - 1, i + 4); k++) { s += E[k]; c++; } Eg[i] = s / c; } }
+  const ox = Math.round(X.reduce((a, b) => a + b, 0) / n / 1000) * 1000, oz = Math.round(Z.reduce((a, b) => a + b, 0) / n / 1000) * 1000;
+  const x = X.map(v => v - ox), z = Z.map(v => v - oz);
+  let x0 = Infinity, x1 = -Infinity, z0 = Infinity, z1 = -Infinity; for (let i = 0; i < n; i++) { x0 = Math.min(x0, x[i]); x1 = Math.max(x1, x[i]); z0 = Math.min(z0, z[i]); z1 = Math.max(z1, z[i]); }
+  const eMin = Math.min(...Eg), eMax = Math.max(...Eg);
+  return { n, x, z, t: T, d: D, e: Eg, hatE: eOk > n / 2, ox, oz, latR, x0, x1, z0, z1, dist: D[n - 1], dauer: T[n - 1], eMin, eMax };
+}
+/* Wert an einer Zeit oder Strecke zwischen zwei Punkten */
+function lwBei(P, feld, wert, ziel) {
+  const A = P[feld], n = P.n; if (wert <= A[0]) return P[ziel][0]; if (wert >= A[n - 1]) return P[ziel][n - 1];
+  let lo = 0, hi = n - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (A[m] <= wert) lo = m; else hi = m; }
+  const f = (wert - A[lo]) / ((A[hi] - A[lo]) || 1); return P[ziel][lo] + f * (P[ziel][hi] - P[ziel][lo]);
+}
+
+/* ---------- 400-m-Bahn erkennen ----------
+   Hauptachsen der Punktwolke bestimmen, dann prüfen, ob die meisten Punkte auf einem Stadion-Oval liegen
+   (zwei Geraden à 84,39 m, Kurvenradius um 36,5 m). Die Bahn darf schräg liegen. */
+function lwOvalAbst(u, v, a, R) { const du = Math.max(0, Math.abs(u) - a); return Math.abs(Math.hypot(du, v) - R); }
+function lwBahn(P) {
+  if (!P || P.dist < 700) return null;
+  const n = P.n; let mx = 0, mz = 0; for (let i = 0; i < n; i++) { mx += P.x[i]; mz += P.z[i]; } mx /= n; mz /= n;
+  let sxx = 0, szz = 0, sxz = 0; for (let i = 0; i < n; i++) { const a = P.x[i] - mx, b = P.z[i] - mz; sxx += a * a; szz += b * b; sxz += a * b; }
+  const ang = .5 * Math.atan2(2 * sxz, sxx - szz), c = Math.cos(ang), s = Math.sin(ang);
+  /* Mitte über die Ausdehnung genauer bestimmen (Punkte sind nicht gleich verteilt) */
+  const U = [], V = []; for (let i = 0; i < n; i++) { const a = P.x[i] - mx, b = P.z[i] - mz; U.push(a * c + b * s); V.push(-a * s + b * c); }
+  const q = (A, p) => { const B = A.slice().sort((x, y) => x - y); return B[Math.floor(p * (B.length - 1))]; };
+  const u0 = q(U, .02), u1 = q(U, .98), v0 = q(V, .02), v1 = q(V, .98), L = u1 - u0, W = v1 - v0;
+  if (L < 120 || L > 215 || W < 55 || W > 125 || L / W < 1.25 || L / W > 2.8) return null;
+  const cu = (u0 + u1) / 2, cv = (v0 + v1) / 2;
+  /* Radius und Geraden-Länge an die Punkte anpassen */
+  let best = null;
+  for (let R = 30; R <= 50; R += 1) for (let a = 34; a <= 50; a += 1) {
+    let ok = 0; for (let i = 0; i < n; i += 2) if (lwOvalAbst(U[i] - cu, V[i] - cv, a, R) < 12) ok++;
+    if (!best || ok > best.ok) best = { ok, R, a };
+  }
+  const anteil = best.ok / Math.ceil(n / 2); if (anteil < .55) return null;
+  const cx = mx + cu * c - cv * s, cz = mz + cu * s + cv * c;
+  /* Runden zählen: Winkel um die Mitte aufsummieren, solange man auf der Bahn ist */
+  const auf = [], wink = []; for (let i = 0; i < n; i++) { const uu = U[i] - cu, vv = V[i] - cv; auf.push(lwOvalAbst(uu, vv, best.a, best.R) < 16); wink.push(Math.atan2(vv, uu)); }
+  const runden = []; let sum = 0, tStart = null, dStart = null;
+  for (let i = 1; i < n; i++) {
+    if (!auf[i] || !auf[i - 1]) { if (!auf[i]) { sum = 0; tStart = null; } continue; }
+    if (tStart === null) { tStart = P.t[i - 1]; dStart = P.d[i - 1]; sum = 0; }
+    let dw = wink[i] - wink[i - 1]; if (dw > Math.PI) dw -= 2 * Math.PI; if (dw < -Math.PI) dw += 2 * Math.PI; sum += dw;
+    if (Math.abs(sum) >= 2 * Math.PI) { const ueber = (Math.abs(sum) - 2 * Math.PI) / (Math.abs(dw) || 1), tEnde = P.t[i] - ueber * (P.t[i] - P.t[i - 1]), dEnde = P.d[i] - ueber * (P.d[i] - P.d[i - 1]);
+      runden.push({ t0: tStart, t1: tEnde, zeit: tEnde - tStart, dist: dEnde - dStart }); tStart = tEnde; dStart = dEnde; sum -= Math.sign(sum) * 2 * Math.PI; }
+  }
+  /* Bahn-Meter: Anteil der Strecke auf dem Oval */
+  let dAuf = 0; for (let i = 1; i < n; i++) if (auf[i] && auf[i - 1]) dAuf += P.d[i] - P.d[i - 1];
+  if (dAuf < P.dist * .5 || runden.length < 1) return null;
+  const richtung = runden.length ? Math.sign(wink.reduce((acc, w, i) => i ? acc + (() => { let d = w - wink[i - 1]; if (d > Math.PI) d -= 2 * Math.PI; if (d < -Math.PI) d += 2 * Math.PI; return d; })() : 0, 0)) : 1;
+  return { cx, cz, ang, a: best.a, R: best.R, anteil, runden, auf, dAuf, richtung };
+}
+/* Absolute Mitte eines Stadions (für den Vergleich, ob es dasselbe Stadion ist) */
+const lwBahnAbs = (P, B) => [Math.round(B.cx + P.ox), Math.round(B.cz + P.oz)];
+
+/* ---------- Gleiche Strecke erkennen ----------
+   Fingerabdruck: 24 gleichmäßig verteilte Punkte in absoluten Metern. Zwei Strecken sind gleich, wenn die Länge
+   ähnlich ist (bis 10 %) und die Punkte im Schnitt nah beieinander liegen, auch andersherum gelaufen
+   oder bei einer Runde an einer anderen Ecke begonnen. */
+function lwSig(P, B) {
+  if (!P) return null;
+  const k = 24, out = [];
+  for (let j = 0; j < k; j++) { const dd = P.dist * j / (k - 1); out.push(Math.round(lwBei(P, 'd', dd, 'x') + P.ox), Math.round(lwBei(P, 'd', dd, 'z') + P.oz)); }
+  const s = { v: 2, d: Math.round(P.dist), p: out, rund: Math.hypot(P.x[0] - P.x[P.n - 1], P.z[0] - P.z[P.n - 1]) < Math.max(250, P.dist * .06) ? 1 : 0 };
+  if (B) s.bahn = lwBahnAbs(P, B);
+  return s;
+}
+function lwGleich(a, b) {
+  if (!a || !b) return false;
+  if (a.bahn || b.bahn) return !!(a.bahn && b.bahn && Math.hypot(a.bahn[0] - b.bahn[0], a.bahn[1] - b.bahn[1]) < 60); // gleiches Stadion
+  if (Math.abs(a.d - b.d) > Math.max(250, .1 * Math.max(a.d, b.d))) return false;
+  const k = a.p.length / 2, A = [], Bp = []; for (let i = 0; i < k; i++) { A.push([a.p[2 * i], a.p[2 * i + 1]]); Bp.push([b.p[2 * i], b.p[2 * i + 1]]); }
+  const tol = Math.max(45, Math.min(120, a.d * .02));
+  const mittel = (Q) => { let s = 0; for (let i = 0; i < k; i++) s += Math.hypot(A[i][0] - Q[i][0], A[i][1] - Q[i][1]); return s / k; };
+  if (mittel(Bp) < tol || mittel(Bp.slice().reverse()) < tol) return true;
+  if (a.rund && b.rund) { /* Runde: anderer Startpunkt erlaubt */
+    const ring = Bp.slice(0, k - 1);
+    for (const R of [ring, ring.slice().reverse()]) for (let sh = 1; sh < k - 1; sh++) { const Q = R.slice(sh).concat(R.slice(0, sh)); Q.push(Q[0]); if (mittel(Q) < tol) return true; }
+  }
+  return false;
+}
+
+/* ---------- Intervalle ----------
+   1. Runden-Marken der Uhr (doppelt tippen beim Laufen), 2. Runden auf der Bahn, 3. sonst automatisch:
+   Abschnitte, in denen deutlich schneller gelaufen wurde als sonst. */
+function lwTempoReihe(P) {
+  const v = []; for (let i = 0; i < P.n; i++) { let a = i, b = i; while (a > 0 && P.t[i] - P.t[a] < 10) a--; while (b < P.n - 1 && P.t[b] - P.t[i] < 10) b++; const dt = P.t[b] - P.t[a]; v.push(dt > 0 ? (P.d[b] - P.d[a]) / dt : 0); }
+  return v;
+}
+function lwArtBestimmen(L) {
+  /* Hart oder locker: zwei Gruppen nach Tempo bilden, nur wenn sie klar auseinanderliegen */
+  const sp = L.map(o => o.dist / (o.zeit || 1)).filter(v => v > 0); if (L.length < 3 || sp.length < 3) { L.forEach(o => o.art = 'gleich'); return false; }
+  let lo = Math.min(...sp), hi = Math.max(...sp);
+  for (let it = 0; it < 12; it++) { const A = [], B = []; for (const v of sp) (Math.abs(v - lo) < Math.abs(v - hi) ? A : B).push(v); if (!A.length || !B.length) break; lo = A.reduce((a, b) => a + b) / A.length; hi = B.reduce((a, b) => a + b) / B.length; }
+  const klar = hi / (lo || 1) > 1.18; L.forEach(o => { const v = o.dist / (o.zeit || 1); o.art = !klar ? 'gleich' : Math.abs(v - hi) < Math.abs(v - lo) ? 'hart' : 'locker'; });
+  return klar;
+}
+function lwIntervalle(w, P, B) {
+  const tempoOk = P && P.n > 10;
+  /* 1. Uhr-Marken */
+  if (w.laps && w.laps.length >= 2 && lwArt(w) !== 'schwimmen') {
+    const off = w.rt0 || 0, L = w.laps.map(([s, du], i) => { const o = { i, t0: s - off, zeit: du }; if (tempoOk) { o.d0 = lwBei(P, 't', o.t0, 'd'); o.dist = Math.max(0, lwBei(P, 't', o.t0 + du, 'd') - o.d0); } return o; });
+    if (tempoOk) lwArtBestimmen(L); else L.forEach(o => o.art = 'gleich');
+    return { quelle: 'uhr', L };
+  }
+  if (!tempoOk) return null;
+  if (lwArt(w) !== 'lauf') return null; // beim Rad schwankt das Tempo mit Bergen und Ampeln, da gibt es keine echten Intervalle
+  /* 2. Bahn */
+  if (B && B.runden.length >= 2) { const L = B.runden.map((r, i) => ({ i, t0: r.t0, zeit: r.zeit, dist: 400, d0: r.t0 != null ? lwBei(P, 't', r.t0, 'd') : 0 })); lwArtBestimmen(L); return { quelle: 'bahn', L }; }
+  /* 3. Automatisch */
+  if (P.dauer < 300) return null;
+  const v = lwTempoReihe(P), ok = v.filter(x => x > .8).sort((a, b) => a - b); if (ok.length < 20) return null;
+  const p25 = ok[Math.floor(ok.length * .25)], p80 = ok[Math.floor(ok.length * .8)]; if (p80 / p25 < 1.28) return null;
+  const grenze = (p25 + p80) / 2, seg = [];
+  for (let i = 0; i < P.n; i++) { const hart = v[i] >= grenze; if (!seg.length || seg[seg.length - 1].hart !== hart) seg.push({ hart, a: i, b: i }); else seg[seg.length - 1].b = i; }
+  /* kurze Ausreißer in den Nachbarn aufgehen lassen */
+  for (let r = 0; r < 3; r++) for (let j = 0; j < seg.length; j++) { const s = seg[j]; if (P.t[s.b] - P.t[s.a] < 20 && seg.length > 1) { const nb = seg[j - 1] || seg[j + 1]; if (nb === seg[j - 1]) nb.b = s.b; else nb.a = s.a; seg.splice(j, 1); j--; } }
+  for (let j = 1; j < seg.length; j++) if (seg[j].hart === seg[j - 1].hart) { seg[j - 1].b = seg[j].b; seg.splice(j, 1); j--; }
+  const harte = seg.filter(s => s.hart && P.d[s.b] - P.d[s.a] >= 100 && P.t[s.b] - P.t[s.a] >= 25);
+  if (harte.length < 2) return null;
+  const L = seg.map((s, i) => ({ i, t0: P.t[s.a], zeit: P.t[s.b] - P.t[s.a], d0: P.d[s.a], dist: P.d[s.b] - P.d[s.a], art: s.hart ? 'hart' : 'locker' })).filter(o => o.zeit > 0);
+  if (L.length && L[0].art === 'locker') L[0].art = 'ein'; if (L.length > 1 && L[L.length - 1].art === 'locker') L[L.length - 1].art = 'aus';
+  return { quelle: 'auto', L };
+}
+const LW_IV_ART = { hart: 'Belastung', locker: 'Pause', ein: 'Einlaufen', aus: 'Auslaufen', gleich: 'Runde' };
+
+/* ---------- Lauf-Welt, Teil 2: die 3D-Szene (Stadt, Park, Wald, Felder, Wasser, Stadion, Becken) ---------- */
+
+/* Rauschen mit festem Startwert: dieselbe Stelle der Erde ergibt immer dasselbe */
+function lwHash(ix, iz, s) { let h = Math.imul(ix | 0, 374761393) + Math.imul(iz | 0, 668265263) + Math.imul(s | 0, 982451653) | 0; h = Math.imul(h ^ h >>> 13, 1274126177); h ^= h >>> 16; return (h >>> 0) / 4294967296; }
+function lwRausch(x, z, s) { const ix = Math.floor(x), iz = Math.floor(z), fx = x - ix, fz = z - iz, u = fx * fx * (3 - 2 * fx), v = fz * fz * (3 - 2 * fz), a = lwHash(ix, iz, s), b = lwHash(ix + 1, iz, s), c = lwHash(ix, iz + 1, s), d = lwHash(ix + 1, iz + 1, s); return a + (b - a) * u + (c - a) * v + (a - b - c + d) * u * v; }
+const lwFbm = (x, z, s) => .6 * lwRausch(x, z, s) + .3 * lwRausch(x * 2.13, z * 2.13, s + 7) + .1 * lwRausch(x * 4.37, z * 4.37, s + 13);
+
+/* Schneller Abstand zur Strecke: Raster über die Abschnitte */
+function lwIndex(P, g = 50) {
+  const G = new Map(), key = (i, j) => i * 100003 + j;
+  for (let i = 0; i < P.n - 1; i++) { const a0 = Math.floor(Math.min(P.x[i], P.x[i + 1]) / g), a1 = Math.floor(Math.max(P.x[i], P.x[i + 1]) / g), b0 = Math.floor(Math.min(P.z[i], P.z[i + 1]) / g), b1 = Math.floor(Math.max(P.z[i], P.z[i + 1]) / g);
+    for (let a = a0; a <= a1; a++) for (let b = b0; b <= b1; b++) { const k = key(a, b); let L = G.get(k); if (!L) G.set(k, L = []); L.push(i); } }
+  return { G, g, key };
+}
+function lwAbst(I, P, x, z, max) {
+  const r = Math.ceil(max / I.g), ci = Math.floor(x / I.g), cj = Math.floor(z / I.g); let best = Infinity, bi = -1;
+  for (let a = ci - r; a <= ci + r; a++) for (let b = cj - r; b <= cj + r; b++) { const L = I.G.get(I.key(a, b)); if (!L) continue;
+    for (const i of L) { const ax = P.x[i], az = P.z[i], dx = P.x[i + 1] - ax, dz = P.z[i + 1] - az, l2 = dx * dx + dz * dz, f = l2 ? Math.max(0, Math.min(1, ((x - ax) * dx + (z - az) * dz) / l2)) : 0, d = Math.hypot(x - ax - f * dx, z - az - f * dz); if (d < best) { best = d; bi = i; } } }
+  LW.naechst = bi; return best;
+}
+
+/* Gelände: Höhe aus den Höhenwerten der Strecke (überhöht), bei viel Auf und Ab zusätzlich Hügel */
+function lwHoehenFn(P, I, cfg) {
+  const ex = cfg.art === 'rad' ? 1.6 : 2.4, mitte = (P.eMin + P.eMax) / 2, cache = new Map();
+  const huegel = Math.min(28, 1.5 + cfg.hmKm * 1.1);
+  return (x, z) => {
+    const k = Math.round(x * 2) + ',' + Math.round(z * 2); const c = cache.get(k); if (c !== undefined) return c;
+    let s = 0, w = 0;
+    if (P.hatE) { const r = 5, ci = Math.floor(x / I.g), cj = Math.floor(z / I.g);
+      for (let a = ci - r; a <= ci + r; a++) for (let b = cj - r; b <= cj + r; b++) { const L = I.G.get(I.key(a, b)); if (!L) continue; for (const i of L) { const d2 = (P.x[i] - x) ** 2 + (P.z[i] - z) ** 2, ww = 1 / (d2 + 900); s += P.e[i] * ww; w += ww; } } }
+    const e = w ? s / w : mitte, X = x + P.ox, Z = z + P.oz;
+    const h = (e - P.eMin) * ex + (lwFbm(X / 380, Z / 380, 21) - .5) * huegel * (cfg.art === 'rad' ? 1.4 : 1);
+    cache.set(k, h); return h;
+  };
+}
+
+/* Was steht an dieser Stelle? (absolute Koordinaten, damit es überall gleich bleibt) */
+function lwBiom(X, Z, cfg) {
+  const n1 = lwFbm(X / 420, Z / 420, 1), n2 = lwRausch(X / 150, Z / 150, 2), nw = lwFbm(X / 650, Z / 650, 5);
+  if (cfg.art === 'rad') { if (nw < .2) return 'wasser'; if (n1 > .69) return 'wald'; if (n1 > .5 && n1 < .57) return 'dorf'; if (n2 > .86) return 'wald'; return 'feld'; }
+  if (nw < .17) return 'wasser';
+  if (n1 > (cfg.hmKm > 12 ? .5 : .7)) return 'wald';
+  if (n2 > .78) return 'park';
+  if (n1 < .4) return 'stadt';
+  return 'wohnen';
+}
+const LW_BODEN = { stadt: '#cdd2db', wohnen: '#cfe2b4', park: '#bde09c', wald: '#93c47a', feld: '#c9d98a', dorf: '#cfe2b4', sport: '#b9dd98', wasser: '#86c9ea', ufer: '#e9dfb8' };
+const LW_FELD = ['#dcc66a', '#b5cf6f', '#9cc15e', '#cfae72', '#e1d27e', '#a8c96b'];
+const LW_FASSADE = ['#f4f1ea', '#ece4d6', '#e1e7ef', '#f2e7da', '#e7ece3', '#dadfe8', '#efe1d8'];
+const LW_DACH = ['#c4604b', '#b9563f', '#7d8796', '#a8705a', '#8b5b4a'];
+
+/* ---------- Welt bauen ---------- */
+function lwWeltBauen(w, P, B) {
+  const art = lwArt(w), frei_w = w.ort === 'freiwasser';
+  const hmKm = P.dist > 0 ? (w.hm || (P.eMax - P.eMin)) / (P.dist / 1000) : 0;
+  const lang = art !== 'rad' && P.dist > 25000; // sehr lange Läufe: schmaleres Band und etwas weniger Häuser, damit es auf dem iPhone flüssig bleibt
+  const cfg = { art: art === 'rad' ? 'rad' : 'lauf', hmKm, lang, zelle: art === 'rad' ? (P.dist > 70000 ? 100 : 80) : lang ? 48 : 40, R: art === 'rad' ? (P.dist > 70000 ? 220 : 300) : lang ? 115 : Math.min(220, Math.max(130, P.dist * .02)) };
+  const I = lwIndex(P), H0 = lwHoehenFn(P, I, cfg), Z = cfg.zelle;
+  /* Rund ums Stadion ist das Gelände eben */
+  const hS = B ? H0(B.cx, B.cz) : 0, H = !B ? H0 : (x, z) => { const d = Math.hypot(x - B.cx, z - B.cz); if (d < 135) return hS; if (d > 200) return H0(x, z); const f = (d - 135) / 65, e = f * f * (3 - 2 * f); return hS + (H0(x, z) - hS) * e; };
+  const W = new THREE.Group(), T = { wa: gsPuf(), fl: gsPuf(), bo: gsPuf(), wa2: gsPuf() }, baeume = [], tannen = [];
+  const flach = (P.x1 - P.x0) * (P.z1 - P.z0) < 2.6e6; // kleine Runde: ganze Fläche füllen, sonst nur ein Band entlang der Strecke
+  const i0 = Math.floor((P.x0 + P.ox - cfg.R) / Z), i1 = Math.floor((P.x1 + P.ox + cfg.R) / Z), j0 = Math.floor((P.z0 + P.oz - cfg.R) / Z), j1 = Math.floor((P.z1 + P.oz + cfg.R) / Z);
+  const stadion = B ? { x: B.cx, z: B.cz } : null, abstand = cfg.art === 'rad' ? 10 : 7;
+  let zellen = 0;
+  const hc = new Map(), Hc = (i, j) => { const k = i * 100003 + j; let v = hc.get(k); if (v === undefined) { v = H(i * Z - P.ox, j * Z - P.oz); hc.set(k, v); } return v; };
+  const zahl = {};
+  for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+    const cx = (i + .5) * Z - P.ox, cz = (j + .5) * Z - P.oz, d = lwAbst(I, P, cx, cz, cfg.R + Z);
+    if (!flach && d > cfg.R) continue;
+    if (++zellen > 14000) break;
+    const X = cx + P.ox, Zg = cz + P.oz, rnd = gsZufall(Math.floor(lwHash(i, j, 9) * 4294967296));
+    let bi = lwBiom(X, Zg, cfg);
+    if (stadion && Math.hypot(cx - stadion.x, cz - stadion.z) < 125) bi = 'sport';
+    if (bi === 'wasser' && d < 26) bi = cfg.art === 'rad' ? 'feld' : 'park';
+    if (frei_w) bi = d < 140 ? 'wasser' : d < 175 ? 'ufer' : 'park';
+    zahl[bi] = (zahl[bi] || 0) + 1;
+    /* Boden mit Höhen an den Ecken */
+    const h00 = Hc(i, j), h10 = Hc(i + 1, j), h01 = Hc(i, j + 1), h11 = Hc(i + 1, j + 1), x0 = i * Z - P.ox, z0 = j * Z - P.oz, x1 = x0 + Z, z1 = z0 + Z;
+    if (bi === 'wasser') { const hw = Math.min(h00, h10, h01, h11) - .4; gsFl(T.bo, [[x0, hw, z1], [x1, hw, z1], [x1, hw, z0], [x0, hw, z0]], [0, 1, 0], [[0, 0], [1, 0], [1, 1], [0, 1]], gsRGB(LW_BODEN.wasser));
+      gsFl(T.bo, [[x0, hw - 6, z1], [x1, hw - 6, z1], [x1, hw - 6, z0], [x0, hw - 6, z0]], [0, 1, 0], [[0, 0], [1, 0], [1, 1], [0, 1]], gsRGB('#6fb0d4')); continue; }
+    const farbe = bi === 'feld' ? LW_FELD[Math.floor(lwHash(i >> 1, j >> 1, 3) * LW_FELD.length)] : LW_BODEN[bi];
+    const c = gsRGB(farbe), cv = (k) => { const f = .96 + lwHash(i, j, 40 + k) * .08; return [c[0] * f, c[1] * f, c[2] * f]; };
+    gsFl(T.bo, [[x0, h00, z1 + 0], [x1, h10, z1], [x1, h10, z0], [x0, h00, z0]].map((p, k) => [p[0], [h01, h11, h10, h00][k], p[2]]), [0, 1, 0], [[0, 0], [1, 0], [1, 1], [0, 1]], [cv(0), cv(1), cv(2), cv(3)]);
+    const hy = (x, z) => { const fx = (x - x0) / Z, fz = (z - z0) / Z; return h00 * (1 - fx) * (1 - fz) + h10 * fx * (1 - fz) + h01 * (1 - fx) * fz + h11 * fx * fz; };
+    const frei = (x, z, r) => lwAbst(I, P, x, z, r + abstand + 4) > r + abstand && (!stadion || Math.hypot(x - stadion.x, z - stadion.z) > 120 + r);
+    /* Inhalt */
+    if (bi === 'stadt') {
+      const s = Z - 10, hBase = 11 + rnd() * 16 + (lwFbm(X / 300, Zg / 300, 31) < .35 ? 14 + rnd() * 22 : 0), fa = LW_FASSADE[Math.floor(rnd() * LW_FASSADE.length)];
+      if (frei(cx, cz, s * .72)) { const zwei = rnd() < .35;
+        if (zwei) { const y = Math.min(h00, h10, h01, h11); gsBox(T.fl, cx, y - 1, cz, s, 1.2, s, '#c3c8d1', { ao: false }); gsBox(T.fl, cx - s / 4, y, cz, s / 2 - 1.5, hBase, s - 2, fa, { seite: T.wa, dach: T.fl, bay: 3.4, et: 3.3 }); gsBox(T.fl, cx + s / 4, y, cz, s / 2 - 1.5, hBase * (.6 + rnd() * .6), s - 2, LW_FASSADE[Math.floor(rnd() * LW_FASSADE.length)], { seite: T.wa, dach: T.fl, bay: 3.4, et: 3.3 }); }
+        else { const y = Math.min(h00, h10, h01, h11); gsBox(T.fl, cx, y, cz, s, hBase, s, fa, { seite: rnd() < .3 ? T.wa2 : T.wa, dach: T.fl, bay: 3.4, et: 3.3 }); if (rnd() < .4) gsBox(T.fl, cx + (rnd() - .5) * s * .3, y + hBase, cz + (rnd() - .5) * s * .3, s * .3, 2.4, s * .3, '#d4d8df'); }
+      } else { // Platz an der Strecke: kleiner Bau oder Bäume
+        for (let k = 0; k < 4; k++) { const qx = cx + (k % 2 ? 1 : -1) * Z / 4, qz = cz + (k > 1 ? 1 : -1) * Z / 4; if (frei(qx, qz, 6)) { if (rnd() < .55) gsBox(T.fl, qx, hy(qx, qz) - .5, qz, 11, 8 + rnd() * 9, 11, LW_FASSADE[Math.floor(rnd() * LW_FASSADE.length)], { seite: T.wa, dach: T.fl, bay: 3.4, et: 3.3 }); else baeume.push([qx, hy(qx, qz), qz, 1 + rnd() * .3]); } }
+      }
+      zahl.haus = (zahl.haus || 0) + 1;
+    } else if (bi === 'wohnen' || bi === 'dorf') {
+      const n = bi === 'dorf' ? 2 + Math.floor(rnd() * 2) : cfg.lang ? 2 + Math.floor(rnd() * 2) : 4;
+      for (let k = 0; k < n; k++) { const qx = cx + (k % 2 ? 1 : -1) * Z / 4 + (rnd() - .5) * 3, qz = cz + (k > 1 ? 1 : -1) * Z / 4 + (rnd() - .5) * 3;
+        if (!frei(qx, qz, 7)) { if (frei(qx, qz, 2)) baeume.push([qx, hy(qx, qz), qz, .8 + rnd() * .3]); continue; }
+        lwHaus(T, qx, hy(qx, qz) - .3, qz, 8 + rnd() * 3, 9 + rnd() * 3, 5.5 + rnd() * 2.5, rnd() < .5, LW_FASSADE[Math.floor(rnd() * LW_FASSADE.length)], LW_DACH[Math.floor(rnd() * LW_DACH.length)]);
+        const bx = qx + (rnd() - .5) * 10, bz = qz + (rnd() - .5) * 10; if (rnd() < .6 && frei(bx, bz, 2)) baeume.push([bx, hy(bx, bz), bz, .7 + rnd() * .3]); }
+    } else if (bi === 'park' || bi === 'ufer') {
+      const n = bi === 'ufer' ? 1 : 2 + Math.floor(rnd() * 4); for (let k = 0; k < n; k++) { const qx = x0 + 4 + rnd() * (Z - 8), qz = z0 + 4 + rnd() * (Z - 8); if (frei(qx, qz, 2.5)) baeume.push([qx, hy(qx, qz), qz, .9 + rnd() * .5]); }
+    } else if (bi === 'wald') {
+      const n = cfg.art === 'rad' ? 14 + Math.floor(rnd() * 8) : 9 + Math.floor(rnd() * 6);
+      for (let k = 0; k < n; k++) { const qx = x0 + 2 + rnd() * (Z - 4), qz = z0 + 2 + rnd() * (Z - 4); if (!frei(qx, qz, 2)) continue; (rnd() < .55 ? tannen : baeume).push([qx, hy(qx, qz), qz, (cfg.art === 'rad' ? 1.3 : 1) * (.85 + rnd() * .5)]); }
+    } else if (bi === 'feld') {
+      if (rnd() < .25) for (let k = 0; k < 4; k++) { const qx = x0 + (k + .5) * Z / 4, qz = z0 + 1; if (frei(qx, qz, 2)) baeume.push([qx, hy(qx, qz), qz, 1.2]); } // Baumreihe am Feldrand
+    } else if (bi === 'sport') {
+      if (rnd() < .4) { const qx = x0 + rnd() * Z, qz = z0 + rnd() * Z; if (Math.hypot(qx - stadion.x, qz - stadion.z) > 105) baeume.push([qx, hy(qx, qz), qz, 1]); }
+    }
+  }
+  const M = lwStoffe();
+  /* Weites Land außen herum, damit lange Strecken nicht in der Luft hängen */
+  { let mn = Infinity; for (const v of hc.values()) mn = Math.min(mn, v); const ext = Math.max(P.x1 - P.x0, P.z1 - P.z0) + cfg.R * 2, g = new THREE.Mesh(new THREE.PlaneGeometry(ext * 8, ext * 8).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: cfg.art === 'rad' ? 0xd6dcb8 : 0xd5dcc8 })); g.position.set((P.x0 + P.x1) / 2, (isFinite(mn) ? mn : 0) - 1.2, (P.z0 + P.z1) / 2); W.add(g); }
+  lwNetz(W, T.bo, M.boden, false); lwNetz(W, T.wa, M.wa); lwNetz(W, T.wa2, M.wb); lwNetz(W, T.fl, M.fl);
+  lwBaeume(W, baeume, 'rund'); lwBaeume(W, tannen, 'tanne');
+  if (B) lwStadion(W, P, B, H);
+  const weg = lwWeg(W, P, B, H, art);
+  return { W, H, I, cfg, zahl, weg, flach };
+}
+function lwNetz(par, B, mat, schatten = true) { if (!B.p.length) return null; const m = new THREE.Mesh(gsGeo(B), mat); m.matrixAutoUpdate = false; par.add(m); return m; }
+/* Haus mit Satteldach */
+function lwHaus(T, x, y, z, w, d, h, quer, fa, da) {
+  gsBox(T.fl, x, y, z, w, h, d, fa, { seite: T.wa, dach: null, bay: 3, et: 2.9 });
+  const c = gsRGB(da), c2 = c.map(v => v * .82), y1 = y + h, y2 = y1 + Math.min(w, d) * .45, ue = .5;
+  if (!quer) { const x0 = x - w / 2 - ue, x1 = x + w / 2 + ue, z0 = z - d / 2, z1 = z + d / 2;
+    gsFl(T.fl, [[x0, y1, z1], [x1, y1, z1], [x1, y2, z], [x0, y2, z]], [0, .7, .7], [[0, 0], [1, 0], [1, 1], [0, 1]], c);
+    gsFl(T.fl, [[x1, y1, z0], [x0, y1, z0], [x0, y2, z], [x1, y2, z]], [0, .7, -.7], [[0, 0], [1, 0], [1, 1], [0, 1]], c2);
+    const g = gsRGB(fa); gsFl(T.fl, [[x + w / 2, y1, z1], [x + w / 2, y1, z0], [x + w / 2, y2, z], [x + w / 2, y2, z]], [1, 0, 0], [[0, 0], [1, 0], [1, 1], [0, 1]], g); gsFl(T.fl, [[x - w / 2, y1, z0], [x - w / 2, y1, z1], [x - w / 2, y2, z], [x - w / 2, y2, z]], [-1, 0, 0], [[0, 0], [1, 0], [1, 1], [0, 1]], g); }
+  else { const z0 = z - d / 2 - ue, z1 = z + d / 2 + ue, x0 = x - w / 2, x1 = x + w / 2;
+    gsFl(T.fl, [[x1, y1, z1], [x1, y1, z0], [x, y2, z0], [x, y2, z1]], [.7, .7, 0], [[0, 0], [1, 0], [1, 1], [0, 1]], c);
+    gsFl(T.fl, [[x0, y1, z0], [x0, y1, z1], [x, y2, z1], [x, y2, z0]], [-.7, .7, 0], [[0, 0], [1, 0], [1, 1], [0, 1]], c2);
+    const g = gsRGB(fa); gsFl(T.fl, [[x0, y1, z + d / 2], [x1, y1, z + d / 2], [x, y2, z + d / 2], [x, y2, z + d / 2]], [0, 0, 1], [[0, 0], [1, 0], [1, 1], [0, 1]], g); gsFl(T.fl, [[x1, y1, z - d / 2], [x0, y1, z - d / 2], [x, y2, z - d / 2], [x, y2, z - d / 2]], [0, 0, -1], [[0, 0], [1, 0], [1, 1], [0, 1]], g); }
+}
+/* Stoff für das Band der Strecke: Breite kommt als Uniform, die Seite als Attribut */
+function lwBandStoff(u, bunt) {
+  const m = bunt ? new THREE.MeshBasicMaterial({ vertexColors: true, depthTest: false, transparent: true, side: THREE.DoubleSide }) : new THREE.MeshBasicMaterial({ color: 0x1c2333, transparent: true, opacity: .55, depthTest: false, depthWrite: false, side: THREE.DoubleSide });
+  m.onBeforeCompile = sh => { sh.uniforms.uB = u; sh.vertexShader = 'attribute vec2 aN;\nuniform float uB;\n' + sh.vertexShader.replace('#include <begin_vertex>', 'vec3 transformed = vec3(position); transformed.xz += aN * uB;'); };
+  m.customProgramCacheKey = () => 'lwband' + (bunt ? 1 : 0); return m;
+}
+/* Stoffe einmal anlegen */
+function lwStoffe() {
+  if (LW.stoffe) return LW.stoffe;
+  const fenster = band => { const t = gsTex(64, 64, (c, w) => { c.fillStyle = '#ffffff'; c.fillRect(0, 0, w, w);
+    if (band) { const g = c.createLinearGradient(0, 12, 0, 46); g.addColorStop(0, '#5b6f9f'); g.addColorStop(1, '#2b3a63'); c.fillStyle = g; c.fillRect(0, 12, w, 34); c.fillStyle = '#e6e9f0'; c.fillRect(0, 12, 3, 34); }
+    else { c.fillStyle = '#d8dce6'; c.fillRect(14, 10, 36, 38); const g = c.createLinearGradient(0, 13, 0, 45); g.addColorStop(0, '#5a6d9c'); g.addColorStop(1, '#2a385f'); c.fillStyle = g; c.fillRect(17, 13, 30, 32); c.fillStyle = 'rgba(255,255,255,.25)'; c.fillRect(19, 15, 11, 5); } });
+    t.wrapS = t.wrapT = THREE.RepeatWrapping; return t; };
+  LW.stoffe = { wa: new THREE.MeshLambertMaterial({ map: fenster(false), vertexColors: true }), wb: new THREE.MeshLambertMaterial({ map: fenster(true), vertexColors: true }), fl: new THREE.MeshLambertMaterial({ vertexColors: true }), boden: new THREE.MeshLambertMaterial({ vertexColors: true }),
+    baum: new THREE.MeshLambertMaterial({ vertexColors: true }), weg: new THREE.MeshBasicMaterial({ vertexColors: true, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4 }), wegRand: new THREE.MeshBasicMaterial({ color: 0x2c3344, transparent: true, opacity: .55, polygonOffset: true, polygonOffsetFactor: -3, polygonOffsetUnits: -3, depthWrite: false }) };
+  return LW.stoffe;
+}
+/* Bäume als Instanzen (zehntausende gehen flüssig) */
+function lwBaumGeo(art) {
+  if (LW['geo_' + art]) return LW['geo_' + art];
+  const B = gsPuf(); gsBox(B, 0, 0, 0, .6, 2.6, .6, '#8a6a4a', { ao: false });
+  if (art === 'tanne') { const k = new THREE.ConeGeometry(2.6, 6.5, 7); k.translate(0, 5.4, 0); gsGeoRein(B, k, '#ffffff'); const k2 = new THREE.ConeGeometry(1.9, 4.2, 7); k2.translate(0, 8.2, 0); gsGeoRein(B, k2, '#ffffff'); }
+  else { const k = new THREE.IcosahedronGeometry(3, 0); k.scale(1, .95, 1); k.translate(0, 5, 0); gsGeoRein(B, k, '#ffffff'); }
+  return LW['geo_' + art] = gsGeo(B);
+}
+function lwBaeume(par, L, art) {
+  if (!L.length) return; const m = new THREE.InstancedMesh(lwBaumGeo(art), lwStoffe().baum, L.length), o = new THREE.Object3D(), c = new THREE.Color();
+  L.forEach((b, i) => { o.position.set(b[0], b[1] - .2, b[2]); o.scale.setScalar(b[3]); o.rotation.y = lwHash(Math.round(b[0]), Math.round(b[2]), 4) * 6.28; o.updateMatrix(); m.setMatrixAt(i, o.matrix);
+    const g = lwHash(Math.round(b[0] * 3), Math.round(b[2] * 3), 5); c.setRGB(art === 'tanne' ? .36 + g * .1 : .5 + g * .18, art === 'tanne' ? .62 + g * .1 : .78 + g * .12, art === 'tanne' ? .42 : .38 + g * .1); m.setColorAt(i, c); });
+  m.instanceColor.needsUpdate = true; m.matrixAutoUpdate = false; par.add(m);
+}
+/* Stadion: Kunststoffbahn mit 8 Bahnen, Rasen, Tribünen, Flutlicht */
+function lwOvalForm(a, R) { const s = new THREE.Shape(); s.moveTo(-a, -R); s.lineTo(a, -R); s.absarc(a, 0, R, -Math.PI / 2, Math.PI / 2, false); s.lineTo(-a, R); s.absarc(-a, 0, R, Math.PI / 2, Math.PI * 1.5, false); return s; }
+function lwOvalPunkt(a, R, w) { /* Punkt auf dem Oval zum Winkel w um die Mitte (für den Läufer auf der Bahn) */ const c = Math.cos(w), s = Math.sin(w); let best = null; const t = Math.abs(s) > 1e-6 ? R / Math.abs(s) : Infinity; if (Math.abs(c * t) <= a) return [c * t, s * t]; const sx = Math.sign(c) * a, A = 1, Bq = -2 * (sx * c), Cq = sx * sx - R * R, D = Bq * Bq - 4 * A * Cq, tt = (-Bq + Math.sqrt(Math.max(0, D))) / 2; best = [c * tt, s * tt]; return best; }
+function lwStadion(W, P, B, H) {
+  const a = 42.195, R0 = 36.5, BW = 1.22, n = 8, y = H(B.cx, B.cz) + .05, g = new THREE.Group(); g.position.set(B.cx, y, B.cz); g.rotation.y = -B.ang;
+  const flach = (sh, col, yy, op) => { const m = new THREE.Mesh(new THREE.ShapeGeometry(sh, 24).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial(Object.assign({ color: col }, op || {}))); m.position.y = yy; g.add(m); return m; };
+  const aussen = lwOvalForm(a, R0 + n * BW + 1.5), bahn = lwOvalForm(a, R0 + n * BW); bahn.holes.push(lwOvalForm(a, R0));
+  flach(lwOvalForm(a + 8, R0 + n * BW + 9), 0xdfe3ea, -.02); flach(aussen, 0xb6dc95, -.01); flach(bahn, 0xc65a42, .02); flach(lwOvalForm(a, R0 - .4), 0x6fbf55, .02);
+  /* Linien */
+  const lm = new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: .85 });
+  for (let k = 0; k <= n; k++) { const pts = lwOvalForm(a, R0 + k * BW).getPoints(40).map(p => new THREE.Vector3(p.x, .06, p.y)); g.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints(pts), lm)); }
+  const ziel = new THREE.Mesh(new THREE.PlaneGeometry(.5, n * BW).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff })); ziel.position.set(a, .07, -(R0 + n * BW / 2)); g.add(ziel);
+  /* Fußballfeld-Linien im Rasen */
+  const fl = new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.PlaneGeometry(100, 64).rotateX(-Math.PI / 2)), new THREE.LineBasicMaterial({ color: 0xffffff, transparent: true, opacity: .6 })); fl.position.y = .05; g.add(fl);
+  /* Tribünen und Flutlicht */
+  const T = gsPuf(), rr = R0 + n * BW + 4;
+  for (const sd of [-1, 1]) { const lang = sd < 0 ? 2 * a * 1.05 : 2 * a * .6; for (let s = 0; s < 4; s++) gsBox(T, 0, 0, sd * (rr + s * 2.4 + 1.2), lang, 1.4 + s * 1.4, 2.4, s % 2 ? '#e3e6ec' : '#d2d7e0', { ao: false });
+    gsBox(T, 0, 0, sd * (rr + 11.5), lang, 9, 1, '#c5cad3'); if (sd < 0) gsBox(T, 0, 9, sd * (rr + 6), lang, .5, 12, '#f2f4f8'); }
+  for (const [sx, sz] of [[1, 1], [1, -1], [-1, 1], [-1, -1]]) { const px = sx * (a + R0 * .75), pz = sz * (R0 + 14); gsBox(T, px, 0, pz, .8, 26, .8, '#9aa3b2'); gsBox(T, px, 25, pz, 4, 2.2, .6, '#f5f2e1'); }
+  const tm = new THREE.Mesh(gsGeo(T), lwStoffe().fl); g.add(tm); W.add(g);
+  LW.stadion = { g, a, R: R0 + .3, y };
+}
+/* Die Strecke als farbiges Band auf dem Gelände (Farbe = Tempo), auf der Bahn läuft sie auf Bahn 1 */
+function lwWeg(W, P, B, H, art) {
+  const breite = art === 'rad' ? 5 : art === 'schwimmen' ? 3 : 3.4, v = lwTempoReihe(P), ok = v.filter(x => x > .3).sort((a, b) => a - b), lo = ok[Math.floor(ok.length * .1)] || 0, hi = ok[Math.floor(ok.length * .9)] || 1;
+  const farbe = s => { const f = Math.max(0, Math.min(1, (s - lo) / ((hi - lo) || 1))); const c = new THREE.Color(); c.setHSL((f > .5 ? 50 + (f - .5) * 2 * 100 : f * 2 * 50) / 360, .8, .52); return [c.r, c.g, c.b]; };
+  /* Positionen zum Zeichnen und für den Läufer: auf der Bahn auf Bahn 1 gezogen */
+  const SX = P.x.slice(), SZ = P.z.slice();
+  if (B) { const c = Math.cos(B.ang), s = Math.sin(B.ang);
+    for (let i = 0; i < P.n; i++) if (B.auf[i]) { const dx = P.x[i] - B.cx, dz = P.z[i] - B.cz, u = dx * c + dz * s, vv = -dx * s + dz * c, [pu, pv] = lwOvalPunkt(42.195, 36.8, Math.atan2(vv, u)); SX[i] = B.cx + pu * c - pv * s; SZ[i] = B.cz + pu * s + pv * c; } }
+  /* Band als zusammenhängender Streifen; die Breite rechnet die Grafikkarte je nach Zoom aus (nah echt breit, fern gut sichtbar) */
+  const laeufe = []; let cur = null;
+  for (let i = 0; i < P.n; i++) { const weg = B && B.auf[i] && (i === 0 || B.auf[i - 1]) && (i === P.n - 1 || B.auf[i + 1]); if (weg) { cur = null; continue; }
+    if (!cur) { cur = []; laeufe.push(cur); if (i > 0) cur.push([SX[i - 1], SZ[i - 1], farbe(v[i])]); }
+    const last = cur[cur.length - 1]; if (last) { const L = Math.hypot(SX[i] - last[0], SZ[i] - last[1]), k = Math.ceil(L / 15); for (let q = 1; q < k; q++) cur.push([last[0] + (SX[i] - last[0]) * q / k, last[1] + (SZ[i] - last[1]) * q / k, farbe(v[i])]); }
+    cur.push([SX[i], SZ[i], farbe(v[i])]); }
+  const pos = [], an = [], col = [], posR = [], anR = [];
+  for (const L of laeufe) { if (L.length < 2) continue; const N = L.map((p, k) => { const a = L[Math.max(0, k - 1)], b = L[Math.min(L.length - 1, k + 1)]; let dx = b[0] - a[0], dz = b[1] - a[1]; const l = Math.hypot(dx, dz) || 1; return [-dz / l, dx / l]; });
+    for (let k = 0; k < L.length - 1; k++) { const A = L[k], Bq = L[k + 1], ya = H(A[0], A[1]) + .45, yb = H(Bq[0], Bq[1]) + .45, na = N[k], nb = N[k + 1];
+      const quad = (P2, A2, C2) => { for (const [pp, nn, cc] of [[A, [-na[0], -na[1]], A[2]], [Bq, [-nb[0], -nb[1]], Bq[2]], [Bq, nb, Bq[2]], [A, [-na[0], -na[1]], A[2]], [Bq, nb, Bq[2]], [A, na, A[2]]]) { P2.push(pp[0], pp === A ? ya : yb, pp[1]); A2.push(nn[0], nn[1]); if (C2) C2.push(cc[0], cc[1], cc[2]); } };
+      quad(pos, an, col); quad(posR, anR, null); } }
+  const mk = (P2, A2, C2, mat, ord) => { if (!P2.length) return null; const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P2, 3)); g.setAttribute('aN', new THREE.Float32BufferAttribute(A2, 2)); if (C2) g.setAttribute('color', new THREE.Float32BufferAttribute(C2, 3)); g.computeBoundingSphere(); g.boundingSphere.radius += 400; const m = new THREE.Mesh(g, mat); m.renderOrder = ord; m.frustumCulled = false; W.add(m); return m; };
+  LW.uB = { value: breite / 2 }; LW.uBr = { value: breite / 2 + .9 }; LW.breite = breite;
+  const band = mk(pos, an, col, lwBandStoff(LW.uB, true), 3), rand = mk(posR, anR, null, lwBandStoff(LW.uBr, false), 2);
+  LW.baender = [band, rand].filter(Boolean);
+  /* Bahn 1 leuchtet, wenn auf der Bahn gelaufen wurde */
+  if (B && LW.stadion) { const st = LW.stadion, pts = lwOvalForm(42.195, 36.8).getPoints(48).map(p => new THREE.Vector3(p.x, .12, p.y)); const l = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts, true), 160, .45, 4, true), new THREE.MeshBasicMaterial({ color: 0xffe66b })); st.g.add(l); }
+  return { SX, SZ, farbe, v };
+}
+
+/* ---------- Lauf-Welt, Teil 3: Bühne, Kamera (ziehen, zoomen, drehen), Abspielen, Schwimmbecken ---------- */
+
+function lwBox(w, kurz) {
+  const a = lwArt(w);
+  return `<div class="lw" data-id="${w.id}"><canvas></canvas><div class="lw-top"><span class="lw-chip">Welt wird gebaut …</span></div>
+    <div class="lw-hud" hidden></div>
+    <div class="lw-kn"><button type="button" data-lw="ueber" aria-label="Überblick">⌖</button><button type="button" data-lw="play" class="lw-play">▶ ${a === 'schwimmen' && !w.route ? 'Bahnen ansehen' : 'Abspielen'}</button><button type="button" data-lw="voll" aria-label="Vollbild">⛶</button></div></div>`;
+}
+/* Start: Strecke laden, Welt bauen, Bühne aufziehen */
+async function lwStart(el, w, r) {
+  lwStop();
+  if (typeof THREE === 'undefined') return false;
+  const cv = el.querySelector('canvas'); let ren;
+  try { ren = new THREE.WebGLRenderer({ canvas: cv, antialias: true, powerPreference: 'high-performance' }); } catch (e) { return false; }
+  ren.setPixelRatio(Math.min(2, devicePixelRatio || 1)); ren.outputColorSpace = THREE.SRGBColorSpace;
+  const scene = new THREE.Scene(), himmel = new THREE.Color('#dde8f4'); scene.background = himmel; scene.fog = new THREE.Fog(himmel, 1000, 4000);
+  scene.add(new THREE.HemisphereLight(0xffffff, 0xaab49a, 1.25)); const sonne = new THREE.DirectionalLight(0xfff6e8, 1.35); sonne.position.set(-.6, 1, .45); scene.add(sonne);
+  const cam = new THREE.PerspectiveCamera(38, 1, 1, 20000);
+  Object.assign(LW, { an: true, raf: 0, el, cv, ren, scene, cam, w, play: null, dirty: true, P: null, B: null, welt: null, iv: null, becken: null, figur: null, kamZiel: null, zieh: false, W: 0, H: 0, kam: { x: 0, z: 0, d: 500, az: .55, el: .95 }, sprites: [] });
+  LW.stadion = null;
+  const a = lwArt(w);
+  let info = '';
+  if (r && r.length >= 25) {
+    const P = lwPunkte(r); if (!P) return false; const B = a === 'lauf' || a === 'gehen' ? lwBahn(P) : null;
+    const welt = lwWeltBauen(w, P, B); scene.add(welt.W);
+    Object.assign(LW, { P, B, welt, iv: lwIntervalle(w, P, B) });
+    lwMarken(P, B, welt);
+    lwFigur(a);
+    const ext = Math.max(P.x1 - P.x0, P.z1 - P.z0, 160);
+    LW.fit = { x: (P.x0 + P.x1) / 2, z: (P.z0 + P.z1) / 2, d: B && P.x1 - P.x0 < 400 ? 330 : ext * 1.7 + 60 };
+    const z = welt.zahl, bez = B ? `🏟 Stadion · ${B.runden.length} ${B.runden.length === 1 ? 'Runde' : 'Runden'}` : w.ort === 'freiwasser' ? '🌊 Freiwasser' : lwBeschreibung(z, welt.cfg);
+    info = `${bez} · ${dec(P.dist / 1000, P.dist < 10000 ? 2 : 1)} km${P.hatE && P.eMax - P.eMin > 8 ? ` · ${Math.round(P.eMax - P.eMin)} m Höhe` : ''}`;
+  } else if (a === 'schwimmen') { lwBecken(w); info = `🏊 ${w.bahn || 25}-m-Becken · ${lwBahnen(w)} Bahnen`; }
+  else return false;
+  el.querySelector('.lw-chip').textContent = info;
+  Object.assign(LW.kam, { x: LW.fit.x, z: LW.fit.z, d: LW.fit.d });
+  lwSteuerung(el); lwGroesse(); lwLauf();
+  return true;
+}
+function lwBeschreibung(z, cfg) {
+  const L = [['stadt', '🏙 Stadt'], ['wohnen', '🏘 Wohngegend'], ['park', '🌳 Park'], ['wald', '🌲 Wald'], ['feld', '🌾 Felder'], ['dorf', '🏡 Dörfer'], ['wasser', '💧 Wasser']].filter(([k]) => z[k]).sort((a, b) => z[b[0]] - z[a[0]]).slice(0, 2).map(x => x[1]);
+  return (cfg.hmKm > 12 ? '⛰ Hügelig · ' : '') + L.join(' · ');
+}
+function lwStop() {
+  if (!LW.an) return; LW.an = false; cancelAnimationFrame(LW.raf); LW.raf = 0;
+  try { LW.scene.traverse(o => { if (o.geometry && !Object.values(LW).includes(o.geometry)) o.geometry.dispose(); if (o.material && o.material.map && o.isSprite) o.material.map.dispose(); }); LW.ren.dispose(); } catch (e) {}
+  LW.scene = LW.ren = null; document.documentElement.classList.remove('lw-offen');
+}
+function lwGroesse() { const r = LW.cv.getBoundingClientRect(), w = Math.max(10, r.width), h = Math.max(10, r.height); if (w === LW.W && h === LW.H) return; LW.W = w; LW.H = h; LW.ren.setSize(w, h, false); LW.cam.aspect = w / h; LW.cam.updateProjectionMatrix(); LW.dirty = true; }
+function lwKamera() {
+  const k = LW.kam, H = LW.welt ? LW.welt.H : () => 0, y0 = LW.welt ? H(k.x, k.z) : 0, ce = Math.cos(k.el);
+  LW.cam.position.set(k.x + Math.sin(k.az) * ce * k.d, y0 + Math.sin(k.el) * k.d, k.z + Math.cos(k.az) * ce * k.d); LW.cam.lookAt(k.x, y0, k.z);
+  LW.cam.near = Math.max(.5, k.d / 200); LW.cam.far = k.d * 12 + 2000; LW.cam.updateProjectionMatrix();
+  LW.scene.fog.near = k.d * 1.6; LW.scene.fog.far = k.d * 5.5 + 600;
+  const s = Math.max(1.5, k.d / 45); if (LW.figur) LW.figur.scale.setScalar(s);
+  if (LW.uB) { const b = Math.max(LW.breite / 2, k.d * .0052 * (600 / Math.max(300, LW.H || 600))); LW.uB.value = b; LW.uBr.value = b * 1.35 + .6; const tief = k.d < 260; for (const m of LW.baender || []) { m.material.depthTest = tief; } }
+}
+function lwLauf() { if (!LW.an || LW.raf) return; LW.t0 = performance.now(); LW.raf = requestAnimationFrame(lwBild); }
+function lwBild(now) {
+  LW.raf = 0; if (!LW.an) return; if (!LW.cv.isConnected) { lwStop(); return; }
+  lwGroesse(); const dt = Math.min(.1, (now - (LW.tl || now)) / 1000); LW.tl = now;
+  const k = LW.kam, z = LW.kamZiel; if (z) { const f = 1 - Math.exp(-dt * 4); for (const key of ['x', 'z', 'd', 'az', 'el']) if (z[key] !== undefined) k[key] += (z[key] - k[key]) * f; if (Math.abs(z.d - k.d) < .5 && Math.abs(z.x - k.x) < .5 && Math.abs(z.z - k.z) < .5) LW.kamZiel = null; LW.dirty = true; }
+  if (LW.play) { lwAbspielenSchritt(dt); LW.dirty = true; }
+  if (LW.dirty) { lwKamera(); LW.ren.render(LW.scene, LW.cam); LW.dirty = false; }
+  if (LW.play || LW.kamZiel || LW.zieh) LW.raf = requestAnimationFrame(lwBild);
+}
+const lwNeu = () => { LW.dirty = true; lwLauf(); };
+
+/* Bedienung: ein Finger schiebt, zwei Finger zoomen und drehen, Mausrad zoomt, rechte Maustaste oder Umschalt dreht und kippt */
+function lwSteuerung(el) {
+  const cv = LW.cv, P = new Map(); let alt = null;
+  const zwei = () => { const [a, b] = [...P.values()]; return { d: Math.hypot(a.x - b.x, a.y - b.y), w: Math.atan2(b.y - a.y, b.x - a.x), x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }; };
+  const schieb = (dx, dy) => { const k = LW.kam, s = k.d * .0021 * (600 / Math.max(300, LW.H)), c = Math.cos(k.az), si = Math.sin(k.az); k.x -= (dx * c + dy * si) * s; k.z -= (-dx * si + dy * c) * s; LW.kamZiel = null; };
+  cv.addEventListener('pointerdown', e => { cv.setPointerCapture(e.pointerId); P.set(e.pointerId, { x: e.clientX, y: e.clientY, b: e.button, sh: e.shiftKey }); alt = P.size === 2 ? zwei() : null; LW.zieh = true; LW.kamZiel = null; if (LW.play) LW.play.folgen = false; lwLauf(); });
+  cv.addEventListener('pointermove', e => { const p = P.get(e.pointerId); if (!p) return; const dx = e.clientX - p.x, dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY; const k = LW.kam;
+    if (P.size === 2) { const n = zwei(); if (alt) { k.d = Math.max(25, Math.min(LW.fit.d * 4, k.d * alt.d / (n.d || 1))); k.az -= n.w - alt.w; } alt = n; }
+    else if (p.b === 2 || p.sh) { k.az -= dx * .006; k.el = Math.max(.32, Math.min(1.45, k.el + dy * .005)); }
+    else schieb(dx, dy);
+    LW.dirty = true; });
+  const los = e => { P.delete(e.pointerId); alt = P.size === 2 ? zwei() : null; if (!P.size) LW.zieh = false; };
+  cv.addEventListener('pointerup', los); cv.addEventListener('pointercancel', los); cv.addEventListener('contextmenu', e => e.preventDefault());
+  cv.addEventListener('wheel', e => { e.preventDefault(); const k = LW.kam; k.d = Math.max(25, Math.min(LW.fit.d * 4, k.d * Math.exp(e.deltaY * .0012))); LW.kamZiel = null; lwNeu(); }, { passive: false });
+  cv.addEventListener('dblclick', () => { LW.kamZiel = { d: Math.max(25, LW.kam.d * .45) }; lwLauf(); });
+  el.querySelector('[data-lw=ueber]').onclick = () => { LW.kamZiel = { x: LW.fit.x, z: LW.fit.z, d: LW.fit.d, el: .95 }; if (LW.play) LW.play.folgen = false; lwLauf(); };
+  el.querySelector('[data-lw=voll]').onclick = () => { const an = el.classList.toggle('lw-voll'); document.documentElement.classList.toggle('lw-offen', an); el.querySelector('[data-lw=voll]').textContent = an ? '✕' : '⛶'; setTimeout(lwNeu, 30); };
+  el.querySelector('[data-lw=play]').onclick = () => lwAbspielen();
+}
+
+/* Beschriftungen als Schilder, die immer gleich groß bleiben */
+function lwSchild(text, x, y, z, farbe = '#1c2333', klein) {
+  if (klein && LW.P) { const min = Math.max(LW.P.x1 - LW.P.x0, LW.P.z1 - LW.P.z0) * .07; if (LW.sprites.some(sp => Math.hypot(sp.position.x - x, sp.position.z - z) < min)) return null; }
+  const c = document.createElement('canvas'), s = 2, ctx = c.getContext("2d"), f = (klein ? 22 : 26) * s;
+  ctx.font = `800 ${f}px -apple-system, system-ui, sans-serif`; const w = Math.ceil(ctx.measureText(text).width) + 22 * s / 3, h = Math.ceil(f * 1.6);
+  c.width = w; c.height = h + 8; ctx.font = `800 ${f}px -apple-system, system-ui, sans-serif`;
+  ctx.fillStyle = 'rgba(0,0,0,.18)'; ctx.beginPath(); ctx.roundRect(1, 3, w - 2, h, h / 2); ctx.fill();
+  ctx.fillStyle = farbe; ctx.beginPath(); ctx.roundRect(0, 0, w, h, h / 2); ctx.fill();
+  ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(text, w / 2, h / 2 + 1);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+  const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, sizeAttenuation: false })); sp.center.set(.5, 0); sp.position.set(x, y, z); const sk = .0006; sp.scale.set(c.width * sk, c.height * sk, 1); sp.renderOrder = 10; LW.scene.add(sp); LW.sprites.push(sp); return sp;
+}
+function lwMarken(P, B, welt) {
+  const H = welt.H, S = welt.weg, rund = Math.hypot(P.x[0] - P.x[P.n - 1], P.z[0] - P.z[P.n - 1]) < 60;
+  if (!B) { const schritt = P.dist > 42000 ? 10000 : P.dist > 21000 ? 5000 : P.dist > 12000 ? 2000 : 1000;
+    for (let km = schritt; km < P.dist - schritt * .3; km += schritt) { const x = lwBei(P, 'd', km, 'x'), z = lwBei(P, 'd', km, 'z'); lwSchild(`${km / 1000} km`, x, H(x, z) + 2, z, '#2b3346', true); } }
+  const sx = S.SX[0], sz = S.SZ[0]; lwSchild(rund || B ? '🏁 Start / Ziel' : '🟢 Start', sx, H(sx, sz) + 3, sz, '#16935f');
+  if (!rund && !B) { const ex = S.SX[P.n - 1], ez = S.SZ[P.n - 1]; lwSchild('🏁 Ziel', ex, H(ex, ez) + 3, ez, '#1c2333'); }
+  /* Intervalle: Nummern an den harten Abschnitten */
+  const iv = LW.iv; if (iv && iv.quelle !== 'bahn' && !B) { let n = 0; for (const o of iv.L) if (o.art === 'hart' && o.d0 != null) { n++; const x = lwBei(P, 'd', o.d0, 'x'), z = lwBei(P, 'd', o.d0, 'z'); lwSchild(`⚡${n}`, x, H(x, z) + 2.5, z, '#e8553f', true); } }
+}
+/* Läufer, Radfahrer oder Schwimmer */
+function lwFigur(a) {
+  const g = new THREE.Group(), M = c => new THREE.MeshLambertMaterial({ color: c });
+  if (a === 'rad') { const r1 = new THREE.Mesh(new THREE.TorusGeometry(.35, .06, 6, 16), M(0x222831)), r2 = r1.clone(); r1.position.set(.55, .38, 0); r2.position.set(-.55, .38, 0); g.add(r1, r2); const k = new THREE.Mesh(new THREE.BoxGeometry(1.1, .08, .08), M(0xe8553f)); k.position.y = .7; g.add(k); const p = new THREE.Mesh(new THREE.CapsuleGeometry(.22, .55, 3, 8), M(0x3a7bfd)); p.position.set(-.1, 1.15, 0); p.rotation.z = -.5; g.add(p); const kopf = new THREE.Mesh(new THREE.SphereGeometry(.2, 10, 8), M(0xf2c9a0)); kopf.position.set(.15, 1.55, 0); g.add(kopf); }
+  else { const p = new THREE.Mesh(new THREE.CapsuleGeometry(.26, .8, 3, 8), M(0x3a7bfd)); p.position.y = 1; g.add(p); const kopf = new THREE.Mesh(new THREE.SphereGeometry(.24, 10, 8), M(0xf2c9a0)); kopf.position.y = 1.85; g.add(kopf); }
+  const ring = new THREE.Mesh(new THREE.RingGeometry(.8, 1.15, 24).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: .85, depthTest: false })); ring.position.y = .2; ring.renderOrder = 5; g.add(ring);
+  g.visible = false; LW.scene.add(g); LW.figur = g;
+  /* Markierung über der Figur, bleibt immer gleich groß */
+  const c = document.createElement('canvas'); c.width = c.height = 96; const x = c.getContext('2d');
+  x.fillStyle = 'rgba(0,0,0,.2)'; x.beginPath(); x.arc(48, 44, 38, 0, 7); x.fill(); x.fillStyle = '#3a7bfd'; x.beginPath(); x.arc(48, 40, 36, 0, 7); x.fill(); x.lineWidth = 6; x.strokeStyle = '#fff'; x.stroke();
+  x.font = '40px -apple-system, system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText((LW_ART[a] || LW_ART.lauf)[2], 48, 42);
+  const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: t, depthTest: false, sizeAttenuation: false })); sp.center.set(.5, -.15); sp.scale.set(.085, .085, 1); sp.renderOrder = 12; sp.visible = false; LW.scene.add(sp); LW.marke = sp;
+}
+/* Abspielen: der ganze Lauf in etwa 25 Sekunden, Kamera fährt mit */
+function lwAbspielen() {
+  const btn = LW.el.querySelector('[data-lw=play]');
+  if (LW.play) { LW.play.pause = !LW.play.pause; btn.textContent = LW.play.pause ? '▶ Weiter' : '❚❚ Pause'; if (!LW.play.pause) lwLauf(); return; }
+  if (LW.becken) { LW.play = { t: 0, dauer: Math.max(12, Math.min(40, LW.becken.n * .8)), folgen: false }; btn.textContent = '❚❚ Pause'; LW.el.querySelector('.lw-hud').hidden = false; lwLauf(); return; }
+  const P = LW.P; if (!P) return;
+  LW.play = { t: 0, dauer: Math.max(14, Math.min(45, P.dist / 1000 * 4.5)), folgen: true }; LW.figur.visible = true;
+  LW.kam.d = Math.min(LW.kam.d, 260); LW.kam.el = .78;
+  btn.textContent = '❚❚ Pause'; LW.el.querySelector('.lw-hud').hidden = false; lwLauf();
+}
+function lwAbspielenSchritt(dt) {
+  const pl = LW.play; if (pl.pause) return; pl.t += dt; const f = Math.min(1, pl.t / pl.dauer), hud = LW.el.querySelector('.lw-hud');
+  if (LW.becken) { lwBeckenSchritt(f, hud); if (f >= 1) lwAbspielenEnde(); return; }
+  const P = LW.P, S = LW.welt.weg, H = LW.welt.H, tt = f * P.dauer;
+  let lo = 0, hi = P.n - 1; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (P.t[m] <= tt) lo = m; else hi = m; }
+  const q = (tt - P.t[lo]) / ((P.t[hi] - P.t[lo]) || 1), x = S.SX[lo] + (S.SX[hi] - S.SX[lo]) * q, z = S.SZ[lo] + (S.SZ[hi] - S.SZ[lo]) * q, y = (LW.B && LW.B.auf[lo] && LW.stadion ? LW.stadion.y : H(x, z)) + .4;
+  const fg = LW.figur; fg.position.set(x, y, z); if (LW.marke) { LW.marke.visible = true; LW.marke.position.set(x, y + 2.2 * fg.scale.x, z); } fg.rotation.y = Math.atan2(-(S.SZ[hi] - S.SZ[lo]), S.SX[hi] - S.SX[lo]);
+  if (pl.folgen) { const k = LW.kam, g = 1 - Math.exp(-dt * 3); k.x += (x - k.x) * g; k.z += (z - k.z) * g; k.az += .04 * dt; }
+  const d = P.d[lo] + (P.d[hi] - P.d[lo]) * q, v = S.v[lo] || 0, art = lwArt(LW.w);
+  let iv = ''; if (LW.iv) { const o = LW.iv.L.find(o => tt >= o.t0 && tt < o.t0 + o.zeit); if (o) iv = `<span class="lw-iv ${o.art}">${LW.iv.quelle === 'bahn' ? 'Runde ' + (o.i + 1) : LW_IV_ART[o.art] + (o.art === 'hart' ? ' ' + (LW.iv.L.filter(x => x.art === 'hart').indexOf(o) + 1) : '')}</span>`; }
+  hud.innerHTML = `<div><b>${dec(d / 1000, 2)}</b><span>km</span></div><div><b>${secToStr(Math.round(tt))}</b><span>Zeit</span></div><div><b>${v > .3 ? (art === 'rad' ? dec(v * 3.6, 1) : secToStr(Math.round(1000 / v))) : '–'}</b><span>${art === 'rad' ? 'km/h' : '/km'}</span></div>${iv}`;
+  if (f >= 1) lwAbspielenEnde();
+}
+function lwAbspielenEnde() { const btn = LW.el.querySelector('[data-lw=play]'); LW.play = null; btn.textContent = '↻ Nochmal'; setTimeout(() => { if (!LW.play && LW.el) LW.el.querySelector('.lw-hud').hidden = true; }, 2500); }
+
+/* ---------- Schwimmbecken: Bahnen aus den Marken der Uhr ---------- */
+const lwBahnen = w => w.laps && w.laps.length ? w.laps.length : w.dist && w.bahn ? Math.round(w.dist * 1000 / w.bahn) : 0;
+function lwBecken(w) {
+  const L = w.bahn === 50 ? 50 : w.bahn || 25, n = L === 50 ? 8 : 6, bw = 2.5, B = n * bw, sc = LW.scene, M = c => new THREE.MeshLambertMaterial({ color: c });
+  const T = gsPuf(), rd = 8; /* Beckenrand als Rahmen, damit man ins Wasser sieht */ gsBox(T, 0, -2, -(B / 2 + rd / 2 + 1.2), L + 2 * rd + 2.4, 2, rd, '#e9ecf1', { ao: false }); gsBox(T, 0, -2, B / 2 + rd / 2 + 1.2, L + 2 * rd + 2.4, 2, rd, '#e9ecf1', { ao: false }); gsBox(T, -(L / 2 + rd / 2 + 1.2), -2, 0, rd, 2, B + 2.4, '#e9ecf1', { ao: false }); gsBox(T, L / 2 + rd / 2 + 1.2, -2, 0, rd, 2, B + 2.4, '#e9ecf1', { ao: false });
+  gsBox(T, 0, -2.4, 0, L, .4, B, '#5fb4dd', { ao: false });
+  for (const sd of [-1, 1]) { gsBox(T, sd * (L / 2 + .6), -2, 0, 1.2, 2.3, B, '#dfe4ea'); gsBox(T, 0, -2, sd * (B / 2 + .6), L + 2.4, 2.3, 1.2, '#dfe4ea'); }
+  for (let k = 0; k < n; k++) { const z = -B / 2 + bw * (k + .5); gsBox(T, -L / 2 - 1.2, .25, z, .8, .7, .9, '#f4f6f9'); gsBox(T, -L / 2 - 1.2, .95, z, .9, .08, .9, k === 2 ? '#3a7bfd' : '#9aa6b8'); }
+  for (let s = -1; s <= 1; s += 2) for (let k = 0; k < 6; k++) gsBox(T, s * (L / 2 + 5 + k * 1.4), 0, -B / 2 - 6, 1.2, .6 + k * .5, B + 4, k % 2 ? '#d5dae2' : '#e3e7ed', { ao: false });
+  sc.add(new THREE.Mesh(gsGeo(T), lwStoffe().fl));
+  const wasser = new THREE.Mesh(new THREE.PlaneGeometry(L, B).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x48b4e6, transparent: true, opacity: .78, emissive: 0x0c3b5a, emissiveIntensity: .25 })); wasser.position.y = -.25; sc.add(wasser);
+  for (let k = 1; k < n; k++) { const z = -B / 2 + bw * k; for (let s = 0; s < L / 2; s++) { const m = new THREE.Mesh(new THREE.SphereGeometry(.12, 6, 4), M(s % 5 < 2 || s > L / 2 - 3 ? 0xe8553f : 0xffffff)); m.position.set(-L / 2 + 1 + s * 2, -.2, z); sc.add(m); } }
+  for (let k = 0; k < n; k++) { const m = new THREE.Mesh(new THREE.PlaneGeometry(L - 4, .3).rotateX(-Math.PI / 2), new THREE.MeshBasicMaterial({ color: 0x1f4f8f, transparent: true, opacity: .5 })); m.position.set(0, -2.15, -B / 2 + bw * (k + .5)); sc.add(m); }
+  const sw = new THREE.Group(), kp = new THREE.Mesh(new THREE.SphereGeometry(.22, 10, 8), M(0xe8553f)), kr = new THREE.Mesh(new THREE.CapsuleGeometry(.22, 1.1, 3, 8), M(0x2a5cd6)); kr.rotation.z = Math.PI / 2; kp.position.x = .85; sw.add(kp, kr); sw.position.set(-L / 2 + 1, -.2, -B / 2 + bw * 2.5); sc.add(sw);
+  /* Zeiten je Bahn */
+  const laps = (w.laps || []).map(x => x[1]).filter(x => x > 0), anz = lwBahnen(w) || laps.length || 1, ds = laps.length ? laps : new Array(anz).fill((w.dur || anz * 40) / anz);
+  LW.becken = { L, n: anz, z: ds, sw, B, bw };
+  LW.fit = { x: 0, z: 0, d: L * 1.9 + 18 };
+}
+function lwBeckenSchritt(f, hud) {
+  const b = LW.becken, ges = b.z.reduce((a, c) => a + c, 0), tt = f * ges; let acc = 0, i = 0; while (i < b.z.length - 1 && acc + b.z[i] < tt) acc += b.z[i++];
+  const q = Math.min(1, (tt - acc) / b.z[i]), hin = i % 2 === 0, x = -b.L / 2 + 1 + (b.L - 2) * (hin ? q : 1 - q);
+  b.sw.position.x = x; b.sw.rotation.y = hin ? 0 : Math.PI; b.sw.position.y = -.2 + Math.sin(tt * 6) * .05;
+  hud.innerHTML = `<div><b>${i + 1}<small>/${b.n}</small></b><span>Bahn</span></div><div><b>${dec((i + q) * b.L, 0)}</b><span>Meter</span></div><div><b>${secToStr(Math.round(tt))}</b><span>Zeit</span></div><div><b>${secToStr(Math.round(b.z[i]))}</b><span>diese Bahn</span></div>`;
+}
+
+/* ---------- Lauf-Welt, Teil 4: Anzeige im Training (Welt, Intervalle, deine Runde, was der Lauf gebracht hat),
+   andere Sportarten in der Liste, Laufziele mit Prognose ---------- */
+
+/* Fingerabdrücke der Strecken liegen wie die Strecken selbst nur im Gerätespeicher (nicht in der Sicherungsdatei) */
+LW.sigs = {};
+async function lwSigVon(w) {
+  if (LW.sigs[w.id] !== undefined) return LW.sigs[w.id];
+  let s = null; try { s = await hlGet('s:' + w.id); } catch (e) {}
+  if (!s || s.v !== 2) { const r = await hlRoute(w.id); const P = lwPunkte(r); if (P) { const a = lwArt(w), B = a === 'lauf' || a === 'gehen' ? lwBahn(P) : null; s = lwSig(P, B); if (B) { const hart = (lwIntervalle(w, P, B) || { L: [] }).L; s.runden = B.runden.map(x => Math.round(x.zeit)); s.hart = hart.filter(o => o.art === 'hart').map(o => Math.round(o.zeit)); } try { await hlPut('s:' + w.id, s); } catch (e) {} } }
+  return LW.sigs[w.id] = s;
+}
+async function lwGleiche(w) {
+  const me = await lwSigVon(w); if (!me) return null; const a = lwArt(w), L = [];
+  for (const x of S.workouts) { if (!x.route || lwArt(x) !== a) continue; const s = x === w ? me : await lwSigVon(x); if (s && (x === w || lwGleich(me, s))) L.push({ w: x, s }); }
+  return { me, L: L.sort((p, q) => (p.w.date + (p.w.zeit || '')) < (q.w.date + (q.w.zeit || '')) ? -1 : 1) };
+}
+
+/* ---------- Detailansicht eines Trainings ---------- */
+ACT.laufDetail = async d => {
+  const w = byId(S.workouts, d.id); if (!w) return; const a = lwArt(w), r = w.route ? await hlRoute(w.id) : null, p = pace(w);
+  const rad = a === 'rad', sw = a === 'schwimmen';
+  const st = (sw ? [[dec((w.dist || 0) * 1000, 0), 'Meter'], [secToStr(w.dur), 'Zeit'], [w.dist ? secToStr(w.dur / (w.dist * 10)) : '–', 'pro 100 m'], lwBahnen(w) && [lwBahnen(w), 'Bahnen à ' + (w.bahn || 25) + ' m']]
+    : [[dec(w.dist || 0, 2), 'km'], [secToStr(w.dur), 'Zeit'], rad ? [w.dur ? dec(w.dist / (w.dur / 3600), 1) : '–', 'km/h'] : [p ? secToStr(p) : '–', 'Pace /km'], !rad && [w.dur ? dec(w.dist / (w.dur / 3600), 1) : '–', 'km/h']])
+    .concat([w.hr && [w.hr, '⌀ Puls'], w.hrMax && [w.hrMax, 'max. Puls'], w.kcal && [w.kcal, 'kcal aktiv'], w.hm && [w.hm, 'Höhenmeter'], w.watt && [w.watt, '⌀ Watt'], !rad && !sw && w.steps && w.dur && [Math.round(w.steps / (w.dur / 60)), 'Schritte/min']]).filter(Boolean);
+  const P = r ? lwPunkte(r) : null, B = P && (a === 'lauf' || a === 'gehen') ? lwBahn(P) : null, iv = P ? lwIntervalle(w, P, B) : null;
+  const welt = (P || (sw && lwBahnen(w))) && typeof THREE !== 'undefined';
+  let h = welt ? lwBox(w) + (P && !B ? `<div class="lf-leg"><span>schneller</span><i></i><span>langsamer</span></div>` : '') : r ? `<div class="lf-map gross">${routeSvg(r, { km: true, grid: true, w: 340, h: 240 })}</div>` : '';
+  h += `<div class="lf-st">${st.map(([v, l]) => `<div><b>${v}</b><span>${l}</span></div>`).join('')}</div>`;
+  h += `<div class="lw-gew" data-lwg>${lwGewinnHtml(w, null)}</div>`;
+  if (iv) h += lwIvKarte(iv, a);
+  if (sw && w.laps && w.laps.length > 1) h += lwBahnenKarte(w);
+  h += `<div data-lwr></div>`;
+  if (w.splits && w.splits.length && !(iv && iv.quelle === 'bahn')) { const mn = Math.min(...w.splits), mx = Math.max(...w.splits);
+    h += `<h3>Kilometer-Zeiten</h3><div class="lf-spl">${w.splits.map((s, i) => `<div class="${s === mn ? 'best' : ''}"><span>${i + 1}</span><div class="lf-sb"><i style="width:${(40 + 60 * (mx - s) / ((mx - mn) || 1)).toFixed(0)}%"></i></div><b>${secToStr(s)}</b></div>`).join('')}</div>`; }
+  if (r && r.length > 30) { const n = r.length / 5, pts = [], el = []; for (let i = 4; i < n; i += 2) { const dd = r[i * 5 + 3] - r[(i - 4) * 5 + 3], dt = r[i * 5 + 2] - r[(i - 4) * 5 + 2]; if (dd > 5 && dt > 0) pts.push({ x: r[i * 5 + 3] / 1000, y: rad ? dd / dt * 3.6 : -(dt / dd * 1000) / 60 }); if (r[i * 5 + 4] > -9999) el.push({ x: r[i * 5 + 3] / 1000, y: r[i * 5 + 4] }); }
+    if (pts.length > 5) h += `<h3>Tempo über die Strecke</h3>${xyChart(pts, '#5fb3ff', v => rad ? dec(v, 0) + ' km/h' : secToStr(-v * 60))}`;
+    if (el.length > 5) h += `<h3>Höhenprofil</h3>${xyChart(el, '#9bd35f', v => dec(v, 0) + ' m', 90)}`; }
+  if (w.be && Object.keys(w.be).length) h += `<h3>Bestzeiten in diesem Lauf</h3><div class="sp-chips">${BE_DIST.filter(([len]) => w.be[len]).map(([len, n]) => `<span>${n} <b>${secToStr(w.be[len])}</b></span>`).join('')}</div>`;
+  if (w.note) h += `<div class="sub" style="margin-top:10px">${esc(w.note)}</div>`;
+  h += `<button type="button" class="btn sec full" data-x="edit" style="margin-top:14px">Bearbeiten</button>${w.src === 'health' ? '<div class="sub" style="margin-top:6px;text-align:center">aus Apple Health</div>' : ''}`;
+  const md = modal(`${(LW_ART[a] || [w.name || 'Training'])[0]} · ${fmtDs(w.date)}${w.zeit ? ', ' + w.zeit : ''}`, h, null);
+  $('[data-x=edit]', md.el).onclick = () => { lwStop(); md.close(); woEdit(w); };
+  md.el.addEventListener('click', e => { if (e.target === md.el || e.target.closest('[data-close]')) lwStop(); });
+  if (welt) { const box = $('.lw', md.el); requestAnimationFrame(async () => { let ok = false; try { ok = await lwStart(box, w, r); } catch (e) { console.error(e); } if (!ok) box.outerHTML = r ? `<div class="lf-map gross">${routeSvg(r, { km: true, grid: true, w: 340, h: 240 })}</div>` : ''; }); }
+  if (P) lwGleiche(w).then(g => { const el = $('[data-lwr]', md.el); if (!el || !g) return; el.innerHTML = lwRundeKarte(w, g); const gw = $('[data-lwg]', md.el); if (gw) gw.innerHTML = lwGewinnHtml(w, g); }).catch(() => {});
+};
+
+/* ---------- Intervalle ---------- */
+function lwIvKarte(iv, a) {
+  const L = iv.L, bahn = iv.quelle === 'bahn', harte = L.filter(o => o.art === 'hart'), pausen = L.filter(o => o.art === 'locker');
+  const quelle = { uhr: 'Runden-Marken deiner Uhr', bahn: 'Runden auf der 400-m-Bahn', auto: 'automatisch erkannt' }[iv.quelle];
+  const tempo = o => o.dist > 20 ? (a === 'rad' ? dec(o.dist / o.zeit * 3.6, 1) + ' km/h' : secToStr(Math.round(o.zeit / o.dist * 1000)) + ' /km') : '';
+  const mx = Math.max(...L.map(o => o.zeit)), best = (bahn ? L : harte.length ? harte : L).reduce((m, o) => !m || o.zeit < m.zeit ? o : m, null);
+  const sum = harte.length >= 2 ? `<div class="lw-ivs"><div><b>${harte.length} ×</b><span>Belastung</span></div><div><b>${secToStr(Math.round(harte.reduce((s, o) => s + o.zeit, 0) / harte.length))}</b><span>⌀ Zeit</span></div>${harte[0].dist ? `<div><b>${dec(harte.reduce((s, o) => s + (o.dist || 0), 0) / harte.length, 0)} m</b><span>⌀ Strecke</span></div>` : ''}${pausen.length ? `<div><b>${secToStr(Math.round(pausen.reduce((s, o) => s + o.zeit, 0) / pausen.length))}</b><span>⌀ Pause</span></div>` : ''}</div>` : '';
+  return `<h3>${bahn ? 'Runden auf der Bahn' : 'Intervalle'} <small class="sub" style="font-weight:500">· ${quelle}</small></h3>${sum}<div class="lw-ivl">${L.map((o, k) => `<div class="${o.art}${o === best ? ' best' : ''}"><span>${bahn ? k + 1 : o.art === 'hart' ? '⚡' + (harte.indexOf(o) + 1) : LW_IV_ART[o.art]}</span><div class="lw-ivb"><i style="width:${Math.max(6, o.zeit / mx * 100).toFixed(0)}%"></i></div><em>${o.dist != null ? dec(o.dist, 0) + ' m' : ''}</em><b>${secToStr(Math.round(o.zeit))}</b><small>${tempo(o)}</small></div>`).join('')}</div>`;
+}
+function lwBahnenKarte(w) {
+  const L = w.laps.map(x => x[1]).filter(x => x > 0); if (L.length < 2) return ''; const mx = Math.max(...L), mn = Math.min(...L), je = w.bahn || 25, pro100 = [];
+  for (let i = 0; i + 100 / je <= L.length; i += 100 / je) pro100.push(L.slice(i, i + 100 / je).reduce((a, b) => a + b, 0));
+  return `<h3>Bahnen <small class="sub" style="font-weight:500">· ${L.length} × ${je} m</small></h3>${pro100.length ? `<div class="sp-chips">${pro100.map((t, i) => `<span>${(i + 1) * 100} m <b>${secToStr(Math.round(t))}</b></span>`).join('')}</div>` : ''}<details class="lw-det"><summary>Alle ${L.length} Bahnen ansehen</summary><div class="lw-ivl">${L.map((t, i) => `<div class="${t === mn ? 'best' : ''}"><span>${i + 1}</span><div class="lw-ivb"><i style="width:${Math.max(8, t / mx * 100).toFixed(0)}%"></i></div><em>${je} m</em><b>${secToStr(Math.round(t))}</b><small></small></div>`).join('')}</div></details>`;
+}
+
+/* ---------- Deine Runde: gleiche Strecke oder gleiches Stadion ---------- */
+function lwRundeKarte(w, g) {
+  const L = g.L; if (L.length < 2) return '';
+  if (g.me.bahn) { /* Stadion: beste Runde je Training */
+    const T = L.map(o => ({ w: o.w, b: o.s.runden && o.s.runden.length ? Math.min(...(o.s.hart && o.s.hart.length ? o.s.hart : o.s.runden)) : null })).filter(o => o.b);
+    const ich = T.find(o => o.w === w), vorher = T.filter(o => o.w !== w && o.w.date <= w.date), best = T.reduce((m, o) => !m || o.b < m.b ? o : m, null), nr = L.findIndex(o => o.w === w) + 1;
+    const mx = Math.max(...T.map(o => o.b)), mn = Math.min(...T.map(o => o.b));
+    return `<h3>Dein Stadion</h3><div class="card lw-rd"><div class="lw-rdk"><b>${nr}.</b><span>Training in diesem Stadion · ${L.length} insgesamt</span></div>
+      ${ich ? `<div class="lw-rdv">Schnellste Runde heute <b>${secToStr(ich.b)}</b>${vorher.length ? ` · ${lwDelta(ich.b - Math.min(...vorher.map(o => o.b)))} zur bisher besten` : ''}${best === ich ? ' · <span class="pos">🏆 Stadion-Rekord</span>' : ''}</div>` : ''}
+      <div class="lw-rdb">${T.slice(-16).map(o => `<i class="${o.w === w ? 'ich' : ''}${o === best ? ' best' : ''}" style="height:${(30 + 70 * (mx - o.b) / ((mx - mn) || 1)).toFixed(0)}%" title="${fmtDs(o.w.date)}: ${secToStr(o.b)}"></i>`).join('')}</div><div class="lw-rdf"><span>${fmtDs(T[Math.max(0, T.length - 16)].w.date)}</span><span>höher = schnellere Runde</span></div></div>`;
+  }
+  const zeit = o => o.w.dur * (g.me.d / (o.s.d || g.me.d)); // auf die gleiche Länge umgerechnet
+  const T = L.map(o => ({ w: o.w, z: zeit(o) })), ich = T.find(o => o.w === w), sort = T.slice().sort((a, b) => a.z - b.z), platz = sort.indexOf(ich) + 1;
+  const vorher = T.filter(o => o.w !== w && (o.w.date + (o.w.zeit || '')) < (w.date + (w.zeit || ''))), letzt = vorher[vorher.length - 1], mx = Math.max(...T.map(o => o.z)), mn = Math.min(...T.map(o => o.z));
+  return `<h3>Deine Runde</h3><div class="card lw-rd"><div class="lw-rdk"><b>${L.length}×</b><span>gelaufen · gleiche Strecke erkannt, auch wenn sie mal etwas länger war</span></div>
+    <div class="lw-rdv">Platz <b>${platz} von ${L.length}</b>${letzt ? ` · ${lwDelta(ich.z - letzt.z)} zum letzten Mal` : ''}${platz === 1 ? ' · <span class="pos">🏆 Bestzeit auf dieser Runde</span>' : ` · Bestzeit ${secToStr(Math.round(sort[0].z))}`}</div>
+    <div class="lw-rdb">${T.slice(-16).map(o => `<i class="${o.w === w ? 'ich' : ''}${o === sort[0] ? ' best' : ''}" style="height:${(30 + 70 * (mx - o.z) / ((mx - mn) || 1)).toFixed(0)}%" title="${fmtDs(o.w.date)}: ${secToStr(Math.round(o.z))}"></i>`).join('')}</div><div class="lw-rdf"><span>${fmtDs(T[Math.max(0, T.length - 16)].w.date)}</span><span>höher = schneller</span></div></div>`;
+}
+const lwDelta = s => { s = Math.round(s); return s === 0 ? 'gleich schnell' : s < 0 ? `<span class="pos">${secToStr(-s)} schneller</span>` : `<span class="neg">${secToStr(s)} langsamer</span>`; };
+
+/* ---------- Was dieser Lauf gebracht hat (wie im Spiel: Punkte, Auf- und Abwärts) ---------- */
+function lwGewinnHtml(w, g) {
+  const Z = [], key = x => x.date + (x.zeit || ''), vor = S.workouts.filter(x => key(x) < key(w));
+  const pkt = sportPunkte([w]).p, alt = sportPunkte(vor).p, rA = rangVon(alt), rN = rangVon(alt + pkt);
+  const auf = rN.j > rA.j ? `<div class="lw-auf" style="--rc:${rN.c}">⬆ Aufstieg: ${rN.n} ${['', 'I', 'II', 'III'][rN.stufe]}</div>` : '';
+  /* Körperwerte vorher und nachher */
+  const reihe = k => (typeof hlReihe === 'function' ? hlReihe(k) : []);
+  const mittel = (L, a, b) => { const x = L.filter(o => o.x >= a && o.x <= b && o.y); return x.length >= 2 ? x.reduce((s, o) => s + o.y, 0) / x.length : null; };
+  const rp = reihe('ruhepuls'), rv = mittel(rp, addD(w.date, -14), addD(w.date, -1)), rn = mittel(rp, addD(w.date, 1), addD(w.date, 14));
+  if (rv && rn) { const dlt = Math.round(rn) - Math.round(rv); Z.push(['❤️', 'Ruhepuls', `${Math.round(rv)} → ${Math.round(rn)} bpm`, Math.abs(dlt) < .5 ? 0 : dlt < 0 ? 1 : -1, 'zwei Wochen vor und nach dem Lauf']); }
+  const vo = reihe('vo2'), v0 = vo.filter(o => o.x <= w.date).pop(), v1 = vo.find(o => o.x > w.date && o.x <= addD(w.date, 21));
+  if (v0 && v1) { const dlt = v1.y - v0.y; Z.push(['🫁', 'VO2max', `${dec(v0.y, 1)} → ${dec(v1.y, 1)}`, Math.abs(dlt) < .05 ? 0 : dlt > 0 ? 1 : -1, 'letzter Wert davor und danach']); }
+  /* Grundlagenausdauer oder Tempo nach Puls */
+  if (w.hr && w.dur) { const alter = (typeof hlAlter === 'function' && hlAlter()) || 30, hf = Math.round(208 - .7 * alter), q = w.hr / hf, min = Math.round(w.dur / 60);
+    Z.push(q < .77 ? ['🌿', 'Grundlagenausdauer', `+${min} Min.`, 1, `ruhiger Puls (${Math.round(q * 100)} % vom Maximalpuls)`] : q < .87 ? ['🔥', 'Tempo-Ausdauer', `+${min} Min.`, 1, `zügiger Puls (${Math.round(q * 100)} % vom Maximalpuls)`] : ['⚡', 'Harte Einheit', `+${min} Min.`, 1, 'hoher Puls, gut für Schnelligkeit, danach Erholung einplanen']); }
+  /* Neue Bestzeiten */
+  if (w.be) for (const [len, n] of BE_DIST) { const t = w.be[len]; if (!t) continue; const alt2 = vor.map(x => x.be && x.be[len]).filter(Boolean); if (alt2.length && t < Math.min(...alt2)) Z.push(['🏆', 'Neue Bestzeit ' + n, secToStr(t), 1, `vorher ${secToStr(Math.min(...alt2))}`]); }
+  /* Vergleich mit derselben Strecke oder demselben Stadion */
+  if (g && g.L.length > 1) {
+    if (g.me.bahn) { const ich = g.L.find(o => o.w === w), b = x => x.s.runden && x.s.runden.length ? Math.min(...(x.s.hart && x.s.hart.length ? x.s.hart : x.s.runden)) : null, alt3 = g.L.filter(o => key(o.w) < key(w)).map(b).filter(Boolean);
+      if (ich && b(ich) && alt3.length) { const dlt = b(ich) - alt3[alt3.length - 1]; Z.push(['🏟', 'Schnellste Runde', secToStr(b(ich)), Math.abs(dlt) < 1 ? 0 : dlt < 0 ? 1 : -1, `${dlt <= -1 ? secToStr(-dlt) + ' schneller' : dlt >= 1 ? secToStr(dlt) + ' langsamer' : 'gleich'} als beim letzten Mal im Stadion`]); } }
+    else { const z = o => o.w.dur * (g.me.d / (o.s.d || g.me.d)), alt3 = g.L.filter(o => key(o.w) < key(w)); if (alt3.length) { const dlt = z(g.L.find(o => o.w === w)) - z(alt3[alt3.length - 1]); Z.push(['🔁', 'Deine Runde', `${dlt <= 0 ? '−' : '+'}${secToStr(Math.abs(Math.round(dlt)))}`, Math.abs(dlt) < 3 ? 0 : dlt < 0 ? 1 : -1, 'im Vergleich zum letzten Mal auf derselben Strecke']); } }
+  }
+  /* Woche */
+  if (w.kind === 'lauf' && w.dist) { const wk = mondayOf(w.date), km = sum(S.workouts.filter(x => x.kind === 'lauf' && x.date >= wk && key(x) <= key(w)), x => x.dist || 0); Z.push(['📆', 'Laufwoche', `${dec(km, 1)} km`, 1, `+${dec(w.dist, 1)} km durch diesen Lauf`]); }
+  return `<div class="lw-gk"><div class="lw-gp"><b>+${pkt}</b><span>Rangpunkte</span></div><div class="lw-gr" style="--rc:${rN.c}"><span>${rN.n} ${['', 'I', 'II', 'III'][rN.stufe]}</span><div class="bar"><i style="width:${(rA.j === rN.j ? rA.anteil * 100 : 0).toFixed(1)}%;background:color-mix(in srgb,var(--rc) 45%,transparent)"></i><i class="neu" style="left:${(rA.j === rN.j ? rA.anteil * 100 : 0).toFixed(1)}%;width:${Math.max(1.5, (rN.anteil - (rA.j === rN.j ? rA.anteil : 0)) * 100).toFixed(1)}%;background:var(--rc)"></i></div></div></div>${auf}
+    ${Z.length ? `<div class="lw-gl">${Z.map(([i, l, v, r, s]) => `<div class="${r > 0 ? 'auf' : r < 0 ? 'ab' : 'gl'}"><i>${i}</i><div><b>${l}</b><small>${s}</small></div><em>${v}<u>${r > 0 ? '▲' : r < 0 ? '▼' : '='}</u></em></div>`).join('')}</div>` : ''}`;
+}
+
+/* ---------- Laufen-Reiter: auch Rad, Schwimmen und Gehen ---------- */
+{ const alt = SPO.laufen;
+  SPO.laufen = () => {
+    const arten = ['lauf', 'rad', 'schwimmen', 'gehen'].filter(a => a === 'lauf' || S.workouts.some(w => lwArt(w) === a && (w.dist || w.route)));
+    const sel = arten.includes(UI.lfArt) ? UI.lfArt : 'lauf';
+    const chips = arten.length > 1 ? `<div class="lw-arten">${arten.map(a => `<button class="${a === sel ? 'on' : ''}" data-act="lfArt" data-v="${a}">${LW_ART[a][2]} ${a === 'lauf' ? 'Laufen' : a === 'rad' ? 'Rad' : a === 'schwimmen' ? 'Schwimmen' : 'Gehen'}</button>`).join('')}</div>` : '';
+    if (sel === 'lauf') return chips + alt();
+    const L = S.workouts.filter(w => lwArt(w) === sel).sort((a, b) => (b.date + (b.zeit || '')) < (a.date + (a.zeit || '')) ? -1 : 1), t = today();
+    const km = sum(L.filter(w => w.date.slice(0, 4) === t.slice(0, 4)), w => w.dist || 0);
+    let h = chips + `<div class="grid3" style="margin-bottom:12px"><div class="stat"><div class="l">${t.slice(0, 4)}</div><div class="v">${sel === 'schwimmen' ? dec(km * 1000, 0) + ' <small>m</small>' : dec(km, 0) + ' <small>km</small>'}</div></div><div class="stat"><div class="l">Einheiten</div><div class="v">${L.length}</div></div><div class="stat"><div class="l">Zeit</div><div class="v">${dec(sum(L, w => w.dur || 0) / 3600, 0)} <small>h</small></div></div></div>`;
+    h += `<div class="card tight list">${L.map(w => `<div class="it click lf-it" data-act="laufDetail" data-id="${w.id}">${w.route ? `<span class="lf-th rt-th" data-id="${w.id}"></span>` : `<span class="sp-wi sonst" style="font-size:20px">${LW_ART[sel][2]}</span>`}<div class="grow" style="min-width:0"><div class="t">${sel === 'schwimmen' ? dec((w.dist || 0) * 1000, 0) + ' m' : dec(w.dist || 0, 2) + ' km'} <span class="sub" style="font-weight:400">· ${secToStr(w.dur)}${sel === 'rad' && w.dist && w.dur ? ' · ' + dec(w.dist / (w.dur / 3600), 1) + ' km/h' : sel === 'schwimmen' && w.dist ? ' · ' + secToStr(w.dur / (w.dist * 10)) + ' /100 m' : ''}</span></div><div class="s">${fmtD(w.date)}${w.zeit ? ', ' + w.zeit : ''}${w.hr ? ' · ⌀ ' + w.hr + ' bpm' : ''}${sel === 'schwimmen' && lwBahnen(w) ? ' · ' + lwBahnen(w) + ' Bahnen' : ''}</div></div></div>`).join('') || '<div class="sub" style="padding:12px">Noch nichts eingetragen.</div>'}</div>`;
+    setTimeout(routenFuellen, 0);
+    return h;
+  };
+}
+ACT.lfArt = d => { UI.lfArt = d.v; render(); };
+
+/* ---------- Laufziele mit Prognose ----------
+   Hochrechnung nach Riegel (Zeit × (Strecke neu / Strecke alt)^1,06) aus deinen besten Abschnitten der letzten Monate.
+   Aus dem Verlauf der Prognose über die Monate wird geschätzt, wann du dein Ziel erreichst. */
+const LZ_DIST = [[5000, '5 km'], [10000, '10 km'], [21097.5, 'Halbmarathon'], [42195, 'Marathon']];
+function lzPrognose(dist, bis = today(), tage = 100) {
+  const von = addD(bis, -tage); let best = null;
+  for (const w of S.workouts) { if (w.kind !== 'lauf' || w.date < von || w.date > bis) continue;
+    const quellen = []; if (w.be) for (const k in w.be) if (+k >= Math.min(1000, dist / 5)) quellen.push([+k, w.be[k]]);
+    if (w.dist >= 3 && w.dur) quellen.push([w.dist * 1000, w.dur]);
+    for (const [len, t] of quellen) { const ex = dist > 21000 && len < 10000 ? 1.08 : 1.06, p = t * Math.pow(dist / len, ex); if (!best || p < best.t) best = { t: p, w, len }; } }
+  return best;
+}
+function lzTrend(dist) {
+  const P = []; for (let m = 6; m >= 0; m--) { const d = addD(today(), -m * 30), p = lzPrognose(dist, d); if (p) P.push([-m * 30, p.t]); }
+  if (P.length < 3) return null; const n = P.length, mx = P.reduce((s, p) => s + p[0], 0) / n, my = P.reduce((s, p) => s + p[1], 0) / n;
+  const sl = P.reduce((s, p) => s + (p[0] - mx) * (p[1] - my), 0) / (P.reduce((s, p) => s + (p[0] - mx) ** 2, 0) || 1);
+  return { proTag: sl, P };
+}
+function lzKarte() {
+  const Lz = S.lziele || [];
+  const heute = LZ_DIST.map(([d, n]) => { const p = lzPrognose(d); return `<div><span>${n}</span><b>${p ? secToStr(Math.round(p.t)) : '–'}</b></div>`; }).join('');
+  let h = `<div class="row sb"><h3 class="kw-h" style="--c:#3ddc97">Laufziele & Prognose</h3><button class="btn sec" style="padding:6px 12px" data-act="lzNeu">+ Ziel</button></div>
+    <div class="card lz-heute"><div class="sub">Das würdest du heute laufen (aus deinen besten Abschnitten der letzten 100 Tage)</div><div class="lz-hg">${heute}</div></div>`;
+  for (const z of Lz) {
+    const p = lzPrognose(z.dist), tr = lzTrend(z.dist), n = (LZ_DIST.find(x => x[0] === z.dist) || [0, dec(z.dist / 1000, 1) + ' km'])[1];
+    const start = z.start || (p && p.t) || z.ziel * 1.2, jetzt = p ? p.t : start, anteil = jetzt <= z.ziel ? 1 : Math.max(0, Math.min(1, (start - jetzt) / ((start - z.ziel) || 1)));
+    let wann = '';
+    if (!p) wann = 'Noch zu wenig Läufe für eine Prognose.';
+    else if (p.t <= z.ziel) wann = `<span class="pos">✓ Schaffst du laut Prognose schon jetzt.</span> Geh es an!`;
+    else if (tr && tr.proTag < -0.05) { const tg = (p.t - z.ziel) / -tr.proTag, dat = addD(today(), Math.round(tg)); wann = tg > 730 ? 'Bei deinem jetzigen Tempo dauert das noch über zwei Jahre. Mehr Umfang oder Intervalle helfen.' : `Bei deinem Trend etwa im <b>${MON[+dat.slice(5, 7) - 1]} ${dat.slice(0, 4)}</b>${z.bis ? (dat <= z.bis ? ` · <span class="pos">rechtzeitig bis ${fmtDs(z.bis)}</span>` : ` · <span class="neg">knapp nach ${fmtDs(z.bis)}</span>`) : ''}.`; }
+    else wann = 'Deine Prognose wird gerade nicht schneller. Mit regelmäßigen Läufen und einem Intervall pro Woche geht es wieder voran.';
+    const fehlt = p ? p.t - z.ziel : 0;
+    h += `<div class="card lz-z" data-act="lzEdit" data-id="${z.id}"><div class="row sb"><b>🎯 ${n} unter ${secToStr(z.ziel)}</b><span class="sub">${p && fehlt > 0 ? 'noch ' + secToStr(Math.round(fehlt)) : ''}</span></div>
+      <div class="lz-bar"><i style="width:${(anteil * 100).toFixed(1)}%"></i><span style="left:${Math.max(9, Math.min(91, anteil * 100)).toFixed(1)}%">${p ? secToStr(Math.round(p.t)) : ''}</span></div>
+      <div class="lz-zl"><span>Start ${secToStr(Math.round(start))}</span><span>Ziel ${secToStr(z.ziel)}</span></div>
+      <div class="sub" style="margin-top:6px">Prognose heute: <b>${p ? secToStr(Math.round(p.t)) : '–'}</b>${p ? ` · ${secToStr(Math.round(p.t / z.dist * 1000))} /km` : ''}. ${wann}</div>
+      ${p ? `<div class="sub" style="margin-top:4px;font-size:11px">berechnet aus ${p.len >= 1000 ? dec(p.len / 1000, p.len % 1000 ? 1 : 0) + ' km' : p.len + ' m'} am ${fmtDs(p.w.date)}</div>` : ''}</div>`;
+  }
+  if (!Lz.length) h += `<div class="sub" style="margin:-4px 0 14px">Setz dir ein Ziel, zum Beispiel 5 km unter 20 Minuten. Die App rechnet aus, ob und wann du es schaffst.</div>`;
+  return h;
+}
+function lzEdit(z) {
+  const neu = !z.id, opt = LZ_DIST.map(([d, n]) => [String(d), n]).concat([['eigen', 'Eigene Strecke']]), wahl = z.dist ? (LZ_DIST.some(x => x[0] === z.dist) ? String(z.dist) : 'eigen') : '5000';
+  modal(neu ? 'Neues Laufziel' : 'Laufziel', `${fSel('dist', 'Strecke', opt, wahl)}<div data-k="eig">${fIn('km', 'Eigene Strecke (km)', z.dist && wahl === 'eigen' ? dec(z.dist / 1000, 2) : '', 'text', 'inputmode="decimal"')}</div>
+    ${fIn('ziel', 'Zielzeit (mm:ss oder h:mm:ss)', z.ziel ? secToStr(z.ziel) : '20:00')}${fIn('bis', 'Bis wann (optional)', z.bis || '', 'date')}`,
+    v => { const dist = v.dist === 'eigen' ? numIn(v.km) * 1000 : +v.dist, ziel = strToSec(v.ziel); if (!dist || !ziel) return false; const o = Object.assign(neu ? { id: uid() } : z, { dist, ziel, bis: v.bis || null }); if (neu || o.distAlt !== dist) { const p = lzPrognose(dist); o.start = p ? Math.round(p.t) : null; o.distAlt = dist; } if (neu) (S.lziele = S.lziele || []).push(o); },
+    { del: neu ? null : () => { S.lziele = S.lziele.filter(x => x !== z); }, init: f => { const u = () => { $('[data-k=eig]', f).style.display = f.dist.value === 'eigen' ? '' : 'none'; }; f.dist.onchange = u; u(); } });
+}
+ACT.lzNeu = () => lzEdit({});
+ACT.lzEdit = d => lzEdit((S.lziele || []).find(z => z.id === d.id));
+{ const alt = SPO.ziele; SPO.ziele = () => { const h = alt(), mark = '<h3 class="kw-h" style="--c:#5fb3ff">Bestzeiten'; const i = h.indexOf(mark); return i < 0 ? h + lzKarte() : h.slice(0, i) + lzKarte() + h.slice(i); }; }
 
 /* ---------- Sport · Körperwerte (aus Apple Health, plus eigene Messungen) ---------- */
 /* Kurzname: [Name, Einheit, Nachkommastellen, besser wenn (+/-/0), Erklärung, Anzeige-Funktion] */
@@ -15455,7 +16678,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 139;
+const APP_V = 140;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
