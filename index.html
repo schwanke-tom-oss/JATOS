@@ -11607,7 +11607,7 @@ function bfPlanAnpassen(mm) {
     if (!x.art || x.art === 'DF') continue;
     let m = (S.bfMap || {})[x.art] || bfKuerzelStandard(x.art);
     if (m.art === 'frei') continue;
-    if (m.art === 'abs') { if (ABS[m.k] && !S.abs[d]) S.abs[d] = { type: m.k }; continue; }
+    if (m.art === 'abs') { bfAbsTag(d, x, m.k); continue; }
     if (m.art === 'sch') { if (typeof ausbFix === 'function') ausbFix(); if (S.sTag && !S.sTag[d]) S.sTag[d] = {}; const s0 = S.shifts[d]; if (s0 && stype(s0.type) && (stype(s0.type).code || '').toUpperCase() === x.art) delete S.shifts[d]; continue; }
     if (m.art === 'neu') { const ty0 = S.shiftTypes.find(t => (t.code || '').toUpperCase() === x.art);
       const t = ty0 || { id: uid(), code: x.art.slice(0, 3), name: DP_NAMEN[x.art] || x.art, start: x.von || '', end: x.bis || '', pause: bfZeit(x.pause) ? Math.round(bfZeit(x.pause) * 60) : 0, color: DP_FARBEN[S.shiftTypes.length % DP_FARBEN.length] };
@@ -11617,6 +11617,13 @@ function bfPlanAnpassen(mm) {
     if (x.von && x.bis) { const genau = S.shiftTypes.find(t => t.start === x.von && t.end === x.bis && (t.code || '')[0].toUpperCase() === (ty.code || '')[0].toUpperCase()); if (genau) ty = genau; }
     S.shifts[d] = bfSchicht(ty.id, x, S.shifts[d]);
   }
+}
+/* Abwesenheit vom Blatt: ersetzt eine alte Schicht an dem Tag. Am Wochenende oder Feiertag ohne Stunden (z.B. EU über das Wochenende) wird nichts eingetragen */
+function bfAbsTag(d, x, k) {
+  if (!ABS[k]) return;
+  if (!bfZeit(x.ges) && !sollBasis(d)) { if (S.abs[d] && S.abs[d].type === k) delete S.abs[d]; return; }
+  const s = S.shifts[d]; if (s && !s.extra) delete S.shifts[d];
+  if (!S.abs[d] || S.abs[d].type !== k) S.abs[d] = { type: k };
 }
 /* Schicht aus einer Blatt-Zeile: die Zeiten vom Blatt gelten als geplant, damit ein normaler Dienst kein Plus oder Minus zeigt.
    Nur wenn "gesamt" davon abweicht (z.B. Sport angerechnet), steht der Unterschied als Abgerechnet drin */
@@ -11643,11 +11650,19 @@ function bfReparatur() {
 }
 /* Reparatur 2 (V144): Monate, die schon verbindlich sind, aber deren Tage nie in den Kalender kamen (Kürzel ohne passende Schichtart), einmal nachtragen */
 function bfReparatur2() {
-  if (!S.dbFest || (S.settings && S.settings.bfRep >= 2)) return;
+  if (!S.dbFest || (S.settings && S.settings.bfRep >= 2)) return bfReparatur3();
   for (const m of Object.keys(S.dbFest)) { const f = S.dbFest[m]; if (!f || !f.tage) continue;
     const leer = Object.entries(f.tage).filter(([d, x]) => x.art && x.art !== 'DF' && !S.shifts[d] && !S.abs[d] && !(S.sTag && S.sTag[d])).length;
     if (leer) bfPlanAnpassen(m); }
-  S.settings.bfRep = 2;
+  S.settings.bfRep = 2; bfReparatur3();
+}
+/* Reparatur 3 (V145): an Urlaubs- und Krankentagen stand noch eine alte Schicht (zeigte -0:30), und EU am Wochenende wurde eingetragen */
+function bfReparatur3() {
+  if (!S.dbFest || (S.settings && S.settings.bfRep >= 3)) return;
+  for (const f of Object.values(S.dbFest)) for (const [d, x] of Object.entries((f && f.tage) || {})) {
+    if (!x.art || x.art === 'DF') continue; const m = (S.bfMap || {})[x.art] || bfKuerzelStandard(x.art);
+    if (m.art === 'abs') bfAbsTag(d, x, m.k); }
+  S.settings.bfRep = 3;
 }
 /* Überstunden eines Tages in einem verbindlichen Monat: gesamt laut Blatt minus Soll (Monats-Soll gleichmäßig auf die Werktage) */
 function bfOtTag(d) {
@@ -16297,13 +16312,40 @@ async function ocrText(buf, mime, fort) {
     logger: m => { if (fort && m.status === 'recognizing text') fort(m.progress); } });
   try { const { data } = await w.recognize(await ocrVorbereiten(new Blob([buf], { type: mime || 'image/png' })), {}, { text: true, blocks: true }); const t = data && data.text || ''; try { ocrText.zeilen = lzOcrZeilen(data); ocrText.fuer = t; } catch (e) { ocrText.zeilen = null; } return t; } finally { try { await w.terminate(); } catch (e) {} }
 }
+/* Örtliche Schwelle (Mittel im Umkreis über ein Summenbild): Schrift auf grauen Zellen und Schatten im Foto bleiben lesbar */
+function lzOrtSchwelle(d, W, H) {
+  const g = new Float32Array(W * H); for (let i = 0, j = 0; j < W * H; i += 4, j++) g[j] = .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2];
+  const S = new Float64Array((W + 1) * (H + 1)); for (let y = 1; y <= H; y++) { let r = 0; for (let x = 1; x <= W; x++) { r += g[(y - 1) * W + x - 1]; S[y * (W + 1) + x] = S[(y - 1) * (W + 1) + x] + r; } }
+  const R = Math.max(8, Math.round(Math.min(W, H) / 60));
+  for (let y = 0; y < H; y++) { const y0 = Math.max(0, y - R), y1 = Math.min(H, y + R + 1);
+    for (let x = 0; x < W; x++) { const x0 = Math.max(0, x - R), x1 = Math.min(W, x + R + 1), n = (y1 - y0) * (x1 - x0);
+      const m = (S[y1 * (W + 1) + x1] - S[y0 * (W + 1) + x1] - S[y1 * (W + 1) + x0] + S[y0 * (W + 1) + x0]) / n, v = g[y * W + x], i = (y * W + x) * 4;
+      const o = v < m * .82 && v < 200 ? 0 : 255; d[i] = d[i + 1] = d[i + 2] = o; } }
+}
+/* Foto von einem Blatt auf Pinnwand, Tisch o.ä.: das helle, farblose Papier finden und nur das lesen (Kork und Holz stören sonst die Texterkennung) */
+function lzPapier(bmp) {
+  try { const k = Math.min(1, 600 / Math.max(bmp.width, bmp.height)), W = Math.max(1, Math.round(bmp.width * k)), H = Math.max(1, Math.round(bmp.height * k));
+    const c = document.createElement('canvas'); c.width = W; c.height = H; const x = c.getContext('2d'); x.drawImage(bmp, 0, 0, W, H); const d = x.getImageData(0, 0, W, H).data;
+    const pap = new Uint8Array(W * H); for (let i = 0, j = 0; i < d.length; i += 4, j++) { const r = d[i], g = d[i + 1], b = d[i + 2], mx = Math.max(r, g, b), mn = Math.min(r, g, b); pap[j] = mx - mn < 45 && (.299 * r + .587 * g + .114 * b) > 110 ? 1 : 0; }
+    const band = (n, f) => { let best = null, a = -1; for (let i = 0; i <= n; i++) { const on = i < n && f(i) > .4; if (on && a < 0) a = i; else if (!on && a >= 0) { if (!best || i - a > best[1] - best[0]) best = [a, i]; a = -1; } } return best; };
+    const rb = band(H, y => { let s = 0; for (let px = 0; px < W; px++) s += pap[y * W + px]; return s / W; }); if (!rb) return null;
+    const cb = band(W, px => { let s = 0; for (let y = rb[0]; y < rb[1]; y++) s += pap[y * W + px]; return s / (rb[1] - rb[0]); }); if (!cb) return null;
+    const fl = (rb[1] - rb[0]) * (cb[1] - cb[0]) / (W * H); if (fl > .8 || fl < .15) return null;
+    /* rundherum muss es farbig oder dunkel sein (Kork, Holz, Tisch), sonst ist es ein normales Foto vom Blatt */
+    let aussen = 0, n = 0; for (let y = 0; y < H; y += 2) for (let px = 0; px < W; px += 2) { if (y >= rb[0] && y < rb[1] && px >= cb[0] && px < cb[1]) continue; n++; if (!pap[y * W + px]) aussen++; }
+    if (!n || aussen / n < .6) return null;
+    const m = 4; return { x: Math.max(0, Math.round((cb[0] - m) / k)), y: Math.max(0, Math.round((rb[0] - m) / k)), w: Math.min(bmp.width, Math.round((cb[1] - cb[0] + 2 * m) / k)), h: Math.min(bmp.height, Math.round((rb[1] - rb[0] + 2 * m) / k)) };
+  } catch (e) { return null; }
+}
 /* Dunkle Screenshots (z. B. Trade Republic, Dunkelmodus): umkehren und in Graustufen, damit auch graue Beschriftungen gelesen werden */
 async function ocrVorbereiten(blob, ziel = 2400, opt = {}) {
-  try { const bmp = await createImageBitmap(blob), sc = Math.min(3, Math.max(ziel / bmp.width, ziel < 2400 ? ziel / bmp.width : 1), 7000 / bmp.height) /* kleine Schrift (Abrechnung im Screenshot) vergrößern */; let c = document.createElement('canvas'); c.width = Math.round(bmp.width * sc); c.height = Math.round(bmp.height * sc);
-    let x = c.getContext('2d'); x.drawImage(bmp, 0, 0, c.width, c.height); let im = x.getImageData(0, 0, c.width, c.height), d = im.data; let su = 0;
+  try { const bmp = await createImageBitmap(blob), pr = /jpe?g|heic|heif/i.test(blob.type || '') ? lzPapier(bmp) : null, bw = pr ? pr.w : bmp.width, bh = pr ? pr.h : bmp.height;
+    const sc = Math.min(3, Math.max(ziel / bw, ziel < 2400 ? ziel / bw : 1), 7000 / bh) /* kleine Schrift (Abrechnung im Screenshot) vergrößern */; let c = document.createElement('canvas'); c.width = Math.round(bw * sc); c.height = Math.round(bh * sc);
+    let x = c.getContext('2d'); if (pr) x.drawImage(bmp, pr.x, pr.y, pr.w, pr.h, 0, 0, c.width, c.height); else x.drawImage(bmp, 0, 0, c.width, c.height); let im = x.getImageData(0, 0, c.width, c.height), d = im.data; let su = 0;
     for (let i = 0; i < d.length; i += 16) su += .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2];
     const dunkel = su / (d.length / 16) < 110;
-    for (let i = 0; i < d.length; i += 4) { let v = .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2]; if (dunkel) v = 255 - v; v = v > 215 ? 255 : v * .8; d[i] = d[i + 1] = d[i + 2] = v; }
+    if (pr) lzOrtSchwelle(d, c.width, c.height);
+    else for (let i = 0; i < d.length; i += 4) { let v = .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2]; if (dunkel) v = 255 - v; v = v > 215 ? 255 : v * .8; d[i] = d[i + 1] = d[i + 2] = v; }
     /* schief fotografiert: gerade drehen */
     try { const w = lzSchraeg(d, c.width, c.height); if (Math.abs(w) >= 0.15) { x.putImageData(im, 0, 0); const c2 = document.createElement('canvas'); c2.width = c.width; c2.height = c.height; const x2 = c2.getContext('2d'); x2.fillStyle = '#fff'; x2.fillRect(0, 0, c2.width, c2.height); x2.translate(c2.width / 2, c2.height / 2); x2.rotate(-w * Math.PI / 180); x2.drawImage(c, -c.width / 2, -c.height / 2); c = c2; x = x2; im = x.getImageData(0, 0, c.width, c.height); d = im.data; } } catch (e) {}
     if (opt.canvas) { x.putImageData(im, 0, 0); return c; }
@@ -18388,7 +18430,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 144;
+const APP_V = 145;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -19640,7 +19682,15 @@ async function ocrRaster(buf, mime) {
   const frei = l => { let n = 0, voll = 0; const py = Math.round(l.m), o = Math.max(5, l.b - l.a + 4); if (py - o < 0 || py + o >= H) return true; for (let px = 0; px < W; px++) if (dk(px, py)) { n++; if (dk(px, py - o) || dk(px, py + o)) voll++; } return !n || voll / n < .3; };
   const hl = linien(rowC, W * 0.3).filter(frei); if (hl.length < 3) return null;
   const top = hl[0].m, bot = hl[hl.length - 1].m, colC = new Uint32Array(W); for (let px = 0; px < W; px++) { let sum = 0, run = 0, gap = 0; for (let py = Math.round(top); py <= bot + 1; py++) { if (py <= bot && dk(px, py)) { run += 1 + gap; gap = 0; } else if (run && (py > bot || ++gap > 1)) { if (run >= 50) sum += run; run = 0; gap = 0; } } colC[px] = sum; }
-  const vl = linien(colC, (bot - top) * 0.5); if (vl.length < 3) return null;
+  let vl = linien(colC, (bot - top) * 0.5); if (vl.length < 3) return null;
+  /* blasse senkrechte Linie (z.B. zwischen Stundenspalte und Montag) schafft die Schwelle nicht: bei regelmäßigen Spalten an der erwarteten Stelle mit kleinerer Schwelle suchen */
+  { const ds = vl.slice(1).map((l, i) => l.m - vl[i].m).sort((a, b) => a - b), D = ds[Math.floor(ds.length / 2)];
+    if (D > W * .05 && ds.every(q => Math.abs(q - D) < D * .2 || Math.abs(q - 2 * D) < D * .2)) {
+      const suche = p => { const r = Math.round(D * .12); let best = -1, bv = 0; for (let px = Math.max(0, Math.round(p - r)); px <= Math.min(W - 1, Math.round(p + r)); px++) if (colC[px] > bv) { bv = colC[px]; best = px; } return bv > (bot - top) * .12 ? best : -1; };
+      const neu = []; for (let i = 0; i + 1 < vl.length; i++) if (Math.abs(vl[i + 1].m - vl[i].m - 2 * D) < D * .2) { const p = suche(vl[i].m + D); if (p >= 0) neu.push(p); }
+      const p0 = vl[0].m - D; if (p0 > D * .3) { const p = suche(p0); if (p >= 0) neu.push(p); }
+      const p1 = vl[vl.length - 1].m + D; if (p1 < W - D * .3) { const p = suche(p1); if (p >= 0) neu.push(p); }
+      if (neu.length) vl = vl.concat(neu.map(p => ({ a: p - 1, b: p + 1, m: p }))).sort((a, b) => a.m - b.m); } }
   /* Linien weiß machen, damit nur Schrift übrig bleibt */
   const im = x.getImageData(0, 0, W, H), e = im.data, weiss = (px, py) => { const i = (py * W + px) * 4; e[i] = e[i + 1] = e[i + 2] = 255; };
   for (const l of hl) for (let py = Math.max(0, l.a - 2); py <= Math.min(H - 1, l.b + 2); py++) for (let px = 0; px < W; px++) weiss(px, py);
