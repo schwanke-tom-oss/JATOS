@@ -3915,6 +3915,51 @@ html.lw-offen,html.lw-offen body{overflow:hidden}
 .hk-f b{flex:0 1 auto;min-width:0}.hk-f .muted{flex:0 100 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
 .dc3-tile.hk-tile{padding-right:14px}
 
+/* Fächer-Archiv: Bereiche als Kacheln (27.11.2026) */
+.fa-bereiche{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.fa-b{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 4px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);cursor:pointer;text-align:center;transition:background .2s,border-color .2s,transform .15s}
+.fa-b input{position:absolute;opacity:0;pointer-events:none}
+.fa-b .fa-i{font-size:22px;line-height:1}
+.fa-b .fa-n{font-size:11px;line-height:1.2;color:var(--muted,#9aa3b5)}
+.fa-b:has(input:checked){background:rgba(79,140,255,.18);border-color:rgba(79,140,255,.6)}
+.fa-b:has(input:checked) .fa-n{color:#fff}
+.fa-b:active{transform:scale(.96)}
+.fe-kz{display:inline-block;font-size:11px;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.08);color:var(--muted,#9aa3b5);margin-left:4px;vertical-align:1px}
+@media (max-width:360px){.fa-bereiche{grid-template-columns:repeat(3,1fr)}}
+
+/* Stundenplan-Einlesen: Prüfraster und Zuordnung zu den eigenen Fächern (27.11.2026) */
+.spi-wrap{overflow-x:auto;margin:6px 0;border-radius:12px;border:1px solid rgba(255,255,255,.08)}
+table.spi{border-collapse:collapse;width:100%;font-size:11px;table-layout:fixed;min-width:320px}
+table.spi th{font-weight:600;color:var(--muted,#9aa3b5);padding:5px 2px;text-align:center}
+table.spi td{padding:3px;vertical-align:top;border-top:1px solid rgba(255,255,255,.06)}
+table.spi td.num{width:42px;color:var(--muted,#9aa3b5);font-variant-numeric:tabular-nums;font-size:10px}
+table.spi td.num small{display:block;opacity:.7}
+table.spi td[data-fi]{background:color-mix(in srgb,var(--f,#4f8cff) 22%,transparent);border-left:2px solid var(--f,#4f8cff);border-radius:6px}
+table.spi td[data-fi] b{display:block;font-weight:600;line-height:1.15;word-break:break-word}
+table.spi td[data-fi] i{display:none}
+table.spi td[data-fi] small{display:block;opacity:.65;font-size:9.5px}
+table.spi td.spi-off{background:transparent;border:1px dashed rgba(245,185,66,.55)}
+table.spi td.spi-off b{color:#f5b942}
+table.spi td.spi-off i{display:block;font-style:normal;opacity:.55;font-size:9.5px;line-height:1.1;word-break:break-word}
+.spi-f{display:flex;flex-direction:column;gap:6px;margin-bottom:8px}
+.spi-z{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:8px;align-items:center;padding:6px 8px;border-radius:10px;background:rgba(255,255,255,.04)}
+.spi-z .spi-roh{font-size:12.5px;word-break:break-word}
+.spi-z select.in{margin:0;padding:6px 8px;font-size:13px}
+.spi-z.spi-leer{background:color-mix(in srgb,#f5b942 10%,transparent);outline:1px dashed rgba(245,185,66,.45)}
+.lnk{background:none;border:0;padding:0;color:#7aa2ff;text-decoration:underline;font:inherit;cursor:pointer}
+.spi-rest{margin-top:2px}
+.spi-rest summary{font-size:12px;color:var(--muted,#9aa3b5);cursor:pointer;padding:6px 2px}
+.spi-rest[open] summary{margin-bottom:6px}
+.spi-rest .spi-z{margin-bottom:6px}
+
+/* Schritt zurück (27.11.2026) */
+.undo-k{font-size:17px}
+.undo-l{display:flex;flex-direction:column;gap:2px;margin-bottom:4px}
+.undo-z{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:5px 2px;border-bottom:1px solid rgba(255,255,255,.06)}
+.undo-z small{color:var(--muted,#9aa3b5);white-space:nowrap}
+.pxblase.mitk{pointer-events:auto}
+.pxundo{display:block;margin:6px auto 0;font:inherit;font-size:11px;padding:4px 8px;background:#14142b;color:#f4f4f4;border:0;box-shadow:2px 2px 0 #4f8cff;cursor:pointer}
+
 </style>
 </head>
 <body>
@@ -4094,7 +4139,8 @@ function load() {
   if (!S.cats.some(c => c.type === 'ein' && /Dividend/i.test(c.name))) S.cats.push({ id: uid(), name: 'Dividenden', color: '#b9a0ff', type: 'ein', parent: null, budget: 0 });
 }
 function save() {
-  try { localStorage.setItem(KEY, JSON.stringify(S)); }
+  let j; try { j = JSON.stringify(S); if (typeof undoMerk === 'function') undoMerk(j); } catch (e) {}
+  try { localStorage.setItem(KEY, j || JSON.stringify(S)); }
   catch (e) { toast('Speichern fehlgeschlagen: ' + e.message + '\nBitte eine Sicherung exportieren.'); }
 }
 
@@ -4392,11 +4438,12 @@ function modal(title, html, onSave, opts = {}) {
   const f = $('form', m);
   const close = () => { m.remove(); _modalStack = _modalStack.filter(x => x !== m); };
   m.addEventListener('click', e => { if (e.target === m || e.target.closest('[data-close]')) close(); });
-  if (opts.del) $('[data-del]', m).onclick = async () => { if (await ask('Wirklich löschen?', 'Löschen')) { try { await opts.del(); } catch (e) { if (e === 0) return; throw e; } close(); save(); render(); } };
+  if (opts.del) $('[data-del]', m).onclick = async () => { if (await ask('Wirklich löschen?', 'Löschen')) { try { await opts.del(); } catch (e) { if (e === 0) return; throw e; } if (typeof undoGrund === 'function') undoGrund(title + ' gelöscht'); close(); save(); render(); } };
   f.onsubmit = e => {
     e.preventDefault();
     const data = {}; for (const el of f.elements) { if (!el.name) continue; if (el.type === 'checkbox') data[el.name] = el.checked; else if (el.type === 'radio') { if (el.checked) data[el.name] = el.value; } else data[el.name] = el.value; }
     if (onSave && onSave(data, f) === false) return;
+    if (typeof undoGrund === 'function') undoGrund(title);
     close(); save(); render();
     if (typeof jatosAktion === 'function' && !opts.still) jatosAktion(`„${title.replace(/<[^>]+>/g, '')}“ ist gespeichert. ✨`);
   };
@@ -5647,7 +5694,7 @@ VIEWS.heute = () => {
   const sToday = S.shifts[t] && stype(S.shifts[t].type), aToday = S.abs[t];
   const dienstTxt = typeof schulTag === 'function' && schulTag(t) && !S.shifts[t] ? `Heute ${esc(ausbName())}${schulStundenAm(t)[0] ? ' ab ' + schulStundenAm(t)[0].von : ''}.` : aToday ? `Heute: ${ABS[aToday.type].n}.` : sToday ? (sToday.start ? `Heute ${esc(sToday.name)}dienst ${S.shifts[t].aStart || sToday.start}–${S.shifts[t].aEnd || sToday.end}.` : `Heute ${esc(sToday.name)}.`) : '';
   let h = S.settings.jatos !== false ? (pxModus() ? pixelScene() : castleScene()) : '';
-  h += header(`${greet}${S.settings.name ? ', ' + esc(S.settings.name) : ''}`, `<button class="ibtn" data-act="settings" title="Einstellungen" aria-label="Einstellungen">⚙︎</button>`,
+  h += header(`${greet}${S.settings.name ? ', ' + esc(S.settings.name) : ''}`, `${typeof undoKnopfHtml === 'function' ? undoKnopfHtml() : ''}<button class="ibtn" data-act="settings" title="Einstellungen" aria-label="Einstellungen">⚙︎</button>`,
     `${WDL[d.getDay()]}, ${d.getDate()}. ${MON[d.getMonth()]} · KW ${kw(t)}${holiday(t) ? ' · <span class="neg">' + holiday(t) + '</span>' : ''}. ${dienstTxt}`);
 
   if (!S.accounts.length && !S.tx.length) h += `<div class="card"><h2>👋 Willkommen</h2><div class="sub" style="margin-bottom:10px">Richte zuerst die Grundlagen ein: Name, Bundesland und deine Konten. Alles bleibt nur auf diesem Gerät.</div><div class="row wrap"><button class="btn sm" data-act="settings">Einstellungen</button><button class="btn sm sec" data-act="goto" data-tab="finanzen" data-sub="konten">Konten anlegen</button><button class="btn sm sec" data-act="goto" data-tab="arbeit" data-sub="dienstplan">Dienstplan</button></div></div>`;
@@ -5733,7 +5780,7 @@ ACT.settings = () => {
     <div class="sub" style="margin:-4px 0 10px">Weitere Outfits kommen dazu, sobald es Bilder davon gibt.</div>
     <div class="grid2">${fSel('scP', 'Himmel ansehen: Tageszeit', [['', 'wie jetzt'], ['morgen', 'Morgen'], ['tag', 'Tag'], ['abend', 'Abend'], ['nacht', 'Nacht']], UI.sceneOverride ? UI.sceneOverride.phase : '')}${fSel('scS', 'Jahreszeit', [['', 'wie jetzt'], ['fruehling', 'Frühling'], ['sommer', 'Sommer'], ['herbst', 'Herbst'], ['winter', 'Winter']], UI.sceneOverride ? UI.sceneOverride.season : '')}</div>
     ${fSel('scW', 'Himmel ansehen: Wetter', [['', 'wie jetzt'], ['sonne', 'Klar'], ['wolkig', 'Bewölkt'], ['regen', 'Regen'], ['gewitter', 'Gewitter'], ['schnee', 'Schnee'], ['nebel', 'Nebel'], ['regenbogen', 'Regenbogen']], UI.sceneOverride && UI.sceneOverride.wetter || '')}
-    ${kursEinstHtml()}
+    ${typeof undoEinstHtml === 'function' ? undoEinstHtml() : ''}${kursEinstHtml()}
     <h3>Daten</h3>
     <div class="sub" style="margin-bottom:8px">Alle Daten liegen nur auf diesem Gerät. Zum Übertragen auf ein anderes Gerät: Sichern, Datei per AirDrop/WhatsApp schicken und dort importieren.</div>
     <div class="row wrap"><button type="button" class="btn sec sm" data-act="heuteAnpassen">Heute anpassen</button><button type="button" class="btn sec sm" data-act="export">Sicherung exportieren</button><button type="button" class="btn sec sm" data-act="import">Sicherung importieren</button><button type="button" class="btn bad sm" data-act="wipe">Alles löschen</button></div>
@@ -11283,10 +11330,11 @@ function fachVorlagen() {
   return {
     schule: ['Schule' + (l ? ' (' + LAENDER[l] + ')' : ''), ['Deutsch', 'Mathematik', 'Englisch', 'Französisch', 'Latein', 'Spanisch', 'Biologie', 'Chemie', 'Physik', 'Geschichte', geo, politik, 'Wirtschaft', 'Informatik', 'Kunst', 'Musik', 'Sport', 'Religion', ethik, ...extra]],
     grundschule: ['Grundschule' + (l ? ' (' + LAENDER[l] + ')' : ''), ['Deutsch', 'Mathematik', l === 'BY' ? 'Heimat- und Sachunterricht' : 'Sachunterricht', 'Englisch', 'Kunst', 'Musik', 'Sport', 'Religion', ethik, 'Werken/Textiles Gestalten']],
-    polizei: ['Polizei-Ausbildung', ['Eingriffsrecht / Einsatzrecht', 'Strafrecht', 'Strafprozessrecht', 'Staats- und Verfassungsrecht', 'Verkehrsrecht', 'Verkehrslehre', 'Einsatzlehre', 'Einsatztraining / Eigensicherung', 'Kriminalistik', 'Kriminologie', 'Psychologie', 'Kommunikation und Deeskalation', 'Politische Bildung', 'Berufsethik', 'Dienst- und Beamtenrecht', 'Zivilrecht', 'Waffenrecht', 'Schießtraining', 'Erste Hilfe', 'Sport', 'Englisch', 'Informations- und Kommunikationstechnik', 'Fahrausbildung']],
+    polizei: ['Polizei', ['Eingriffsrecht', 'Einsatzrecht', 'Strafrecht', 'Strafprozessrecht', 'Staats- und Verfassungsrecht', 'Öffentliches Dienstrecht', 'Verkehrsrecht', 'Verkehrslehre', 'Einsatzlehre', 'Einsatzausbildung', 'Einsatztraining', 'Eigensicherung', 'Kriminalistik', 'Kriminologie', 'Psychologie', 'Kommunikation und Deeskalation', 'Politische Bildung', 'Berufsethik', 'Dienst- und Beamtenrecht', 'Zivilrecht', 'Waffenrecht', 'Schießtraining', 'Erste Hilfe', 'Sport', 'Englisch', 'Informations- und Kommunikationstechnik', 'Fahrausbildung']],
     jura: ['Jurastudium', ['BGB Allgemeiner Teil', 'Schuldrecht AT', 'Schuldrecht BT', 'Sachenrecht', 'Familien- und Erbrecht', 'Handels- und Gesellschaftsrecht', 'Arbeitsrecht', 'Zivilprozessrecht', 'Strafrecht AT', 'Strafrecht BT', 'Strafprozessrecht', 'Staatsorganisationsrecht', 'Grundrechte', 'Verwaltungsrecht AT', 'Polizei- und Ordnungsrecht', 'Baurecht', 'Kommunalrecht', 'Europarecht', 'Rechtsgeschichte', 'Methodenlehre', 'Arbeitsgemeinschaft (AG)', 'Hausarbeit', 'Schwerpunktbereich', 'Klausurenkurs', 'Repetitorium']],
     notsan: ['Notfallsanitäter', ['Notfallsituationen erkennen und erfassen', 'Rettungsdienstliche Maßnahmen', 'Reanimation', 'Traumatologie', 'Anatomie und Physiologie', 'Krankheitslehre', 'Pharmakologie', 'Hygiene', 'Medizintechnik und Gerätekunde', 'Kommunikation und Interaktion', 'Einsatztaktik und Großschadenslagen', 'Pädiatrische Notfälle', 'Psychiatrische Notfälle', 'Rechtliche Grundlagen', 'Qualität und Berufskunde', 'Skills- und Simulationstraining']],
-    pflege: ['Pflegefachfrau / Pflegefachmann', ['Pflegeprozess und Pflegeplanung', 'Anatomie und Physiologie', 'Krankheitslehre', 'Arzneimittellehre', 'Hygiene', 'Wundmanagement', 'Akutpflege', 'Pflege alter Menschen', 'Pflege von Kindern und Jugendlichen', 'Palliativpflege', 'Notfall und Erste Hilfe', 'Kommunikation und Beratung', 'Pflegewissenschaft', 'Ethik', 'Recht und Berufskunde', 'Lagerung und Mobilisation']],
+    feuerwehr: ['Feuerwehr', ['Brandschutz und Brandbekämpfung', 'Fahrzeugkunde', 'Gerätekunde', 'Löscheinsatz', 'Technische Hilfeleistung', 'Atemschutz', 'ABC-Gefahrstoffe', 'Rettungsdienst / Erste Hilfe', 'Einsatztaktik', 'Führungslehre', 'Funk und Kommunikation', 'Vorbeugender Brandschutz', 'Baukunde', 'Rechtsgrundlagen', 'Unfallverhütung', 'Sport', 'Übungsdienst']],
+    pflege: ['Krankenhaus / Pflege', ['Pflegeprozess und Pflegeplanung', 'Anatomie und Physiologie', 'Krankheitslehre', 'Arzneimittellehre', 'Hygiene', 'Wundmanagement', 'Akutpflege', 'Pflege alter Menschen', 'Pflege von Kindern und Jugendlichen', 'Palliativpflege', 'Notfall und Erste Hilfe', 'Kommunikation und Beratung', 'Pflegewissenschaft', 'Ethik', 'Recht und Berufskunde', 'Lagerung und Mobilisation']],
     ota: ['OTA / ATA (OP und Anästhesie)', ['Anatomie und Physiologie', 'Krankheitslehre', 'Hygiene und Sterilgutversorgung', 'Instrumentenkunde', 'OP-Lehre / Chirurgie', 'Anästhesie', 'Pharmakologie', 'Notfallmanagement', 'Medizintechnik', 'Kommunikation', 'Recht und Berufskunde']],
   };
 }
@@ -11294,9 +11342,11 @@ const FACH_FARBEN2 = ['#4f8cff', '#ff8a4c', '#5fd08d', '#b07cff', '#ffd166', '#f
 
 ACT.fachEdit = () => {
   schulFix(); _modalStack.forEach(m => m.remove()); _modalStack = [];
-  const rows = S.school.faecher.map(f => `<div class="it click" data-act="fachOne" data-id="${f.id}"><span class="fe-sym" style="--f:${f.color}">${fsymSvg(fachSym(f))}</span><div class="grow"><div class="t">${esc(f.name)}</div><div class="s">${S.school.noten.filter(x => x.fach === f.id).length} Noten</div></div></div>`).join('');
-  modal('Fächer', `<div class="card tight list" style="background:var(--card)">${rows || '<div class="sub" style="padding:12px">Noch keine Fächer. Nimm eine Vorlage oder leg sie selbst an.</div>'}</div>
-    <div class="row" style="gap:6px;margin-top:8px"><button type="button" class="btn sec grow" data-act="fachOne">+ Neues Fach</button><button type="button" class="btn sec grow" data-act="fachVorlage">Aus Vorlage</button></div>`, null);
+  const rows = S.school.faecher.map(f => { const nN = S.school.noten.filter(x => x.fach === f.id).length;
+    return `<div class="it click" data-act="fachOne" data-id="${f.id}"><span class="fe-sym" style="--f:${f.color}">${fsymSvg(fachSym(f))}</span><div class="grow"><div class="t">${esc(f.name)}${f.kurz ? ` <span class="fe-kz">${esc(f.kurz)}</span>` : ''}</div><div class="s">${nN ? nN + ' Noten' : 'Tippen zum Bearbeiten'}</div></div></div>`; }).join('');
+  modal('Fächer', `<div class="sub" style="margin:-4px 0 8px">Leg hier einmal deine Fächer an, wie bei den Schichtarten. Beim Einlesen eines Stundenplans übernimmt JATOS nur diese Fächer.</div>
+    <div class="card tight list" style="background:var(--card)">${rows || '<div class="sub" style="padding:12px">Noch keine Fächer. Nimm sie aus dem Archiv oder leg sie selbst an.</div>'}</div>
+    <div class="row" style="gap:6px;margin-top:8px"><button type="button" class="btn sec grow" data-act="fachOne">+ Fach</button><button type="button" class="btn sec grow" data-act="fachVorlage">📚 Aus dem Archiv</button></div>`, null);
 };
 ACT.fachOne = d => {
   schulFix();
@@ -11304,23 +11354,47 @@ ACT.fachOne = d => {
   _modalStack.forEach(m => m.remove()); _modalStack = [];
   const wahl = f.sym || '';
   const knoepfe = [['', 'Auto'], ['-', 'Keins'], ...Object.entries(FSYM).map(([k, v]) => [k, v[0]])].map(([k, n]) => `<label class="fe-w" title="${esc(n)}"><input type="radio" name="sym" value="${k}" ${wahl === k ? 'checked' : ''}><span>${k && k !== '-' ? fsymSvg(k) : `<small>${n}</small>`}</span></label>`).join('');
-  modal(isNew ? 'Neues Fach' : 'Fach', `${fIn('name', 'Name', f.name || '', 'text', 'placeholder="z.B. Einsatzrecht"')}${fIn('color', 'Farbe', f.color, 'color')}
+  modal(isNew ? 'Neues Fach' : 'Fach', `${fIn('name', 'Name', f.name || '', 'text', 'placeholder="z.B. Einsatzrecht"')}
+    <div class="row" style="gap:8px"><div class="grow">${fIn('kurz', 'Kürzel (wie im Stundenplan)', f.kurz || '', 'text', 'placeholder="z.B. ER" maxlength="12" autocapitalize="characters"')}</div><div style="width:84px">${fIn('color', 'Farbe', f.color, 'color')}</div></div>
     <div class="f"><span>Symbol im Hintergrund</span><div class="fe-wahl">${knoepfe}</div></div>
     <div class="sub" id="feVor" style="margin-top:4px"></div>`,
-    v => { if (!v.name.trim()) return false; const o = Object.assign(isNew ? { id: uid() } : f, { name: v.name.trim(), color: v.color, sym: v.sym || '' }); if (!o.sym) delete o.sym; if (isNew) S.school.faecher.push(o); },
-    { del: isNew ? null : () => { S.school.faecher = S.school.faecher.filter(x => x !== f); S.school.noten = S.school.noten.filter(x => x.fach !== f.id); },
+    v => { const name = v.name.trim(); if (!name) return false;
+      if (S.school.faecher.some(x => x !== f && x.name.toLowerCase() === name.toLowerCase())) { toast('Dieses Fach gibt es schon.'); return false; }
+      const o = Object.assign(isNew ? { id: uid() } : f, { name, color: v.color, sym: v.sym || '', kurz: (v.kurz || '').trim() });
+      if (!o.sym) delete o.sym; if (!o.kurz) delete o.kurz; if (isNew) S.school.faecher.push(o);
+      fachZurueck(); },
+    { del: isNew ? null : () => { S.school.faecher = S.school.faecher.filter(x => x !== f); S.school.noten = S.school.noten.filter(x => x.fach !== f.id); setTimeout(ACT.fachEdit, 0); },
       init: fm => { const vor = () => { const k = fsymRaten(fm.name.value); $('#feVor', fm).textContent = k ? 'Automatisch: ' + FSYM[k][0] : 'Automatisch: kein passendes Symbol gefunden'; }; vor(); fm.name.addEventListener('input', vor); } });
 };
+/* Nach dem Anlegen: zurück zum gerade eingelesenen Stundenplan (falls von dort gekommen), sonst zur Fächerliste */
+function fachZurueck() {
+  const w = typeof spImportFenster === 'function' && spImportFenster._warte; spImportFenster._warte = null;
+  setTimeout(() => { if (w && Date.now() - w[2] < 15 * 60e3) spImportFenster(w[0], w[1]); else ACT.fachEdit(); }, 0);
+}
+const FACH_BEREICH_IC = { schule: '🏫', grundschule: '✏️', pflege: '🏥', ota: '🩺', feuerwehr: '🚒', notsan: '🚑', polizei: '👮', jura: '⚖️' };
+const FACH_BEREICH_REIHE = ['schule', 'grundschule', 'pflege', 'ota', 'feuerwehr', 'notsan', 'polizei', 'jura'];
 ACT.fachVorlage = () => {
   schulFix(); _modalStack.forEach(m => m.remove()); _modalStack = [];
-  const V = fachVorlagen(), art = (S.ausb || {}).art, std = { polizei: 'polizei', schule: 'schule', berufsschule: 'schule', notsan: 'notsan', pflege: 'pflege', uni: 'jura' }[art] || 'schule';
-  const liste = k => { const da = new Set(S.school.faecher.map(f => f.name.toLowerCase())); return V[k][1].map((n, i) => `<label class="fe-v"><input type="checkbox" name="v${i}" ${da.has(n.toLowerCase()) ? 'disabled' : 'checked'}><span class="fe-sym">${fsymSvg(fsymRaten(n))}</span><span>${esc(n)}${da.has(n.toLowerCase()) ? ' <span class="muted">(schon da)</span>' : ''}</span></label>`).join(''); };
-  modal('Fächer aus Vorlage', `${fSel('vk', 'Vorlage', Object.entries(V).map(([k, x]) => [k, x[0]]), std)}
-    <div class="sub" style="margin:-4px 0 8px">Hak ab, was du brauchst. Namen, Farben und Symbole kannst du danach ändern.</div><div id="feListe" class="fe-liste">${liste(std)}</div>`,
-    v => { const k = v.vk, n0 = S.school.faecher.length; let n = 0;
+  const V = fachVorlagen(), reihe = FACH_BEREICH_REIHE.filter(k => V[k]).concat(Object.keys(V).filter(k => !FACH_BEREICH_REIHE.includes(k)));
+  const art = (S.ausb || {}).art, std = { polizei: 'polizei', schule: 'schule', berufsschule: 'schule', notsan: 'notsan', pflege: 'pflege', uni: 'jura', feuerwehr: 'feuerwehr' }[art] || '';
+  const da = () => new Set(S.school.faecher.map(f => f.name.toLowerCase()));
+  const kacheln = reihe.map(k => `<label class="fa-b"><input type="radio" name="vk" value="${k}" ${k === std ? 'checked' : ''}><span class="fa-i">${FACH_BEREICH_IC[k] || '📘'}</span><span class="fa-n">${esc(V[k][0].replace(/ \(.*\)$/, ''))}</span></label>`).join('');
+  const liste = k => { const d = da(); return V[k][1].map((n, i) => { const schon = d.has(n.toLowerCase());
+    return `<label class="fe-v"><input type="checkbox" name="v${i}" ${schon ? 'disabled checked' : ''}><span class="fe-sym">${fsymSvg(fsymRaten(n))}</span><span>${esc(n)}${schon ? ' <span class="muted">(schon da)</span>' : ''}</span></label>`; }).join(''); };
+  modal('📚 Fächer aus dem Archiv', `<div class="sub" style="margin:-4px 0 8px">Wähl deinen Bereich und hak deine Fächer an. Danach kannst du jedes Fach einzeln ändern, zum Beispiel Name, Kürzel und Farbe.</div>
+    <div class="fa-bereiche">${kacheln}</div>
+    <div id="faWahl" hidden><div class="row sb" style="margin:10px 0 6px"><b id="faTitel"></b><button type="button" class="btn sm sec" id="faAlle">Alle anhaken</button></div><div id="feListe" class="fe-liste"></div></div>`,
+    v => { const k = v.vk; if (!k) { toast('Wähl zuerst einen Bereich.'); return false; }
+      const n0 = S.school.faecher.length; let n = 0;
       V[k][1].forEach((name, i) => { if (v['v' + i] && !S.school.faecher.some(f => f.name.toLowerCase() === name.toLowerCase())) { S.school.faecher.push({ id: uid(), name, color: FACH_FARBEN2[(n0 + n) % FACH_FARBEN2.length] }); n++; } });
-      toast(n ? n + (n === 1 ? ' Fach' : ' Fächer') + ' übernommen.' : 'Nichts Neues übernommen.'); },
-    { still: true, saveLabel: 'Übernehmen', init: fm => { fm.vk.onchange = () => { $('#feListe', fm).innerHTML = liste(fm.vk.value); }; } });
+      if (!n) { toast('Hak mindestens ein Fach an.'); return false; }
+      toast(n + (n === 1 ? ' Fach' : ' Fächer') + ' übernommen.'); fachZurueck(); },
+    { still: true, saveLabel: 'Übernehmen', init: fm => {
+      const zeig = () => { const k = (fm.querySelector('input[name=vk]:checked') || {}).value; $('#faWahl', fm).hidden = !k; if (!k) return;
+        $('#faTitel', fm).textContent = V[k][0]; $('#faAlle', fm).textContent = 'Alle anhaken'; $('#feListe', fm).innerHTML = liste(k); };
+      fm.querySelectorAll('input[name=vk]').forEach(r => r.addEventListener('change', zeig)); zeig();
+      $('#faAlle', fm).onclick = () => { const cb = [...fm.querySelectorAll('#feListe input:not(:disabled)')], an = cb.some(c => !c.checked); cb.forEach(c => { c.checked = an; }); $('#faAlle', fm).textContent = an ? 'Keine' : 'Alle anhaken'; };
+    } });
 };
 
 /* Eine Stunde im Stundenplan: dunkle Kachel in der Fachfarbe, feines Symbol rechts unten, Test als rote Ecke */
@@ -18436,7 +18510,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 147;
+const APP_V = 148;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -19688,38 +19762,91 @@ function dpIst(T) {
 const dpLegendeAnz = t => Object.keys(dpLegende(t)).length;
 
 /* ======================= Prüfansichten ======================= */
+/* Erkannter Name oder Kürzel → eines DEINER Fächer (oder null). Neue Fächer legt JATOS beim Einlesen nicht mehr selbst an.
+   Reihenfolge: was du schon einmal zugeordnet hast, Kürzel, gleicher Name, bekannte Abkürzung, dann Schreibfehler je Wort. */
+const SP_FUELL = new Set(['und', 'der', 'die', 'das', 'des', 'den', 'dem', 'im', 'in', 'zu', 'zur', 'zum', 'von', 'mit', 'fur', 'u']);
+const spWorte = s => lowN(s).replace(/[^a-z0-9]+/g, ' ').split(' ').filter(w => w.length >= 2 && !SP_FUELL.has(w));
+function spWortGleich(a, b) {
+  if (a === b) return 1; const n = Math.min(a.length, b.length);
+  if (n >= 4 && (a.startsWith(b) || b.startsWith(a))) return .9;
+  const d = lzLev(a, b), m = Math.max(a.length, b.length); return m >= 5 && d <= Math.max(1, Math.floor(m * .25)) ? 1 - d / m : 0;
+}
+function spFachZu(name, kurz) {
+  const F = (S.school && S.school.faecher) || []; if (!F.length) return null;
+  const roh = String(name || '').trim(), k = lowN(kurz || '').replace(/[.\s]+$/, ''), kn = lowN(roh).replace(/[.\s]+$/, ''), n = lzN(roh);
+  const byId0 = id => F.find(f => f.id === id), zu = S.spFachZu || {};
+  for (const key of [kn, k && '#' + k]) if (key && zu[key] && byId0(zu[key])) return byId0(zu[key]);
+  const kz = f => lowN(f.kurz || '').replace(/[.\s]+$/, '');
+  if (k) { const t = F.filter(f => kz(f) === k); if (t.length === 1) return t[0]; }
+  if (kn && !/\s/.test(roh) && kn.length <= 6) { const t = F.filter(f => kz(f) === kn); if (t.length === 1) return t[0]; }
+  if (n) { const t = F.find(f => lzN(f.name) === n); if (t) return t; }
+  /* Abkürzung oder Lesefehler über das allgemeine Wörterbuch („Ma“ → Mathematik) */
+  const voll = spFachFinden(roh); if (voll) { const t = F.find(f => lzN(f.name) === lzN(voll)) || F.find(f => lzN(f.name).length >= 5 && (lzN(voll).startsWith(lzN(f.name)) || lzN(f.name).startsWith(lzN(voll)))); if (t) return t; }
+  /* Schreibfehler je Wort: alle Wörter des Fachs müssen im Bild ähnlich vorkommen (zusätzliche Wörter wie Thema oder Lehrkraft stören nicht).
+     Passen mehrere, gewinnt das vollständigere und dann das, was weiter vorn steht. */
+  const A = spWorte(roh); if (!A.length) return null;
+  const wertung = F.map(f => { const B = spWorte(f.name); if (!B.length) return null;
+    const pos = [], deckB = B.reduce((s, y) => { let m = 0, j = -1; A.forEach((x, i) => { const g = spWortGleich(x, y); if (g > m) { m = g; j = i; } }); if (m) pos.push(j); return s + m; }, 0) / B.length;
+    const deckA = A.reduce((s, x) => s + Math.max(0, ...B.map(y => spWortGleich(x, y))), 0) / A.length;
+    const ganz = n.length >= 5 ? 1 - lzLev(n, lzN(f.name)) / Math.max(n.length, lzN(f.name).length) : 0;
+    const lang = B.some(y => y.length >= 4);
+    const ok = (lang && deckB >= .75) || ganz >= .78;
+    return ok ? [f, (Math.max(deckB, ganz) >= .75 ? 1 : ganz) + deckA * .3 - (pos.length ? Math.min(...pos) : 0) * .05] : null; }).filter(Boolean).sort((a, b) => b[1] - a[1]);
+  if (wertung.length) return wertung[0][0];
+  return null;
+}
 /* Stundenplan: alles Erkannte als Raster zeigen, Fachnamen und Abkürzungen korrigierbar, dann in die Wochen schreiben */
 function spImportFenster(r, fname) {
-  ausbFix(); const st = r.stunden; if (!st.length) return ask('Ich habe in dem Dokument keine Stunden mit Wochentag und Uhrzeit gefunden.', 'OK', 'Schließen');
+  ausbFix(); schulFix(); const st = r.stunden; if (!st.length) return ask('Ich habe in dem Dokument keine Stunden mit Wochentag und Uhrzeit gefunden.', 'OK', 'Schließen');
   const tage = [...new Set(st.map(x => x.wd))].sort((a, b) => (a || 7) - (b || 7)), Z = r.zeiten;
   const faecher = [...new Set(st.map(x => x.fach))], kurzVon = {}; st.forEach(x => { if (x.kurz) kurzVon[x.fach] = x.kurz; });
   const T0 = String(r.text || '') + ' ' + (r.titel || ''), artR = /polizei|bpol|polizeiakademie|polizeischule/i.test(T0) ? 'polizei' : /universit|hochschule|vorlesung|semester|seminar/i.test(T0) ? 'uni' : /berufsschule|berufskolleg|bbs\b/i.test(T0) ? 'berufsschule' : /pflege|krankenhaus|klinik/i.test(T0) ? 'pflege' : /notfallsanit|rettungsdienst/i.test(T0) ? 'notsan' : 'schule';
   const neuA = !S.ausb, gleich0 = S.ausb && S.ausb.gleich !== undefined ? !!S.ausb.gleich : !r.woche;
   const mitDatum = st.some(x => x.d), mo0 = mitDatum ? mondayOf(st.map(x => x.d).sort()[0]) : r.woche || mondayOf(today());
-  const geraten = st.filter(x => x.geraten).length;
-  const raster = `<div class="spi-wrap"><table class="spi"><tr><th></th>${tage.map(w => `<th>${WDK[w]}</th>`).join('')}</tr>${Z.map(z => `<tr><td class="num">${z.von}<small>${z.bis}</small></td>${tage.map(w => { const x = st.find(y => y.wd === w && y.von === z.von); return `<td>${x ? `<b>${esc(x.fach)}</b>${x.raum ? `<small>${esc(x.raum)}</small>` : ''}` : ''}</td>`; }).join('')}</tr>`).join('')}</table></div>`;
-  const vorh = n => (S.school.faecher || []).find(f => lzN(f.name) === lzN(n));
-  modal('🕘 Stundenplan erkannt', `<div class="sub" style="margin-bottom:8px">${st.length} Stunden an ${tage.length} Tagen, ${faecher.length} Fächer${r.titel ? ' · ' + esc(r.titel) : ''}. Bitte kurz prüfen. Was du bei den Fächern änderst, merke ich mir für das nächste Mal.</div>${geraten ? `<div class="sp-ferien">⚠️ Bei ${geraten} Stunden war eine Uhrzeit im Bild nicht lesbar. Ich habe sie aus den Nachbarstunden ergänzt.</div>` : ''}${raster}
-    <h3 style="margin-top:12px">Fächer</h3><div class="spi-f">${faecher.map((f, i) => `<label class="f"><span>${kurzVon[f] ? esc(kurzVon[f]) + ' → ' : ''}${vorh(f) ? '✓ vorhanden' : 'neu'}</span><input class="in" name="f${i}" value="${esc(f)}"></label>`).join('')}</div>
+  const geraten = st.filter(x => x.geraten).length, F = S.school.faecher;
+  const wahl0 = faecher.map(f => { const o = spFachZu(f, kurzVon[f]); return o ? o.id : ''; });
+  const treffer = wahl0.filter(Boolean).length;
+  const raster = `<div class="spi-wrap"><table class="spi"><tr><th></th>${tage.map(w => `<th>${WDK[w]}</th>`).join('')}</tr>${Z.map(z => `<tr><td class="num">${z.von}<small>${z.bis}</small></td>${tage.map(w => { const x = st.find(y => y.wd === w && y.von === z.von); if (!x) return '<td></td>'; const i = faecher.indexOf(x.fach); return `<td data-fi="${i}"><b></b><i>${esc(x.fach)}</i>${x.raum ? `<small>${esc(x.raum)}</small>` : ''}</td>`; }).join('')}</tr>`).join('')}</table></div>`;
+  const optionen = sel => `<option value="">— nicht übernehmen —</option>${F.map(f => `<option value="${f.id}" ${f.id === sel ? 'selected' : ''}>${esc(f.name)}${f.kurz ? ' (' + esc(f.kurz) + ')' : ''}</option>`).join('')}<option value="+">➕ als neues Fach anlegen</option>`;
+  const zeile = i => { const f = faecher[i]; return `<label class="spi-z${wahl0[i] ? '' : ' spi-leer'}"><span class="spi-roh">${esc(f)}${kurzVon[f] && lzN(kurzVon[f]) !== lzN(f) ? ` <span class="fe-kz">${esc(kurzVon[f])}</span>` : ''}</span><select class="in" name="f${i}">${optionen(wahl0[i])}</select></label>`; };
+  const idx = faecher.map((f, i) => i), mit = idx.filter(i => wahl0[i]), ohne = idx.filter(i => !wahl0[i]);
+  const zeilen = mit.map(zeile).join('') + (ohne.length ? (mit.length ? `<details class="spi-rest"><summary>${ohne.length} weitere erkannte Texte ohne Fach (z.B. Lehrkraft oder Raum). Aufklappen, um sie doch zuzuordnen.</summary>${ohne.map(zeile).join('')}</details>` : ohne.map(zeile).join('')) : '');
+  const hinweis = !F.length ? `<div class="sp-ferien">Du hast noch keine Fächer angelegt. Leg sie einmal an, dann ordne ich alles Erkannte deinen Fächern zu, auch bei Schreibfehlern.<div style="margin-top:6px"><button type="button" class="btn sm" data-sp-archiv>📚 Fächer anlegen</button></div></div>`
+    : treffer < faecher.length ? `<div class="sub" style="margin:-2px 0 6px">${faecher.length - treffer} von ${faecher.length} konnte ich keinem deiner Fächer zuordnen. Diese Stunden bleiben leer (gestrichelt), außer du wählst ein Fach. <button type="button" class="lnk" data-sp-archiv>Fächer ergänzen</button></div>` : `<div class="sub" style="margin:-2px 0 6px">Alles deinen Fächern zugeordnet. Prüf kurz, ob es stimmt.</div>`;
+  modal('🕘 Stundenplan erkannt', `<div class="sub" style="margin-bottom:8px">${st.length} Stunden an ${tage.length} Tagen${r.titel ? ' · ' + esc(r.titel) : ''}. Was du bei den Fächern wählst, merke ich mir für das nächste Mal.</div>${geraten ? `<div class="sp-ferien">⚠️ Bei ${geraten} Stunden war eine Uhrzeit im Bild nicht lesbar. Ich habe sie aus den Nachbarstunden ergänzt.</div>` : ''}${raster}
+    <h3 style="margin-top:12px">Deine Fächer</h3>${hinweis}<div class="spi-f">${zeilen}</div>
     ${fChk('zeiten', 'Unterrichtszeiten aus dem Plan übernehmen (' + Z.length + ' Stunden, ' + Z[0].von + '–' + Z[Z.length - 1].bis + ')', !ausbZeiten().length || JSON.stringify(ausbZeiten().map(z => z.von)) !== JSON.stringify(Z.map(z => z.von)))}
     ${mitDatum ? '<div class="sub">Die Termine haben feste Daten und kommen genau in ihre Wochen.</div>' : (r.woche ? `<div class="sub">Der Plan gilt für die ${spIsoKw(r.woche)}. KW (ab ${fmtD(r.woche)}). Ich trage ihn nur dort ein, andere Wochen bleiben, wie sie sind.</div>` : '') + fIn('ab', r.woche ? 'Woche vom' : 'Ab der Woche vom', mo0, 'date') + fChk('alle', 'Jede Woche bis zum Ende der Ausbildung so eintragen' + (S.settings.land && ausbMitFerien() ? ' (Ferien bleiben frei)' : ''), gleich0)}
     ${neuA ? `<h3 style="margin-top:12px">Deine Schule / Ausbildung</h3><div class="sub" style="margin:-4px 0 6px">Du hast noch keine angelegt. Ich lege sie damit an, ändern kannst du alles später unter Arbeit.</div>${fSel('aArt', 'Art', Object.entries(AUSB_ART).map(([k, x]) => [k, x[1] + ' ' + x[0]]), artR)}${fIn('aName', 'Name (optional)', '', 'text', 'placeholder="z.B. Polizeiakademie"')}` : ''}`,
     v => {
-      const neuName = {}; faecher.forEach((f, i) => { const n = (v['f' + i] || '').trim() || f; neuName[f] = n; if (n !== f) { S.spKurz = S.spKurz || {}; S.spKurz[lowN(kurzVon[f] || f)] = n; } });
+      const idOf = {}; let nf = 0, leer = 0; S.spFachZu = S.spFachZu || {};
+      faecher.forEach((f, i) => { let id = v['f' + i] || '';
+        if (id === '+') { let o = F.find(x => lzN(x.name) === lzN(f)); if (!o) { o = { id: uid(), name: f, color: FACH_FARBEN2[(F.length) % FACH_FARBEN2.length] }; F.push(o); nf++; } id = o.id; }
+        if (!id) return; idOf[f] = id;
+        S.spFachZu[lowN(f).replace(/[.\s]+$/, '')] = id; const kz = kurzVon[f];
+        if (kz && /^[A-Za-zÄÖÜäöü][A-Za-zÄÖÜäöü0-9_\/]{0,7}$/.test(kz)) { S.spFachZu['#' + lowN(kz)] = id; const o = F.find(x => x.id === id); if (o && !o.kurz) o.kurz = kz; } });
       if (!S.ausb) { const ar = AUSB_ART[v.aArt] ? v.aArt : artR; S.ausb = { an: true, art: ar, name: (v.aName || '').trim(), ende: '', zeiten: [], zaehlt: ar === 'polizei', modus: 'plan', festH: ar === 'polizei' ? 8 : 0, ferien: ar !== 'polizei' && ar !== 'uni', tage: tage.slice() }; }
       S.ausb.an = true; if (!mitDatum) S.ausb.gleich = !!v.alle;
       if (v.zeiten || !ausbZeiten().length) { const alt = ausbZeiten(); S.ausb.zeiten = Z.map(z => ({ von: z.von, bis: z.bis, p: false })); if (alt.length) for (const m in S.school.wochen) for (const w in S.school.wochen[m]) { const t = S.school.wochen[m][w], n = {}; for (const i in t) { const z = alt[i]; const j = z ? S.ausb.zeiten.findIndex(y => y.von === z.von) : -1; if (j >= 0) n[j] = t[i]; } S.school.wochen[m][w] = n; } }
       S.ausb.tage = [...new Set([...(S.ausb.tage || []), ...tage])];
-      const ZZ = ausbZeiten(), idOf = {}; let nf = 0;
-      for (const f of faecher) { const n = neuName[f]; let o = vorh(n); if (!o) { o = { id: uid(), name: n, color: FACH_FARBEN2[(S.school.faecher.length + nf++) % FACH_FARBEN2.length] }; S.school.faecher.push(o); } idOf[f] = o.id; }
-      const eintrag = (mo, x) => { const i = ZZ.findIndex(z => z.von === x.von); if (i < 0) return; const w = (S.school.wochen[mo] = S.school.wochen[mo] || {}), t = (w[x.wd] = w[x.wd] || {}); t[i] = { fach: idOf[x.fach], titel: '', raum: x.raum || '' }; const d = addD(mo, wdOffset(x.wd)); if (!S.shifts[d] && !S.abs[d]) S.sTag[d] = {}; };
+      const ZZ = ausbZeiten();
+      const eintrag = (mo, x) => { const i = ZZ.findIndex(z => z.von === x.von); if (i < 0) return; const id = idOf[x.fach]; if (!id) { leer++; return; } const w = (S.school.wochen[mo] = S.school.wochen[mo] || {}), t = (w[x.wd] = w[x.wd] || {}); t[i] = { fach: id, titel: '', raum: x.raum || '' }; const d = addD(mo, wdOffset(x.wd)); if (!S.shifts[d] && !S.abs[d]) S.sTag[d] = {}; };
       let wochen = 0;
       if (mitDatum) { const ms = new Set(); st.forEach(x => { const mo = mondayOf(x.d); ms.add(mo); eintrag(mo, x); }); wochen = ms.size; }
       else { const ab = mondayOf(v.ab || mo0), ende = v.alle ? (S.ausb.ende || addD(ab, 7 * 26)) : ab;
         for (let m = ab; m <= ende; m = addD(m, 7)) { const fe = st.filter(x => !(m !== ab && ausbFerienAm(addD(m, wdOffset(x.wd))))); fe.forEach(x => eintrag(m, x)); wochen++; } }
+      const ohne = st.filter(x => !idOf[x.fach]).length;
       UI.tab = 'arbeit'; UI.sub.arbeit = 'stundenplan'; UI.spWoche = mitDatum ? mo0 : mondayOf(v.ab || mo0);
-      setTimeout(() => toast(`✓ Stundenplan übernommen: ${st.length} Stunden${wochen > 1 ? ' in ' + wochen + ' Wochen' : ''}${nf ? ', ' + nf + ' neue Fächer' : ''}.`), 60);
-    }, { saveLabel: 'In den Stundenplan übernehmen', still: true, focus: false });
+      setTimeout(() => toast(`✓ Stundenplan übernommen: ${st.length - ohne} Stunden${wochen > 1 ? ' in ' + wochen + ' Wochen' : ''}${nf ? ', ' + nf + (nf === 1 ? ' neues Fach' : ' neue Fächer') : ''}${ohne ? '. ' + ohne + ' ohne Fach frei gelassen' : ''}.`), 60);
+    }, { saveLabel: 'In den Stundenplan übernehmen', still: true, focus: false, init: fm => {
+      const farbe = id => { const o = F.find(f => f.id === id); return o ? o.color : ''; };
+      const mal = () => { const w = faecher.map((f, i) => fm['f' + i] ? fm['f' + i].value : '');
+        fm.querySelectorAll('td[data-fi]').forEach(td => { const id = w[+td.dataset.fi], o = id && id !== '+' ? F.find(f => f.id === id) : null;
+          td.classList.toggle('spi-off', !id); td.querySelector('b').textContent = o ? o.name : id === '+' ? faecher[+td.dataset.fi] : '?'; td.style.setProperty('--f', o ? farbe(id) : id === '+' ? '#9aa3b5' : 'transparent'); });
+        fm.querySelectorAll('.spi-z').forEach(l => { const s = l.querySelector('select'); l.classList.toggle('spi-leer', !s.value); }); };
+      fm.querySelectorAll('.spi-f select').forEach(s => s.addEventListener('change', mal)); mal();
+      fm.querySelectorAll('[data-sp-archiv]').forEach(b => b.onclick = () => { spImportFenster._warte = [r, fname, Date.now()]; ACT.fachVorlage(); });
+    } });
 }
 /* Rechnung oder Kassenbon: als Ausgabe buchen */
 function rgFenster(r, text, fname) {
@@ -19947,6 +20074,76 @@ function reiseNachbessern(p, text) {
   }
   return p;
 }
+
+/* ---------- Schritt zurück (27.11.2026, Toms Wunsch) ----------
+   Vor jeder Änderung, die du selbst machst, merkt sich die App den Stand davor. Bis zu 10 Schritte, die letzten 5 bleiben
+   auch nach dem Schließen der App (nur auf diesem Gerät, im Browser-Speicher). Änderungen im Hintergrund (Kurse, Wetter)
+   zählen nicht als eigener Schritt. Zurück geht über Einstellungen, den Knopf auf Heute oder JATOS. */
+const UNDO = { st: [], last: null, t: 0, grund: '', tipp: 0, aus: false, max: 10, maxZeichen: 24e6, haltMax: 5 };
+function undoDB() { return UNDO.db || (UNDO.db = new Promise(res => { try { const r = indexedDB.open('alltagsplaner-undo', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => res(r.result); r.onerror = () => res(null); } catch (e) { res(null); } })); }
+function undoSichern() {
+  clearTimeout(UNDO.sT);
+  UNDO.sT = setTimeout(async () => { try { const db = await undoDB(); if (!db) return; db.transaction('kv', 'readwrite').objectStore('kv').put(UNDO.st.slice(-UNDO.haltMax), 'st'); } catch (e) {} }, 800);
+}
+async function undoStart() {
+  try { UNDO.last = JSON.stringify(S); UNDO.sig = JSON.stringify(S, undoErsatz); } catch (e) {}
+  try { const db = await undoDB(); if (!db) return;
+    const alt = await new Promise(res => { const q = db.transaction('kv').objectStore('kv').get('st'); q.onsuccess = () => res(q.result); q.onerror = () => res(null); });
+    if (Array.isArray(alt) && !UNDO.st.length) { UNDO.st = alt.filter(x => x && typeof x.j === 'string'); undoKnopfZeigen(); }
+  } catch (e) {}
+}
+/* Merkt, was du zuletzt angetippt hast, damit der Schritt einen Namen bekommt */
+['pointerup', 'keydown', 'change', 'drop', 'submit'].forEach(ev => document.addEventListener(ev, e => {
+  UNDO.tipp = Date.now();
+  if (ev === 'pointerup') { const b = e.target.closest && e.target.closest('[data-act],button,label'); const t = b && (b.getAttribute('title') || b.textContent || '').replace(/\s+/g, ' ').trim(); if (t && t.length <= 40 && !/zurück|rückgängig/i.test(t)) UNDO.knopf = t; }
+}, true));
+function undoGrund(t) { UNDO.grund = String(t || '').replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 50); }
+/* Felder, die die App nebenbei selbst setzt (gesehen-Merker, Kurse, Wetter): zählen nicht als dein Schritt */
+const UNDO_NEBEN = /^(kurs[A-Z]\w*|\w*Gesehen|docLeseV|lastBackup|gefeiert|jatosDaheim|jatosGruss|wetter|gsSeen|hist)$/;
+function undoErsatz(k, v) { if (UNDO_NEBEN.test(k)) return undefined; if ((k === 'value' || k === 'valueDate') && this && this.isin) return undefined; return v; }
+/* Aufruf aus save(): j ist der neue Stand */
+function undoMerk(j) {
+  let sig = null; try { sig = JSON.stringify(S, undoErsatz); } catch (e) {}
+  if (UNDO.aus || UNDO.last === null) { UNDO.last = j; UNDO.sig = sig; return; }
+  if (j === UNDO.last) return;
+  if (sig !== null && sig === UNDO.sig) { UNDO.last = j; return; }
+  UNDO.sig = sig;
+  const jetzt = Date.now(), vonDir = jetzt - UNDO.tipp < 4000;
+  if (vonDir) {
+    const grund = UNDO.grund || UNDO.knopf || 'Letzte Änderung';
+    if (!UNDO.st.length || jetzt - UNDO.t > (UNDO.grund ? 300 : 2000)) UNDO.st.push({ j: UNDO.last, grund, zeit: jetzt });
+    else if (UNDO.grund) UNDO.st[UNDO.st.length - 1].grund = grund;
+    UNDO.t = jetzt;
+    while (UNDO.st.length > UNDO.max || (UNDO.st.length > 1 && UNDO.st.reduce((s, x) => s + x.j.length, 0) > UNDO.maxZeichen)) UNDO.st.shift();
+    undoSichern(); setTimeout(undoKnopfZeigen, 0);
+  }
+  UNDO.last = j; UNDO.grund = '';
+}
+const undoKann = () => UNDO.st.length > 0;
+const undoLetzter = () => undoKann() ? UNDO.st[UNDO.st.length - 1].grund : '';
+function undoSchritt() {
+  const e = UNDO.st.pop(); if (!e) { toast('Es gibt keinen Schritt zum Zurücknehmen.'); return false; }
+  let neu; try { neu = JSON.parse(e.j); } catch (x) { toast('Dieser Schritt lässt sich leider nicht zurücknehmen.'); undoSichern(); return false; }
+  UNDO.aus = true; try { S = neu; save(); } finally { UNDO.aus = false; }
+  UNDO.t = 0; undoSichern();
+  _modalStack.forEach(m => m.remove()); _modalStack = [];
+  render(); undoKnopfZeigen();
+  toast(`↩︎ Zurückgenommen: ${e.grund}${UNDO.st.length ? `\nNoch ${UNDO.st.length} ${UNDO.st.length === 1 ? 'Schritt' : 'Schritte'} möglich.` : ''}`);
+  return true;
+}
+ACT.undo = () => undoSchritt();
+/* Knopf oben auf Heute (neben dem Zahnrad) nur zeigen, wenn es etwas zurückzunehmen gibt */
+function undoKnopfHtml() { return `<button class="ibtn undo-k" data-act="undo" title="Schritt zurück" aria-label="Schritt zurück"${undoKann() ? '' : ' hidden'}>↩︎</button>`; }
+function undoKnopfZeigen() { document.querySelectorAll('.undo-k').forEach(b => { b.hidden = !undoKann(); b.title = undoKann() ? 'Schritt zurück: ' + undoLetzter() : 'Schritt zurück'; });
+  const el = document.getElementById('undoEinst'); if (el) el.outerHTML = undoEinstHtml(); }
+function undoZeit(t) { const m = Math.round((Date.now() - t) / 60000); return m < 1 ? 'gerade eben' : m < 60 ? `vor ${m} Min.` : m < 1440 ? `vor ${Math.round(m / 60)} Std.` : `vor ${Math.round(m / 1440)} Tagen`; }
+function undoEinstHtml() {
+  const L = UNDO.st.slice().reverse();
+  return `<div id="undoEinst"><h3>↩︎ Schritt zurück</h3><div class="sub" style="margin:-4px 0 8px">Die App merkt sich deine letzten ${UNDO.max} Änderungen. Du kannst sie hier, oben auf Heute oder über JATOS zurücknehmen.</div>
+    ${L.length ? `<div class="undo-l">${L.slice(0, 5).map((x, i) => `<div class="undo-z${i ? ' muted' : ''}"><span>${esc(x.grund)}</span><small>${undoZeit(x.zeit)}</small></div>`).join('')}</div>
+    <button type="button" class="btn sec full" data-act="undo" style="margin:6px 0 12px">↩︎ „${esc(L[0].grund)}“ zurücknehmen</button>` : '<div class="sub" style="margin-bottom:12px">Gerade gibt es nichts zum Zurücknehmen.</div>'}</div>`;
+}
+const undoFrisch = () => undoKann() && Date.now() - UNDO.st[UNDO.st.length - 1].zeit < 10 * 60e3;
 
 /* ---------- JATOS, der Zauberer ---------- */
 const OUTFITS = {
@@ -20925,7 +21122,7 @@ function unstick(){if(J.sit||J.mode==='weg'||J.mode==='da')return;const g=fixT(J
 const J={x:100,y:BODEN,flip:false,mode:'idle',t0:0,vis:true,alpha:1,form:'jatos',queue:[]};
 const parts=[];let blaseT=0;
 let blase=null;
-let blaseTxt='',blaseVis=false;function sag(txt,ms=2400){blaseTxt=txt;blaseVis=true;blaseT=performance.now()+ms;if(blase){blase.textContent=txt;blase.hidden=false}}
+let blaseTxt='',blaseVis=false;function sag(txt,ms=2400){blaseTxt=txt;blaseVis=true;blaseT=performance.now()+ms;if(blase){blase.classList.remove('mitk');blase.textContent=txt;blase.hidden=false}}
 function puff(x,y){for(let i=0;i<16;i++){const a=i/16*Math.PI*2;parts.push({x,y,vx:Math.cos(a)*.6,vy:Math.sin(a)*.4,l:26,c:i%2?'#d8dbe6':'#f4f4f4',s:3})}}
 function funken(x,y,n=10,vx0=0){for(let i=0;i<n;i++)parts.push({x:x+Math.random()*4-2,y,vx:vx0+Math.random()*.8-.4,vy:-Math.random()*.9-.2,l:30+Math.random()*20,c:['#f5c542','#ffffff','#7cc8ff'][Math.random()*3|0],s:1})}
 function schritt(list){if(J.mode==='tepp'&&J.arg){J.y=BODEN;if(J.arg.x0!=null)J.x=J.arg.x0}list=list.slice();if(J.y!==BODEN&&list.some(q=>ROWM.has(q.m))&&list[0].m!=='lauf')list.unshift(rowStep());J.queue=list;naechst()}
@@ -21097,8 +21294,11 @@ function schlossFlug(t,ny,steady){
   if(steady){if(NW.length&&Math.random()<.04){const q=NW[Math.random()*NW.length|0],sp=W2S(NX+q[0],y+q[1]);parts.push({x:sp[0],y:sp[1],vx:0,vy:.45,g:.012,l:70,c:'#9fd4ff',s:1})}
     if(I.vis&&!I.back)inselDraw(oy)}cx.restore()}
 const FLUGSATZ=['Ich bin gerade oben in der Burg beschäftigt.','Herrliche Aussicht hier oben!','Wir fliegen gerade über die Wolken.','Gleich gibt es hier oben mehr zu sehen.'];
+function sagUndo(){if(!blase)return;sag('',6000);blase.innerHTML=`Soll ich „${esc(undoLetzter())}“ rückgängig machen?<button type="button" class="pxundo" data-undo>↩︎ Ja, zurück</button>`;blase.classList.add('mitk');blaseT=performance.now()+6000;
+  blase.onclick=e=>{if(!e.target.closest('[data-undo]'))return;e.stopPropagation();blase.classList.remove('mitk');if(undoSchritt()){schritt([{m:'zaub',d:2000,start:()=>sag('Zurückgezaubert! ✨',2400)}])}}}
+window.pxSagUndo=sagUndo;
 function tippen(e){if(fliegt||BA){if(fliegt&&!BA&&I.vis){const rr=cv.getBoundingClientRect(),tx=(e.clientX-rr.left)/rr.width*W,ty=(e.clientY-rr.top)/rr.height*VH+CROP;const sq=W2S(I.x,I.y+I.oy);if(Math.abs(tx-sq[0])<Math.max(18,(I.h||34)/2)&&Math.abs(ty-(sq[1]-(I.h||34)/2))<Math.max(20,(I.h||34)/2+6)){const tp=typeof jatosNext==='function'?jatosNext('heute'):'';sag(tp?tp.replace(/<[^>]+>/g,''):'Hallo!',4200);blaseT=performance.now()+4200;iSchritt([{m:'ihupf',d:800}]);I.next=performance.now()+4500;return}}sag(FLUGSATZ[Math.random()*FLUGSATZ.length|0],2200);return}if(J.mode==='schlaf'){AKT.wach();return}const r=cv.getBoundingClientRect(),x=(e.clientX-r.left)/r.width*W,y=(e.clientY-r.top)/r.height*VH+CROP;
-  if(Math.abs(x-J.x)<20&&y>J.y-60){if(Math.random()<.4){const tp=typeof jatosNext==='function'?jatosNext('heute'):'';if(tp){sag(tp.replace(/<[^>]+>/g,''),4200);AKT.wink();blaseT=performance.now()+4200;return}}AKT[pick(['wink','zaub','zeig','schn','fros','medi','hupf','rad','tanz','spruch'])]()}
+  if(Math.abs(x-J.x)<20&&y>J.y-60){if(typeof undoFrisch==='function'&&undoFrisch()&&!(blase&&blase.classList.contains('mitk')&&!blase.hidden)){sagUndo();schritt([{m:'wink',d:1800}]);return}if(Math.random()<.4){const tp=typeof jatosNext==='function'?jatosNext('heute'):'';if(tp){sag(tp.replace(/<[^>]+>/g,''),4200);AKT.wink();blaseT=performance.now()+4200;return}}AKT[pick(['wink','zaub','zeig','schn','fros','medi','hupf','rad','tanz','spruch'])]()}
   else if(y>150)schritt([geh(x|0,{y:y|0})]);else AKT.zeig()}
 function frame(r,c,flip,lift,fo){const x=Math.round(J.x),y=Math.round(J.y-lift*(J.s||1));cx.save();cx.globalAlpha=J.alpha;cx.translate(x,y);cx.scale(J.s||1,J.s||1);cx.translate(0,-24);if(fo&&fo.rot)cx.rotate(fo.rot);if(flip)cx.scale(-1,1);if(fo)cx.scale(fo.sx||1,fo.sy||1);cx.drawImage(sheet[outfitK()],c*CW,r*CH,CW,CH,-CW/2,-CH+24,CW,CH);cx.restore()}
 Object.assign(AKT,{
@@ -21286,12 +21486,15 @@ function rufen(x,y){if(!pxModus()||UI.tab==='spiel')return;delete S.settings.jat
   setup();const cx0=x/SC,cy0=y/SC;
   if(!B.vis){arrive('Du hast gerufen? Hier bin ich! 🧙',Math.max(14,Math.min(Wc-14,cx0)),Math.min(floorY(),cy0));loopStart();return}
   B.q=[];B.busy=false;B.help=false;closeBubble();puff(B.x,B.y-26);B.on=null;B.x=Math.max(14,Math.min(Wc-14,cx0));B.y=Math.min(floorY(),cy0);B.vy=0;puff(B.x,B.y-26);say(pick(['Zu Diensten! 🧙','Du hast gerufen?','Simsalabim, da bin ich!']),2200);B.mode='idle'}
-function aktion(msg){if(!B.vis||B.mode==='heim')return;B.q=[];B.on=B.on;B.help=false;closeBubble();konfetti(46);plan([{m:'hupf',d:800},{m:'hupf',d:900,start:()=>say(msg||'Erledigt! ✨',2600)}])}
-/* Antippen: Hilfe */
+function aktion(msg){if(!B.vis||B.mode==='heim')return;B.q=[];B.on=B.on;B.help=false;closeBubble();konfetti(46);plan([{m:'hupf',d:800},{m:'hupf',d:900,start:()=>{if(typeof undoKann==='function'&&undoKann()){say(msg||'Erledigt! ✨',6000,[['undo','↩︎ Rückgängig']]);B.busy=true;B.help=true}else say(msg||'Erledigt! ✨',2600)}}])}
+/* Antippen: Hilfe. Gibt es etwas zurückzunehmen, bietet JATOS das zuerst an */
+const jKnoepfe=b=>(typeof undoKann==='function'&&undoKann()?[['undo','↩︎ Schritt zurück']]:[]).concat(b);
 function tapHim(){if(B.mode==='heim')return;B.q=[];B.busy=true;B.help=true;B.flip=false;B.mode='tap';B.t0=performance.now();B.d=800;B.arg={};funken(B.x,B.y-50,6);
-  const el=(B.on&&B.on.isConnected)?B.on:null;say(el?erklaerung(el):jatosNext(UI.tab),15000,[['was','Was ist das hier?'],['tipp','Noch ein Tipp'],['heim','🏰 Heim']])}
+  const el=(B.on&&B.on.isConnected)?B.on:null;if(typeof undoFrisch==='function'&&undoFrisch()){say(`Soll ich „${undoLetzter()}“ rückgängig machen? Oder brauchst du Hilfe?`,15000,jKnoepfe([['was','Was ist das hier?'],['tipp','Tipp'],['heim','🏰 Heim']]));return}
+  say(el?erklaerung(el):jatosNext(UI.tab),15000,jKnoepfe([['was','Was ist das hier?'],['tipp','Noch ein Tipp'],['heim','🏰 Heim']]))}
 function bubbleAct(k){B.bsay=performance.now()+15000;
   if(k==='heim'){heim();return}
+  if(k==='undo'){if(typeof undoSchritt==='function'&&undoSchritt()){B.q=[];funken(B.x,B.y-50,10);B.mode='wink';B.t0=performance.now();B.d=1200;say(pick(['Simsalabim, rückgängig! ✨','Zack, wie vorher! 🪄','Zurückgezaubert! ✨']),2600,undoKann()?[['undo','↩︎ Noch einen'],['heim','🏰 Heim']]:null)}return}
   if(k==='tipp'){say(jatosNext(UI.tab),15000,[['was','Was ist das hier?'],['tipp','Noch ein Tipp'],['heim','🏰 Heim']]);B.mode='wink';B.t0=performance.now();B.d=1200;return}
   if(k==='was'){const o=orte().filter(e=>e!==B.on);if(!o.length){say(jatosNext(UI.tab),15000,[['was','Was ist das hier?'],['tipp','Noch ein Tipp'],['heim','🏰 Heim']]);return}
     const el=naechsterOrt()===B.on?pick(o):(naechsterOrt()||pick(o)),r=el.getBoundingClientRect(),x=rnd(r.left+20,Math.max(r.left+22,r.right-20))/SC,y=r.top/SC;bb.hidden=true;
@@ -21404,6 +21607,7 @@ function pixelScene() {
 load();
 try { hilfsKontenMig(); recReparatur(); recReparatur2(); } catch (e) {}
 try { bfReparatur(); } catch (e) {}
+try { undoStart(); } catch (e) {}
 autoBook();
 render();
 hlLaden();
