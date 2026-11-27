@@ -7,7 +7,8 @@ name: Kurse
 # Der nächste Lauf wartet so lange und schließt dann direkt an.
 on:
   schedule:
-    - cron: '3-59/10 5-22 * * 1-5'
+    - cron: '3-59/10 5-21 * * 1-5'
+    # Am Wochenende nur das Wetter, keine Finanzdaten
     - cron: '17 */2 * * 0,6'
   workflow_dispatch:
     inputs:
@@ -64,11 +65,11 @@ jobs:
               echo "Runde $runde ist fehlgeschlagen"
               [ "$runde" -gt 1 ] || exit 1
             fi
-            # Nur Zeitplan-Läufe an Handelstagen (Mo–Fr 06:00–23:05 Uhr Berlin) laufen weiter. Ein Lauf kurz vor
+            # Nur Zeitplan-Läufe an Handelstagen (Mo–Fr 06:00–22:20 Uhr Berlin) laufen weiter. Ein Lauf kurz vor
             # Handelsbeginn bleibt so aktiv, statt bis zum nächsten Start (etwa eine Stunde später) eine Lücke zu lassen
             [ "$ANLASS" = "schedule" ] || break
             tag=$(TZ=Europe/Berlin date +%u); uhr=$(TZ=Europe/Berlin date +%H%M)
-            { [ "$tag" -le 5 ] && [ "$((10#$uhr))" -ge 600 ] && [ "$((10#$uhr))" -le 2305 ]; } || break
+            { [ "$tag" -le 5 ] && [ "$((10#$uhr))" -ge 600 ] && [ "$((10#$uhr))" -le 2220 ]; } || break
             [ $(( $(date +%s) + 600 )) -le "$ende" ] || break
             rest=$(( 600 - ($(date +%s) - beginn) )); [ "$rest" -gt 20 ] || rest=20
             echo "Runde $runde fertig, nächste in $rest Sekunden"

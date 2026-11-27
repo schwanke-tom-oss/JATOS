@@ -268,14 +268,17 @@ def main():
     wp = [x for x in liste if x not in KRYPTO]
     kr = [x for x in liste if x in KRYPTO]
     kurse = {k: v for k, v in alt_k.items() if k in liste}
-    offen = lokal.weekday() < 5 and dt.time(7, 20) <= lokal.time() <= dt.time(23, 15)
+    werktag = lokal.weekday() < 5
+    # Nur holen, was gerade gehandelt wird: Europa bis kurz nach Xetra-Schluss, US-Werte bis kurz nach US-Schluss, am Wochenende nichts
+    offen_fuer = lambda isin: werktag and dt.time(7, 20) <= lokal.time() <= (dt.time(22, 15) if isin.startswith('US') else dt.time(17, 45))
+    offen = [x for x in wp if offen_fuer(x)]
     fehlt = [x for x in wp if x not in kurse]
-    log(f'{lokal:%d.%m.%Y %H:%M} Uhr · {len(wp)} Wertpapiere, {len(kr)} Krypto · Börse {"offen" if offen else "zu"}')
+    log(f'{lokal:%d.%m.%Y %H:%M} Uhr · {len(wp)} Wertpapiere ({len(offen)} offen), {len(kr)} Krypto')
 
     fehler, neu = [], 0
     # 1. Aktuelle Kurse der Wertpapiere
     if offen or ALLES or fehlt:
-        ziel = wp if (offen or ALLES) else fehlt
+        ziel = wp if ALLES else list(dict.fromkeys(offen + fehlt))
         for n, isin in enumerate(ziel):
             try:
                 e = ids.get(isin)
@@ -309,9 +312,9 @@ def main():
                 fehler.append(f'{isin}: {type(ex).__name__} {ex}')
             time.sleep(PAUSE)
 
-    # 2. Krypto (läuft rund um die Uhr)
+    # 2. Krypto (läuft rund um die Uhr, am Wochenende holt der Dienst trotzdem nichts)
     kr_tage = {}
-    for sym in kr:
+    for sym in (kr if (werktag or ALLES) else [x for x in kr if x not in kurse]):
         try:
             kurse[sym], kr_tage[sym] = kr_kurs(KRYPTO[sym], jetzt)
             neu += 1
@@ -326,7 +329,7 @@ def main():
     tag_neu = alt_v.get('tag') != heute.isoformat()
     versucht = alt_v.get('versucht') or ''
     darf = not versucht or (jetzt - dt.datetime.fromisoformat(versucht.replace('Z', '+00:00'))) > dt.timedelta(minutes=50)
-    v_ziel = [x for x in liste if x not in v_k] if not (tag_neu and darf) and not ALLES else liste
+    v_ziel = liste if ALLES or (tag_neu and darf and werktag) else [x for x in liste if x not in v_k]
     v_fehl = 0
     if v_ziel:
         log(f'Verlauf für {len(v_ziel)} Werte …')

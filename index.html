@@ -16317,10 +16317,13 @@ function lzOrtSchwelle(d, W, H) {
   const g = new Float32Array(W * H); for (let i = 0, j = 0; j < W * H; i += 4, j++) g[j] = .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2];
   const S = new Float64Array((W + 1) * (H + 1)); for (let y = 1; y <= H; y++) { let r = 0; for (let x = 1; x <= W; x++) { r += g[(y - 1) * W + x - 1]; S[y * (W + 1) + x] = S[(y - 1) * (W + 1) + x] + r; } }
   const R = Math.max(8, Math.round(Math.min(W, H) / 60));
+  /* zweite, weichere Maske nur für blasse Tabellenlinien (dünne Linien werden im Foto heller als Schrift) */
+  const lin = new Uint8Array(W * H);
   for (let y = 0; y < H; y++) { const y0 = Math.max(0, y - R), y1 = Math.min(H, y + R + 1);
     for (let x = 0; x < W; x++) { const x0 = Math.max(0, x - R), x1 = Math.min(W, x + R + 1), n = (y1 - y0) * (x1 - x0);
       const m = (S[y1 * (W + 1) + x1] - S[y0 * (W + 1) + x1] - S[y1 * (W + 1) + x0] + S[y0 * (W + 1) + x0]) / n, v = g[y * W + x], i = (y * W + x) * 4;
-      const o = v < m * .82 && v < 200 ? 0 : 255; d[i] = d[i + 1] = d[i + 2] = o; } }
+      const o = v < m * .82 && v < 200 ? 0 : 255; d[i] = d[i + 1] = d[i + 2] = o; if (v < m * .93 && v < 225) lin[y * W + x] = 1; } }
+  return lin;
 }
 /* Foto von einem Blatt auf Pinnwand, Tisch o.ä.: das helle, farblose Papier finden und nur das lesen (Kork und Holz stören sonst die Texterkennung) */
 function lzPapier(bmp) {
@@ -16330,7 +16333,7 @@ function lzPapier(bmp) {
     const band = (n, f) => { let best = null, a = -1; for (let i = 0; i <= n; i++) { const on = i < n && f(i) > .4; if (on && a < 0) a = i; else if (!on && a >= 0) { if (!best || i - a > best[1] - best[0]) best = [a, i]; a = -1; } } return best; };
     const rb = band(H, y => { let s = 0; for (let px = 0; px < W; px++) s += pap[y * W + px]; return s / W; }); if (!rb) return null;
     const cb = band(W, px => { let s = 0; for (let y = rb[0]; y < rb[1]; y++) s += pap[y * W + px]; return s / (rb[1] - rb[0]); }); if (!cb) return null;
-    const fl = (rb[1] - rb[0]) * (cb[1] - cb[0]) / (W * H); if (fl > .8 || fl < .15) return null;
+    const fl = (rb[1] - rb[0]) * (cb[1] - cb[0]) / (W * H); if (fl > .92 || fl < .15) return null;
     /* rundherum muss es farbig oder dunkel sein (Kork, Holz, Tisch), sonst ist es ein normales Foto vom Blatt */
     let aussen = 0, n = 0; for (let y = 0; y < H; y += 2) for (let px = 0; px < W; px += 2) { if (y >= rb[0] && y < rb[1] && px >= cb[0] && px < cb[1]) continue; n++; if (!pap[y * W + px]) aussen++; }
     if (!n || aussen / n < .6) return null;
@@ -16339,16 +16342,16 @@ function lzPapier(bmp) {
 }
 /* Dunkle Screenshots (z. B. Trade Republic, Dunkelmodus): umkehren und in Graustufen, damit auch graue Beschriftungen gelesen werden */
 async function ocrVorbereiten(blob, ziel = 2400, opt = {}) {
-  try { const bmp = await createImageBitmap(blob), pr = /jpe?g|heic|heif/i.test(blob.type || '') ? lzPapier(bmp) : null, bw = pr ? pr.w : bmp.width, bh = pr ? pr.h : bmp.height;
+  try { const bmp = await createImageBitmap(blob), pr = /^image\//i.test(blob.type || '') ? lzPapier(bmp) : null, bw = pr ? pr.w : bmp.width, bh = pr ? pr.h : bmp.height;
     const sc = Math.min(3, Math.max(ziel / bw, ziel < 2400 ? ziel / bw : 1), 7000 / bh) /* kleine Schrift (Abrechnung im Screenshot) vergrößern */; let c = document.createElement('canvas'); c.width = Math.round(bw * sc); c.height = Math.round(bh * sc);
     let x = c.getContext('2d'); if (pr) x.drawImage(bmp, pr.x, pr.y, pr.w, pr.h, 0, 0, c.width, c.height); else x.drawImage(bmp, 0, 0, c.width, c.height); let im = x.getImageData(0, 0, c.width, c.height), d = im.data; let su = 0;
     for (let i = 0; i < d.length; i += 16) su += .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2];
     const dunkel = su / (d.length / 16) < 110;
-    if (pr) lzOrtSchwelle(d, c.width, c.height);
+    let lin = null; if (pr) lin = lzOrtSchwelle(d, c.width, c.height);
     else for (let i = 0; i < d.length; i += 4) { let v = .299 * d[i] + .587 * d[i + 1] + .114 * d[i + 2]; if (dunkel) v = 255 - v; v = v > 215 ? 255 : v * .8; d[i] = d[i + 1] = d[i + 2] = v; }
     /* schief fotografiert: gerade drehen */
-    try { const w = lzSchraeg(d, c.width, c.height); if (Math.abs(w) >= 0.15) { x.putImageData(im, 0, 0); const c2 = document.createElement('canvas'); c2.width = c.width; c2.height = c.height; const x2 = c2.getContext('2d'); x2.fillStyle = '#fff'; x2.fillRect(0, 0, c2.width, c2.height); x2.translate(c2.width / 2, c2.height / 2); x2.rotate(-w * Math.PI / 180); x2.drawImage(c, -c.width / 2, -c.height / 2); c = c2; x = x2; im = x.getImageData(0, 0, c.width, c.height); d = im.data; } } catch (e) {}
-    if (opt.canvas) { x.putImageData(im, 0, 0); return c; }
+    try { const w = lzSchraeg(d, c.width, c.height); if (Math.abs(w) >= 0.15) { x.putImageData(im, 0, 0); const c2 = document.createElement('canvas'); c2.width = c.width; c2.height = c.height; const x2 = c2.getContext('2d'); x2.fillStyle = '#fff'; x2.fillRect(0, 0, c2.width, c2.height); x2.translate(c2.width / 2, c2.height / 2); x2.rotate(-w * Math.PI / 180); x2.drawImage(c, -c.width / 2, -c.height / 2); c = c2; x = x2; im = x.getImageData(0, 0, c.width, c.height); d = im.data; lin = null; } } catch (e) {}
+    if (opt.canvas) { x.putImageData(im, 0, 0); c._linien = lin; return c; }
     try { ocrLinienWeg(d, c.width, c.height); } catch (e) {}
     x.putImageData(im, 0, 0); return await new Promise(r => c.toBlob(b => r(b || blob), 'image/png'));
   } catch (e) { return blob; }
@@ -18430,7 +18433,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 145;
+const APP_V = 146;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -18487,10 +18490,22 @@ function kursEinstSave(v, s) {
   for (const a of ['av', 'td']) { if (v['del_' + a]) kursSchlSetzen(a, ''); else if ((v['key_' + a] || '').trim()) kursSchlSetzen(a, v['key_' + a].trim()); }
   if (s.netz === 'kurse') setTimeout(kursAutoCheck, 800);
 }
+/* Handelszeit in Berlin (Mo–Fr 7:20 bis 22:15, danach ist auch die US-Börse zu) */
+function kursBoerseOffen(d) {
+  const p = {}; for (const x of new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/Berlin', weekday: 'short', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).formatToParts(d || new Date())) p[x.type] = x.value;
+  const m = +p.hour * 60 + +p.minute; return !/^(Sat|Sun)/.test(p.weekday) && m >= 440 && m <= 1335;
+}
+/* Kursdatei ist nach dem letzten Handelsschluss geholt: am Wochenende und nachts nicht noch einmal abfragen */
+function kursDateiAktuell() {
+  const t = Date.parse(S.settings.kursDateiStand || ''); if (isNaN(t)) return false;
+  let d = Date.now(); for (let i = 0; i < 4 * 96 && !kursBoerseOffen(new Date(d)); i++) d -= 900000;
+  return t >= d - 30 * 60000;
+}
 function kursAutoCheck() {
   const s = S.settings; if (!s || !kursOnline() || document.hidden) return;
   wetterHolen();
   if (s.kursAuto === false || _kursLaeuft) return;
+  if (!kursBoerseOffen() && kursDateiAktuell()) return;
   ACT.kurseHolen(null, true);
 }
 /* Wetter für das Schloss: der Kursdienst legt das Wetter vieler großer Städte ab, die App nimmt die nächstgelegene.
@@ -19247,17 +19262,31 @@ function spFachFinden(s, eigene) {
   if (n.length <= 4) { const sub = V.filter(x => { const y = lzN(x); if (y[0] !== n[0]) return false; let j = 1; for (const ch of n.slice(1)) { j = y.indexOf(ch, j); if (j < 0) return false; j++; } return true; }); if (sub.length === 1) return sub[0]; }
   return '';
 }
-const SP_RAUM = /^(?:r(?:aum)?\s?\.?\s?[a-z]?\s?\d[\w.\-]*|hs\s?\d+\w?|hörsaal\s?\w+|audimax|auditorium|h\s?\d[\d.]*|[a-z]{1,2}\s?\d[\d.\-]*|\d{1,2}\.\d{2,3}|\d{3,4}|lab(?:or)?\s?\d*|pc-?raum\s?\d*|nw-?raum\s?\d*|edv\s?\d*|turnhalle|sporthalle|halle\s?\d*|aula|mensa|bibliothek|bücherei|werkraum|musikraum|kunstraum|sportplatz|schwimmhalle|schießstand|raum\s?\w+|online|zoom|webex)$/i;
+const SP_RAUM = /^(?:r(?:aum)?\s?\.?\s?[a-z]?\s?\d[\w.\-]*|hs\s?\d+\w?|hörsaal\s?\w+|audimax|auditorium|h\s?\d[\d.]*|[a-z]{1,2}\s?\d[\d.\-]*|\d{1,2}\.\d{2,3}|\d{3,4}|lab(?:or)?\s?\d*|pc-?raum\s?\d*|nw-?raum\s?\d*|edv\s?\d*|turnhalle|sporthalle|halle\s?\d*|aula|mensa|bibliothek|bücherei|werkraum|musikraum|kunstraum|sportplatz|schwimmhalle|schießstand|raum\s?\w+|[a-z]{1,2}\s?\d{1,2}\s?[-–.]*\s?r(?:aum)?\.?\s?\d{2,4}|online|zoom|webex)$/i;
 const SP_LEHRER = /^(?:fr\.|hr\.|frau|herr|dr\.|prof\.|pd)$/i;
 /* Eine Zelle: Fach, Raum, Lehrkraft */
 function spZelle(roh, eigene) {
   let teile = (Array.isArray(roh) ? roh : [roh]).map(s => String(s || '').trim()).filter(Boolean);
   if (!teile.length) return null;
   let typ = ''; teile = teile.map(t => t.replace(/\(([^)]{2,25})\)/, (m, x) => { if (!typ && !/^\d/.test(x)) { typ = x.trim(); return ' '; } return m; }).trim()).filter(Boolean);
-  teile = teile.flatMap(t => t.split(/\s+[\/·|•]\s+|\s*;\s*|,\s+/)).map(s => s.trim()).filter(Boolean);
-  let fach = '', raum = '', lehrer = '';
+  /* Zeile mit mehreren Namenskürzeln („AMü, BKl, CSchr“) ist die Lehrkraft, nicht das Fach */
+  let lehrer = teile.filter(t => teile.length > 1 && (t.match(/,/g) || []).length >= 2).join(' ');
+  if (lehrer) teile = teile.filter(t => (t.match(/,/g) || []).length < 2);
+  /* „Einsatzausbildung - EA“: Name und Kürzel, die Zeile ist das Fach */
+  let kurz0 = '';
+  teile = teile.map(t => { const m = t.match(/^(?:([A-ZÄÖÜ]{2,5})\s+)?(.*[A-Za-zäöüß]{4,}.*?)\s*[-–]?\s+([A-ZÄÖÜ][A-ZÄÖÜ0-9_\/]{1,7})\.?$/);
+    if (!m || /\d{2}/.test(m[3]) || SP_RAUM.test(m[3])) return t; if (!kurz0) kurz0 = m[3].replace(/[_\/]+$/, ''); return { f: (m[1] && m[1] !== m[3] && !/[a-zäöü]/.test(m[2].split(/\s+/)[0]) ? m[1] + ' ' : '') + m[2].replace(/\s*[-–]\s*$/, '').trim() }; });
+  const fz0 = teile.findIndex(t => typeof t === 'object');
+  /* zweizeiliger Fachname („Grundlagen der“ / „Informatik - GDI“): Zeilen davor ohne Raum gehören zum Namen */
+  if (fz0 > 0) { let j = fz0; while (j > 0 && typeof teile[j - 1] === 'string' && /[a-zäöü]{3}/.test(teile[j - 1]) && !SP_RAUM.test(teile[j - 1]) && !SP_NAMEKZ.test(teile[j - 1])) j--;
+    if (j < fz0) { teile[fz0].f = teile.slice(j, fz0).join(' ').replace(/\s*[-–]\s*$/, '') + ' ' + teile[fz0].f; teile.splice(j, fz0 - j); } }
+  const fz = teile.findIndex(t => typeof t === 'object'); if (fz > 0) teile.unshift(teile.splice(fz, 1)[0]);
+  if (fz >= 0) { const f0 = teile[0].f; teile = teile.slice(1).map(t => typeof t === 'object' ? t.f : t).flatMap(t => t.split(/\s+[\/·|•]\s+|\s*;\s*|,\s+/)).map(s => s.trim()).filter(Boolean); teile.unshift(f0); teile.fest = 1; }
+  else teile = teile.flatMap(t => t.split(/\s+[\/·|•]\s+|\s*;\s*|,\s+/)).map(s => s.trim()).filter(Boolean);
+  let fach = '', raum = '';
   const raumT = t => SP_RAUM.test(t.replace(/^raum\s*:?\s*/i, 'raum ')) || t.length >= 4 && ['Turnhalle', 'Sporthalle', 'PC-Raum', 'NW-Raum', 'Bibliothek', 'Werkraum', 'Musikraum', 'Kunstraum', 'Schwimmhalle', 'Sportplatz'].some(w => Math.abs(w.length - t.length) <= 2 && lzLev(lzN(w), lzN(t)) <= Math.max(1, Math.floor(w.length * .15))), lehrT = t => SP_LEHRER.test(t.split(/\s+/)[0]);
-  if (teile.length === 1) { // alles in einer Zeile mit Leerzeichen: Wörter einzeln zuordnen
+  if (teile.fest) { fach = teile[0].replace(/\s{2,}/g, ' - '); for (const t of teile.slice(1)) { if (!raum && raumT(t)) raum = t; else lehrer = (lehrer ? lehrer + ' ' : '') + t; } }
+  else if (teile.length === 1) { // alles in einer Zeile mit Leerzeichen: Wörter einzeln zuordnen
     const w = teile[0].split(/\s+/), tok = [];
     for (let i = 0; i < w.length; i++) { const a = w[i], b = w[i + 1]; if (b && /^\d[\d.\-]*\w?$/.test(b) && /^(raum|hs|h|lab|labor|halle|hörsaal|r|[a-z]|[A-Z]{1,2}|pc-raum|edv)$/i.test(a)) { tok.push(a + ' ' + b); i++; } else if (b && SP_LEHRER.test(a)) { tok.push(a + ' ' + b); i++; } else tok.push(a); }
     let i = 0; const f = []; while (i < tok.length && !raumT(tok[i]) && !lehrT(tok[i])) f.push(tok[i++]);
@@ -19270,7 +19299,9 @@ function spZelle(roh, eigene) {
   }
   if (!fach) return null;
   const voll = spFachFinden(fach, eigene);
-  return { fach: voll || fach, kurz: voll && lzN(voll) !== lzN(fach) ? fach : '', raum: raum.replace(/^raum\s*:?\s*/i, m => /\d/.test(raum) ? m : m), lehrer: lehrer.trim(), typ };
+  if (kurz0 && teile.fest) return { fach: voll || fach, kurz: kurz0, raum: raum, lehrer: lehrer.trim(), typ };
+  const ausKurz = !!voll && lzN(fach).length <= 4;
+  return { ausKurz, fach: voll || fach, kurz: voll && lzN(voll) !== lzN(fach) ? fach : '', raum: raum.replace(/^raum\s*:?\s*/i, m => /\d/.test(raum) ? m : m), lehrer: lehrer.trim(), typ };
 }
 /* Legende „1. Stunde 08:00 - 08:45“ und Abkürzungen „Ma = Mathematik“ */
 function spLegende(T) {
@@ -19291,6 +19322,10 @@ function spAusRaster(zeilen, T) {
     if (c.length >= 2) { c.sort((a, b) => a.x - b.x); if (c.every((o, k) => !k || (o.wd || 7) > (c[k - 1].wd || 7))) { kopf = i; cols = c; } }
   }
   if (kopf < 0) return [];
+  /* Wochentag im Kopf unlesbar (Foto): eine Gitterspalte direkt davor oder dahinter in gleicher Breite ist der fehlende Tag */
+  if (zeilen.spalten && zeilen.spalten.length >= 3) { const sp = zeilen.spalten, idx = c => sp.findIndex((v, i) => i + 1 < sp.length && c.x >= v - 4 && c.x < sp[i + 1]), br = j => sp[j + 1] - sp[j];
+    let j0 = idx(cols[0]); while (j0 > 0 && (cols[0].wd || 7) > 1 && Math.abs(br(j0 - 1) - br(j0)) < br(j0) * .25) { cols.unshift({ wd: cols[0].wd - 1, x: (sp[j0 - 1] + sp[j0]) / 2 + 1 }); j0--; }
+    let j1 = idx(cols[cols.length - 1]); while (j1 >= 0 && j1 + 2 < sp.length && (cols[cols.length - 1].wd || 7) < 5 && Math.abs(br(j1 + 1) - br(j1)) < br(j1) * .25) { cols.push({ wd: cols[cols.length - 1].wd + 1, x: (sp[j1 + 1] + sp[j1 + 2]) / 2 }); j1++; } }
   const dx = cols.length > 1 ? (cols[cols.length - 1].x - cols[0].x) / (cols.length - 1) : 100;
   const grenzen = cols.map((c, k) => [k ? (cols[k - 1].x + c.x) / 2 : c.x - dx / 2, k < cols.length - 1 ? (c.x + cols[k + 1].x) / 2 : c.x + dx / 2]);
   if (zeilen.spalten && zeilen.spalten.length >= 3) { const sp = zeilen.spalten; cols.forEach((c, k) => { const j = sp.findIndex((v, i) => i + 1 < sp.length && c.x >= v - 4 && c.x < sp[i + 1]); if (j >= 0) grenzen[k] = [sp[j], sp[j + 1]]; }); }
@@ -19303,11 +19338,22 @@ function spAusRaster(zeilen, T) {
     if (/^(zeiten|legende|pausen?)\b:?$/i.test(labT) && !zel.some(x => x.length)) break;
     const isNr = /^\d{1,2}\s*\.?\s*(std|stunde|block|ue)?\b(?![:.]\d)/i.test(labT), hatZ = lzZeiten(labT).length;
     const nachtrag = !isNr && hatZ && cur && !z.text && cur.nrStart && lzZeiten(cur.lab.join(' ')).length < 2;
-    if (labT && (isNr || hatZ) && !nachtrag) { cur = { lab: [labT], zel: cols.map(() => []), nrStart: isNr && !hatZ }; reihen.push(cur); }
+    /* Foto mit Gitter: alles zwischen zwei Linien ist eine Stunde (Beginn und Ende stehen oft untereinander) */
+    const curZ = cur ? lzZeiten(cur.lab.join(' ')).length : 0, neuZ = lzZeiten(labT);
+    const gleich = cur && curZ < 2 && z.band != null && z.band === cur.band;
+    /* Beginn und Ende untereinander ohne Gitter: zweite Uhrzeit 20 bis 150 Minuten nach der ersten ist das Ende derselben Stunde, eine Nummer dazwischen gehört auch dazu */
+    const m2a = q => +q.slice(0, 2) * 60 + +q.slice(3), ersteZ = cur && curZ === 1 ? lzZeiten(cur.lab.join(' '))[0].z : '';
+    const paar = ersteZ && !cur.nrStart && ((neuZ.length === 1 && !isNr && m2a(neuZ[0].z) - m2a(ersteZ) >= 20 && m2a(neuZ[0].z) - m2a(ersteZ) <= 150) || (isNr && !neuZ.length && !cur.nr1));
+    if (paar && isNr) cur.nr1 = true;
+    if (labT && (isNr || hatZ) && !nachtrag && !gleich && !paar) { cur = { lab: [labT], zel: cols.map(() => []), nrStart: isNr && !hatZ, band: z.band }; reihen.push(cur); }
     else if (cur && labT) cur.lab.push(labT);
     if (!cur) continue;
     zel.forEach((w, k) => { if (w.length) cur.zel[k].push(w.join(' ')); });
   }
+  /* Foto: erste Zeile eines zweizeiligen Fachnamens rutscht ans Ende der Stunde davor („Grundlagen der“ | „Informatik - GDI“) */
+  if (zeilen.some(z => z.ocr)) for (let ri = 0; ri + 1 < reihen.length; ri++) cols.forEach((c, k) => { const a = reihen[ri].zel[k], b = reihen[ri + 1].zel[k]; if (!a.length || !b.length) return;
+    const l = a[a.length - 1], kurzZ = /[a-zäöüß]{3}.*\s[-–]?\s*[A-ZÄÖÜ][A-ZÄÖÜ0-9_\/]{1,7}\.?$/;
+    if (a.length >= 2 && /[a-zäöü]{4}/.test(l) && !/,/.test(l) && !SP_RAUM.test(l.replace(/^[^\w]+/, '').trim()) && (kurzZ.test(b[0]) || /^[A-ZÄÖÜa-zäöü]{3,}\s*[-–]\s*[A-ZÄÖÜ]{2}/.test(b[0])) && !kurzZ.test(l)) b.unshift(a.pop()); });
   const out = [], m2 = z => +z.slice(0, 2) * 60 + +z.slice(3), z2 = m => lzP2(Math.floor(m / 60) % 24) + ':' + lzP2(m % 60);
   const zt = reihen.map((r, ri) => { const lt = r.lab.join(' '), sp = lzSpannen(lt)[0], z = lzZeiten(lt), nm = lt.match(/^(\d{1,2})\s*\.?(?![:.]?\d)/);
     const nr = nm ? +nm[1] : ri + 1; let von = sp ? sp.von : z.length >= 2 ? z[0].z : '', bis = sp ? sp.bis : z.length >= 2 ? z[1].z : '';
@@ -19323,12 +19369,20 @@ function spAusRaster(zeilen, T) {
   const ocr = zeilen.some(z => z.ocr);
   reihen.forEach((r, ri) => { const { von, bis, nr, geraten } = zt[ri]; if (!von) return;
     r.zel.forEach((cell, k) => { if (!cell.length) return; const c = spZelle(cell.map(x => ocr ? x.replace(/(^|\s)[|\/\\'‘’"_~.,:;!-]+(?=\s|$)/g, ' ').replace(/(^|\s)[a-zäöü]{1,2}(?=\s|$)/g, ' ').trim() : x).filter(Boolean), leg.kurz);
+      /* Foto: Fachzeile unlesbar, übrig ist ein Namenskürzel („AMü“, „BKl“) – das ist die Lehrkraft */
+      if (c && ocr && !c.kurz && SP_NAMEKZ.test(c.fach) && !spFachFinden(c.fach, leg.kurz)) { c.lehrer = (c.fach + ' ' + (c.lehrer || '')).trim(); c.fach = ''; }
+      if (c && !c.fach && ocr && c.lehrer) { out.push(Object.assign({ wd: cols[k].wd, von, bis, nr, offen: true }, c)); return; }
       if (!c || /^(pause|frei|-+|–)$/i.test(c.fach) || !/[a-zäöü]{2}/i.test(c.fach)) return;
       if (ocr && !spFachFinden(c.fach, leg.kurz) && lzN(c.fach).length < 3) return;
       out.push(Object.assign({ wd: cols[k].wd, von, bis, nr }, c, geraten ? { geraten: true } : {})); });
   });
-  return out;
+  /* Stunde ohne lesbares Fach: gleiche Lehrkraft wie die Stunde davor oder danach am selben Tag = gleiches Fach (Doppelstunde) */
+  const lk = x => lzN(String(x.lehrer || '').split(/[\s,]+/).filter(t => t.length >= 2).slice(0, 2).join(''));
+  for (const x of out.filter(x => x.offen)) { const nb = out.filter(y => !y.offen && y.wd === x.wd && y.fach && lk(y) && lk(y) === lk(x)).sort((a, b) => Math.abs(m2(a.von) - m2(x.von)) - Math.abs(m2(b.von) - m2(x.von)))[0];
+    if (nb && Math.abs(m2(nb.von) - m2(x.von)) <= 120) { x.fach = nb.fach; x.kurz = nb.kurz; if (!x.raum) x.raum = nb.raum; x.geraten = true; delete x.offen; } }
+  return out.filter(x => !x.offen);
 }
+const SP_NAMEKZ = /^[A-ZÄÖÜ][a-zäöü]{0,3}[A-ZÄÖÜ][a-zäöüß]{1,4}[,.]?$/;
 /* Listen: „Montag: 08:00–08:45 Mathe, R101“ oder „Mo. 8:00 - 8:45 Analysis I · HS 1“ oder Tag als Überschrift */
 function spAusZeilen(T) {
   const leg = spLegende(T), out = []; let wd = -1;
@@ -19358,16 +19412,40 @@ async function spLesen(text, name, buf, mime) {
     let zeilen = null;
     try { if (buf && (mime === 'application/pdf' || /\.pdf$/i.test(name || ''))) zeilen = await impPdfZeilen(buf); else if (/^image\//.test(mime || '') && ocrText.zeilen && ocrText.fuer === T) zeilen = ocrText.zeilen; } catch (e) {}
     if (zeilen) L = spAusRaster(zeilen, T);
-    if (/^image\//.test(mime || '') && buf) { try { const rz = await ocrRaster(buf, mime); if (rz && rz.zeilen.length) { const L3 = spAusRaster(rz.zeilen, T + '\n' + rz.zeilen.map(z => z.t).join('\n')); if (L3.length >= L.length * .8) L = L3; } } catch (e) {} }
+    if (/^image\//.test(mime || '') && buf) { try { const rz = await ocrRaster(buf, mime); if (rz && rz.zeilen.length) { const L3 = spAusRaster(rz.zeilen, T + '\n' + rz.zeilen.map(z => z.t).join('\n')); /* Foto mit erkanntem Gitter: dem Raster trauen, auch wenn der freie Text mehr (oft falsche) Treffer liefert */ if (L3.length >= L.length * .8 || (rz.reihen && rz.reihen.length >= 5 && L3.length >= 5)) L = L3; } } catch (e) {} }
     if (!L.length) L = spAusRaster(lzZeilenAusText(T), T);
     const L2 = spAusZeilen(T); if (L2.length > L.length) L = L2;
   }
   const seen = new Set(), st = [];
   for (const x of L) { const k = x.wd + '|' + x.von; if (seen.has(k)) continue; seen.add(k); st.push(x); }
   st.sort((a, b) => ((a.wd || 7) - (b.wd || 7)) || (a.von < b.von ? -1 : 1));
+  /* Gleiches Kürzel = gleiches Fach: Lesefehler im Foto („Einsetzausbidung“) bekommen die beste Schreibweise der Gruppe */
+  { const nachK = {}; for (const x of st) if (x.kurz && /^[A-ZÄÖÜ][A-ZÄÖÜ0-9_\/]{1,7}$/.test(x.kurz)) (nachK[x.kurz] = nachK[x.kurz] || []).push(x);
+    const V = spVokabel().map(lzN);
+    for (const g of Object.values(nachK)) { if (g.length < 2) continue; const kand = [...new Set(g.map(x => x.fach))];
+      const roh = kand.filter(f => lzN(f) !== lzN(g[0].kurz) && !g.some(x => x.fach === f && x.ausKurz)); const kand2 = roh.length ? roh : kand;
+      const lang = Math.max(...kand2.map(f => lzN(f).length)), kand3 = kand2.filter(f => lzN(f).length >= lang * .7 && g.filter(x => lzN(x.fach).length >= lang * .7).length >= Math.max(2, g.length * .25)), kand4 = kand3.length ? kand3 : kand2;
+      const best = kand4.find(f => V.includes(lzN(f))) || kand4.map(f => [f, g.reduce((n, x) => n + lzLev(lzN(f), lzN(x.fach)), 0)]).sort((a, b) => a[1] - b[1])[0][0];
+      /* Wort für Wort die Schreibweise nehmen, die den anderen am nächsten ist (aus vielen schlechten Lesungen eine gute) */
+      let fein = best; if (!V.includes(lzN(best))) { const bw = best.split(/\s+/), alle = g.map(x => x.fach.split(/\s+/)).filter(w => w.length === bw.length);
+        if (alle.length >= 3) fein = bw.map((_, i) => { const vs = alle.map(w => w[i]); return vs.map(v => [v, vs.reduce((n, u) => n + lzLev(v.toLowerCase(), u.toLowerCase()), 0)]).sort((a, b) => a[1] - b[1])[0][0]; }).join(' '); }
+      for (const x of g) x.fach = fein; } }
   const zeiten = [...new Map(st.map(x => [x.von, { von: x.von, bis: x.bis }])).values()].sort((a, b) => a.von < b.von ? -1 : 1);
   const titel = (T.split('\n').map(l => l.trim()).find(l => /stundenplan|wochenplan|klasse|kurs|semester|vorlesung/i.test(l) && l.length < 60) || '').slice(0, 60);
-  return { stunden: st, zeiten, titel };
+  return { stunden: st, zeiten, titel, woche: spWoche(T) };
+}
+
+/* Plan nur für eine bestimmte Woche („45. KW vom 02.11. bis 08.11.2026“, „KW 45/2026“, „Woche vom 02.11.2026“): Montag dieser Woche, sonst '' (Plan gilt jede Woche).
+   Lesefehler beim Jahr (2028 statt 2026) werden über Wochentag und Kalenderwoche ausgeglichen */
+function spIsoKw(iso) { const d = pd(iso), t = new Date(d.getFullYear(), d.getMonth(), d.getDate() + 3 - (d.getDay() + 6) % 7), j = new Date(t.getFullYear(), 0, 4); return 1 + Math.round(((t - j) / 864e5 - 3 + (j.getDay() + 6) % 7) / 7); }
+function spWoche(T) {
+  const t = String(T || ''), y0 = +today().slice(0, 4), jahre = j => [...new Set([j, y0, y0 + 1, y0 - 1].filter(Boolean))];
+  const kwM = t.match(/(\d{1,2})\s*\.?\s*(?:KW|Kalenderwoche)|(?:KW|Kalenderwoche)\s*\.?\s*(\d{1,2})/i), kw = kwM ? +(kwM[1] || kwM[2]) : 0;
+  const passt = iso => iso && pd(iso).getDay() === 1 && (!kw || spIsoKw(iso) === kw);
+  const vm = t.match(/(?:KW|Woche)[^\n]{0,12}?vom\s+(\d{1,2})\.(\d{1,2})\.(\d{2,4})?[^\n]{0,8}?(?:bis|-|–)\s*(\d{1,2})\.(\d{1,2})\.(\d{2,4})?/i);
+  if (vm) { const j = +(vm[3] || vm[6] || 0), jj = j && j < 100 ? 2000 + j : j; for (const y of jahre(jj)) { const yy = vm[3] ? y : (+vm[2] > +vm[5] ? y - 1 : y), iso = lzIso(yy, +vm[2], +vm[1]); if (passt(iso)) return iso; } }
+  if (kw >= 1 && kw <= 53) { const jm = t.match(new RegExp('(?:KW|Kalenderwoche)\\s*\\.?\\s*' + kw + '\\s*[\\/ ,]\\s*(20\\d{2})', 'i')) || t.match(/\b(20\d{2})\b/); for (const y of jahre(jm ? +jm[1] : 0)) { const j4 = new Date(y, 0, 4), mo = new Date(y, 0, 4 - (j4.getDay() + 6) % 7 + (kw - 1) * 7), iso = lzIso(mo.getFullYear(), mo.getMonth() + 1, mo.getDate()); if (passt(iso) && kwM) return iso; } }
+  return '';
 }
 
 /* ======================= Dienstplan ======================= */
@@ -19612,14 +19690,14 @@ function spImportFenster(r, fname) {
   ausbFix(); const st = r.stunden; if (!st.length) return ask('Ich habe in dem Dokument keine Stunden mit Wochentag und Uhrzeit gefunden.', 'OK', 'Schließen');
   const tage = [...new Set(st.map(x => x.wd))].sort((a, b) => (a || 7) - (b || 7)), Z = r.zeiten;
   const faecher = [...new Set(st.map(x => x.fach))], kurzVon = {}; st.forEach(x => { if (x.kurz) kurzVon[x.fach] = x.kurz; });
-  const mitDatum = st.some(x => x.d), mo0 = mitDatum ? mondayOf(st.map(x => x.d).sort()[0]) : mondayOf(today());
+  const mitDatum = st.some(x => x.d), mo0 = mitDatum ? mondayOf(st.map(x => x.d).sort()[0]) : r.woche || mondayOf(today());
   const geraten = st.filter(x => x.geraten).length;
   const raster = `<div class="spi-wrap"><table class="spi"><tr><th></th>${tage.map(w => `<th>${WDK[w]}</th>`).join('')}</tr>${Z.map(z => `<tr><td class="num">${z.von}<small>${z.bis}</small></td>${tage.map(w => { const x = st.find(y => y.wd === w && y.von === z.von); return `<td>${x ? `<b>${esc(x.fach)}</b>${x.raum ? `<small>${esc(x.raum)}</small>` : ''}` : ''}</td>`; }).join('')}</tr>`).join('')}</table></div>`;
   const vorh = n => (S.school.faecher || []).find(f => lzN(f.name) === lzN(n));
   modal('🕘 Stundenplan erkannt', `<div class="sub" style="margin-bottom:8px">${st.length} Stunden an ${tage.length} Tagen, ${faecher.length} Fächer${r.titel ? ' · ' + esc(r.titel) : ''}. Bitte kurz prüfen. Was du bei den Fächern änderst, merke ich mir für das nächste Mal.</div>${geraten ? `<div class="sp-ferien">⚠️ Bei ${geraten} Stunden war eine Uhrzeit im Bild nicht lesbar. Ich habe sie aus den Nachbarstunden ergänzt.</div>` : ''}${raster}
     <h3 style="margin-top:12px">Fächer</h3><div class="spi-f">${faecher.map((f, i) => `<label class="f"><span>${kurzVon[f] ? esc(kurzVon[f]) + ' → ' : ''}${vorh(f) ? '✓ vorhanden' : 'neu'}</span><input class="in" name="f${i}" value="${esc(f)}"></label>`).join('')}</div>
     ${fChk('zeiten', 'Unterrichtszeiten aus dem Plan übernehmen (' + Z.length + ' Stunden, ' + Z[0].von + '–' + Z[Z.length - 1].bis + ')', !ausbZeiten().length || JSON.stringify(ausbZeiten().map(z => z.von)) !== JSON.stringify(Z.map(z => z.von)))}
-    ${mitDatum ? '<div class="sub">Die Termine haben feste Daten und kommen genau in ihre Wochen.</div>' : fIn('ab', 'Ab der Woche vom', mo0, 'date') + fChk('alle', 'Jede Woche bis zum Ende der Ausbildung so eintragen' + (S.settings.land && ausbMitFerien() ? ' (Ferien bleiben frei)' : ''), true)}`,
+    ${mitDatum ? '<div class="sub">Die Termine haben feste Daten und kommen genau in ihre Wochen.</div>' : (r.woche ? `<div class="sub">Der Plan gilt für die ${spIsoKw(r.woche)}. KW (ab ${fmtD(r.woche)}). Ich trage ihn nur dort ein, andere Wochen bleiben, wie sie sind.</div>` : '') + fIn('ab', r.woche ? 'Woche vom' : 'Ab der Woche vom', mo0, 'date') + fChk('alle', 'Jede Woche bis zum Ende der Ausbildung so eintragen' + (S.settings.land && ausbMitFerien() ? ' (Ferien bleiben frei)' : ''), !r.woche)}`,
     v => {
       const neuName = {}; faecher.forEach((f, i) => { const n = (v['f' + i] || '').trim() || f; neuName[f] = n; if (n !== f) { S.spKurz = S.spKurz || {}; S.spKurz[lowN(kurzVon[f] || f)] = n; } });
       if (!S.ausb) S.ausb = { an: true, art: 'schule', name: r.titel || 'Schule', ende: '', zeiten: [], zaehlt: false, modus: 'plan', festH: 0, ferien: true, tage: tage.slice() };
@@ -19673,14 +19751,14 @@ async function ocrRaster(buf, mime) {
   if (!window.Tesseract || !/^https?:/.test(location.protocol)) return null;
   if (ocrRaster.c && ocrRaster.b === buf) return ocrRaster.c;
   const c = await ocrVorbereiten(new Blob([buf], { type: mime || 'image/png' }), 2000, { canvas: true }); if (!c || !c.getContext) return null;
-  const W = c.width, H = c.height, x = c.getContext('2d'), d = x.getImageData(0, 0, W, H).data, dk = (px, py) => d[(py * W + px) * 4] < 200;
+  const W = c.width, H = c.height, x = c.getContext('2d'), d = x.getImageData(0, 0, W, H).data, dk0 = (px, py) => d[(py * W + px) * 4] < 200, L0 = c._linien, dk = L0 ? (px, py) => L0[py * W + px] === 1 || dk0(px, py) : dk0;
   /* Linie = langer zusammenhängender dunkler Lauf (Schrift hat Lücken zwischen Buchstaben und Wörtern); ±1 Pixel erlaubt leichte Restschräge */
   /* blasse Linien zerfallen beim Schwellenwert in Striche: Summe aller langen Striche zählt, kurze (Buchstaben) nicht */
   const rowC = new Uint32Array(H); for (let py = 0; py < H; py++) { let sum = 0, run = 0, gap = 0; for (let px = 0; px <= W; px++) { if (px < W && dk(px, py)) { run += 1 + gap; gap = 0; } else if (run && (px === W || ++gap > 1)) { if (run >= 60) sum += run; run = 0; gap = 0; } } rowC[py] = sum; }
   const linien = (arr, min) => { const o = []; let a = -1; for (let i = 0; i <= arr.length; i++) { const on = i < arr.length && arr[i] > min; if (on && a < 0) a = i; else if (!on && a >= 0) { if (i - a < 12) o.push({ a, b: i - 1, m: (a + i - 1) / 2 }); a = -1; } } return o; };
   /* Serifenschrift erzeugt an Grund- und Mittellinie auch lange Striche: eine echte Linie hat darüber und darunter freie Fläche */
   const frei = l => { let n = 0, voll = 0; const py = Math.round(l.m), o = Math.max(5, l.b - l.a + 4); if (py - o < 0 || py + o >= H) return true; for (let px = 0; px < W; px++) if (dk(px, py)) { n++; if (dk(px, py - o) || dk(px, py + o)) voll++; } return !n || voll / n < .3; };
-  const hl = linien(rowC, W * 0.3).filter(frei); if (hl.length < 3) return null;
+  let hl = linien(rowC, W * 0.3).filter(frei); if (hl.length < 3) return null;
   const top = hl[0].m, bot = hl[hl.length - 1].m, colC = new Uint32Array(W); for (let px = 0; px < W; px++) { let sum = 0, run = 0, gap = 0; for (let py = Math.round(top); py <= bot + 1; py++) { if (py <= bot && dk(px, py)) { run += 1 + gap; gap = 0; } else if (run && (py > bot || ++gap > 1)) { if (run >= 50) sum += run; run = 0; gap = 0; } } colC[px] = sum; }
   let vl = linien(colC, (bot - top) * 0.5); if (vl.length < 3) return null;
   /* blasse senkrechte Linie (z.B. zwischen Stundenspalte und Montag) schafft die Schwelle nicht: bei regelmäßigen Spalten an der erwarteten Stelle mit kleinerer Schwelle suchen */
@@ -19705,31 +19783,40 @@ async function ocrRaster(buf, mime) {
   /* Tabellenzeile: Spalten mit Abstand nebeneinanderlegen, damit Kürzel in schmalen Feldern nicht zusammenkleben */
   const iv = []; for (let j = -1; j < vl.length; j++) { const a = j < 0 ? 0 : vl[j].b + 3, e2 = j + 1 < vl.length ? vl[j + 1].a - 3 : W; if (e2 - a > 6) iv.push([a, e2]); }
   /* viele schmale Spalten (Monatsplan): jede Zelle als eigene Zeile untereinander legen, dann kann nichts zusammenkleben */
-  const liesZellen = async (y0, y1) => { const h = y1 - y0, sc2 = Math.max(1.5, Math.min(3, 60 / Math.max(10, h))), ch = Math.round(h * sc2), gv = Math.round(Math.max(20, ch * .6)), bw = Math.round(Math.max(...iv.map(([a, e2]) => e2 - a)) * sc2) + 80;
+  const liesZellen = async (y0, y1, sc0) => { const h = y1 - y0, sc2 = sc0 || Math.max(1.5, Math.min(3, 60 / Math.max(10, h))), ch = Math.round(h * sc2), gv = Math.round(Math.max(20, ch * .6)), bw = Math.round(Math.max(...iv.map(([a, e2]) => e2 - a)) * sc2) + 80;
     const cc = document.createElement('canvas'); cc.width = bw; cc.height = iv.length * (ch + gv) + gv; const xx = cc.getContext('2d'); xx.fillStyle = '#fff'; xx.fillRect(0, 0, cc.width, cc.height);
     iv.forEach(([a, e2], k) => xx.drawImage(c, a, y0, e2 - a, h, 40, gv + k * (ch + gv), (e2 - a) * sc2, ch));
     await w.setParameters({ tessedit_pageseg_mode: '6' }); const { data } = await w.recognize(cc, {}, { blocks: true });
     return (data.blocks || []).flatMap(bl => (bl.paragraphs || []).flatMap(p => (p.lines || []).flatMap(l => l.words || [])))
       .filter(q => q.text && q.text.trim() && (/[\p{L}\p{N}]/u.test(q.text) || /^[\/\-–*]$/.test(q.text.trim())) && q.confidence > 15).map(q => { const yc = (q.bbox.y0 + q.bbox.y1) / 2, k = Math.max(0, Math.min(iv.length - 1, Math.floor((yc - gv / 2) / (ch + gv)))), [a, e2] = iv[k]; return { s: q.text.trim(), x: Math.min(e2 - 4, Math.max(a, a + (q.bbox.x0 - 40) / sc2)), w: Math.min(e2 - a - 4, (q.bbox.x1 - q.bbox.x0) / sc2), y: y0 + (yc - gv - k * (ch + gv)) / sc2, h: (q.bbox.y1 - q.bbox.y0) / sc2 }; }); };
-  const liesSpalten = async (y0, y1) => { if (y1 - y0 < 8) return []; if (iv.length >= 12 && (W / iv.length) < (y1 - y0) * 2.5) return liesZellen(y0, y1); const sc2 = Math.max(1, Math.min(2.5, 48 / Math.max(10, (y1 - y0) / 3))), G = Math.round(Math.max(28, (y1 - y0) * sc2 * 0.9)); const breite = iv.reduce((s2, [a, e2]) => s2 + (e2 - a) * sc2 + G, G);
+  const liesSpalten = async (y0, y1) => { if (y1 - y0 < 8) return []; /* wenige breite Spalten, hohe Zeilen mit mehreren Textzeilen je Zelle (Fach, Lehrkraft, Raum): jede Zelle einzeln und größer lesen */ if (window._spZ || (iv.length >= 4 && iv.length < 12 && y1 - y0 > 70)) return liesZellen(y0, y1, window._spZ || 2); if (iv.length >= 12 && (W / iv.length) < (y1 - y0) * 2.5) return liesZellen(y0, y1); const sc2 = Math.max(1, Math.min(2.5, 48 / Math.max(10, (y1 - y0) / 3))), G = Math.round(Math.max(28, (y1 - y0) * sc2 * 0.9)); const breite = iv.reduce((s2, [a, e2]) => s2 + (e2 - a) * sc2 + G, G);
     const cc = document.createElement('canvas'); cc.width = Math.round(breite); cc.height = Math.round((y1 - y0) * sc2) + 16; const xx = cc.getContext('2d'); xx.fillStyle = '#fff'; xx.fillRect(0, 0, cc.width, cc.height); const map = []; let o = G;
     for (const [a, e2] of iv) { xx.drawImage(c, a, y0, e2 - a, y1 - y0, o, 8, (e2 - a) * sc2, (y1 - y0) * sc2); map.push([o, o + (e2 - a) * sc2, a]); o += (e2 - a) * sc2 + G; }
     await w.setParameters({ tessedit_pageseg_mode: '6' }); const { data } = await w.recognize(cc, {}, { blocks: true });
     return (data.blocks || []).flatMap(bl => (bl.paragraphs || []).flatMap(p => (p.lines || []).flatMap(l => l.words || [])))
       .filter(q => q.text && q.text.trim() && (/[\p{L}\p{N}]/u.test(q.text) || /^[\/\-–*]$/.test(q.text.trim())) && q.confidence > (q.text.trim().length <= 2 ? 35 : 20)).map(q => { const xm = (q.bbox.x0 + q.bbox.x1) / 2, m = map.find(([p0, p1]) => xm >= p0 - G / 2 && xm < p1 + G / 2) || map[0]; return { s: q.text.trim(), x: m[2] + (q.bbox.x0 - m[0]) / sc2, w: (q.bbox.x1 - q.bbox.x0) / sc2, y: y0 + ((q.bbox.y0 + q.bbox.y1) / 2 - 8) / sc2, h: (q.bbox.y1 - q.bbox.y0) / sc2 }; }); };
-  const gruppe = ws => { const hs = ws.map(q => q.h).sort((p, q) => p - q), hm = hs[Math.floor(hs.length / 2)] || 20, out = []; for (const q of ws.sort((p, q) => p.y - q.y)) { let z = out.find(l => Math.abs(l.yc - q.y) < hm * .6); if (!z) { z = { yc: q.y, it: [] }; out.push(z); } z.it.push(q); } return out; };
+  const gruppe = ws => { const hs = ws.map(q => q.h).sort((p, q) => p - q), hm = hs[Math.floor(hs.length / 2)] || 20, out = []; for (const q of ws.sort((p, q) => p.y - q.y)) { let z = out.find(l => l.band === q.band && Math.abs(l.yc - q.y) < hm * .6); if (!z) { z = { yc: q.y, band: q.band, it: [] }; out.push(z); } z.it.push(q); } return out; };
   try {
     const ws = [...await lies(0, hl[0].a, '6')];
     const lc = vl[0].m > W * .06 ? [Math.max(0, vl[0].m - (vl[vl.length - 1].m - vl[0].m) * .3), vl[0].a - 3] : vl.length >= 3 && vl[1].m - vl[0].m < (vl[vl.length - 1].m - vl[0].m) * .25 ? [vl[0].b + 3, vl[1].a - 3] : null;
+    const liesLc = async (y0, y1) => { if (y1 - y0 <= 8) return []; const sc3 = 2, cc = document.createElement('canvas'); cc.width = Math.round((lc[1] - lc[0]) * sc3) + 40; cc.height = Math.round((y1 - y0) * sc3) + 40; const xx = cc.getContext('2d'); xx.fillStyle = '#fff'; xx.fillRect(0, 0, cc.width, cc.height); xx.drawImage(c, lc[0], y0, lc[1] - lc[0], y1 - y0, 20, 20, (lc[1] - lc[0]) * sc3, (y1 - y0) * sc3);
+        await w.setParameters({ tessedit_pageseg_mode: '6' }); const { data } = await w.recognize(cc, {}, { blocks: true });
+        return (data.blocks || []).flatMap(bl => (bl.paragraphs || []).flatMap(p => (p.lines || []).flatMap(l => l.words || []))).filter(q => q.text && /[\p{L}\p{N}]/u.test(q.text) && q.confidence > 30).map(q => ({ s: q.text.trim(), x: lc[0] + (q.bbox.x0 - 20) / sc3, w: (q.bbox.x1 - q.bbox.x0) / sc3, y: y0 + ((q.bbox.y0 + q.bbox.y1) / 2 - 20) / sc3, h: (q.bbox.y1 - q.bbox.y0) / sc3 })); };
+    /* Zeilenlinien fehlen (blass im Foto): die Uhrzeiten in der ersten Spalte bilden das Raster. Beginn und Ende untereinander = eine Stunde */
+    if (lc) { const tz = (await liesLc(hl[0].b + 1, Math.min(H, bot + (bot - top) * .1))).map(q => { const m = q.s.match(/^[^\d]*(\d{1,2})[:.,](\d{2})/); return m && +m[1] < 24 && +m[2] < 60 ? { m: +m[1] * 60 + +m[2], y: q.y, h: q.h } : null; }).filter(Boolean).sort((a, b) => a.y - b.y);
+      const st = []; for (let i = 0; i < tz.length; i++) { const a = tz[i], b2 = tz[i + 1]; if (b2 && b2.m - a.m >= 20 && b2.m - a.m <= 150) { st.push({ a: a.y, e: b2.y, h: a.h }); i++; } else st.push({ a: a.y, e: a.y, h: a.h }); }
+      const proBand = hl.slice(0, -1).map((l, k) => st.filter(x => x.a > l.m && x.a < hl[k + 1].m).length);
+      if (st.length >= 4 && proBand.some(n => n >= 2)) { const kopf = hl.filter(l => l.m < st[0].a - st[0].h);
+        const grenz = []; for (let k = 0; k + 1 < st.length; k++) grenz.push((st[k].e + st[k + 1].a) / 2);
+        const D = st.length > 1 ? (st[st.length - 1].a - st[0].a) / (st.length - 1) : 100, ende = Math.min(H - 1, Math.max(st[st.length - 1].e + D * .35, ...hl.filter(l => l.m > st[st.length - 1].e && l.m < st[st.length - 1].e + D).map(l => l.m)));
+        if (!kopf.length || kopf[kopf.length - 1].m < st[0].a - D * .7) kopf.push({ m: st[0].a - Math.min(D * .35, (st[0].e - st[0].a) || D * .35) });
+        hl = kopf.concat(grenz.map(m => ({ m })), [{ m: ende }]).map(l => l.a != null ? l : { a: Math.round(l.m) - 1, b: Math.round(l.m) + 1, m: l.m }); } }
     for (let k = 0; k + 1 < hl.length; k++) { let r = await liesSpalten(hl[k].b + 1, hl[k + 1].a);
       /* erste schmale Spalte (Stunde, Uhrzeit) einzeln und größer lesen */
-      if (lc) { const y0 = hl[k].b + 1, y1 = hl[k + 1].a; if (y1 - y0 > 8) { const sc3 = 2, cc = document.createElement('canvas'); cc.width = Math.round((lc[1] - lc[0]) * sc3) + 40; cc.height = Math.round((y1 - y0) * sc3) + 40; const xx = cc.getContext('2d'); xx.fillStyle = '#fff'; xx.fillRect(0, 0, cc.width, cc.height); xx.drawImage(c, lc[0], y0, lc[1] - lc[0], y1 - y0, 20, 20, (lc[1] - lc[0]) * sc3, (y1 - y0) * sc3);
-        await w.setParameters({ tessedit_pageseg_mode: '6' }); const { data } = await w.recognize(cc, {}, { blocks: true });
-        const lw = (data.blocks || []).flatMap(bl => (bl.paragraphs || []).flatMap(p => (p.lines || []).flatMap(l => l.words || []))).filter(q => q.text && /[\p{L}\p{N}]/u.test(q.text) && q.confidence > 30).map(q => ({ s: q.text.trim(), x: lc[0] + (q.bbox.x0 - 20) / sc3, w: (q.bbox.x1 - q.bbox.x0) / sc3, y: y0 + ((q.bbox.y0 + q.bbox.y1) / 2 - 20) / sc3, h: (q.bbox.y1 - q.bbox.y0) / sc3 }));
-        if (lw.length) r = r.filter(q => q.x + q.w / 2 < lc[0] || q.x + q.w / 2 > lc[1]).concat(lw); } }
-      ws.push(...r); }
+      if (lc) { const lw = await liesLc(hl[k].b + 1, hl[k + 1].a); if (lw.length) r = r.filter(q => q.x + q.w / 2 < lc[0] || q.x + q.w / 2 > lc[1]).concat(lw); }
+      r.forEach(q => q.band = k); ws.push(...r); }
     ws.push(...await lies(hl[hl.length - 1].b + 1, H, '6'));
-    for (const z of gruppe(ws)) { z.it.sort((p, q) => p.x - q.x); zeilen.push({ y: -z.yc * f, p: 1, ocr: true, raster: true, it: z.it.map(q => ({ x: q.x * f, w: q.w * f, y: -q.y * f, s: q.s })), t: z.it.map(q => q.s).join(' ') }); }
+    for (const z of gruppe(ws)) { z.it.sort((p, q) => p.x - q.x); zeilen.push({ y: -z.yc * f, p: 1, ocr: true, raster: true, band: z.band, it: z.it.map(q => ({ x: q.x * f, w: q.w * f, y: -q.y * f, s: q.s })), t: z.it.map(q => q.s).join(' ') }); }
   } finally { try { await w.terminate(); } catch (e2) {} }
   zeilen.spalten = vl.map(l => l.m * f); const r = { zeilen, spalten: zeilen.spalten, reihen: hl.map(l => -l.m * f) }; ocrRaster.c = r; ocrRaster.b = buf; return r;
 }
