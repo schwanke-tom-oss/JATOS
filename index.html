@@ -3960,6 +3960,21 @@ table.spi td.spi-off i{display:block;font-style:normal;opacity:.55;font-size:9.5
 .pxblase.mitk{pointer-events:auto}
 .pxundo{display:block;margin:6px auto 0;font:inherit;font-size:11px;padding:4px 8px;background:#14142b;color:#f4f4f4;border:0;box-shadow:2px 2px 0 #4f8cff;cursor:pointer}
 
+/* Reiterzeile mit Knopf rechts (🎓 bei Arbeit, ⚙︎ bei Planung): Knopf neben statt über den Reitern (28.11.2026) */
+.seg-zr{display:flex;align-items:flex-start;gap:4px}
+.seg-zr>.seg{flex:1;min-width:0;margin-right:0;padding-right:10px;-webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent);mask-image:linear-gradient(90deg,#000 calc(100% - 22px),transparent)}
+.seg-zr>.ibtn{position:static;flex:none;margin-top:3px;margin-right:-4px;box-shadow:none}
+
+/* Stundenplan: Stift-Modus mit Fächer-Kürzeln unter dem Plan (28.11.2026) */
+.sp-stift.an{background:rgba(79,140,255,.22);border-color:rgba(79,140,255,.6);color:#fff}
+.sp-pal{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding:10px;border-radius:14px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07)}
+.sp-pk{min-width:44px;height:36px;padding:0 10px;border-radius:10px;font:600 13px/1 inherit;letter-spacing:.02em;color:#fff;cursor:pointer;
+  background:color-mix(in srgb,var(--f,#4f8cff) 24%,rgba(20,22,30,.9));border:1px solid color-mix(in srgb,var(--f,#4f8cff) 55%,transparent);transition:transform .12s,box-shadow .2s}
+.sp-pk.an{background:var(--f,#4f8cff);box-shadow:0 0 0 2px #fff inset,0 0 14px color-mix(in srgb,var(--f,#4f8cff) 60%,transparent)}
+.sp-pk:active{transform:scale(.94)}
+.sp-pk.frei{--f:#9aa3b5}
+.sp-pk.plus{--f:#9aa3b5;background:transparent;border-style:dashed;font-size:18px;font-weight:400}
+
 </style>
 </head>
 <body>
@@ -11125,9 +11140,10 @@ ARB.stundenplan = () => {
   ausbFix(); const mo = UI.spWoche || mondayOf(today()), Z = ausbZeiten(), w = S.school.wochen[mo] || {}, t = today(), WT = ausbTage(), sa = addD(mo, wdOffset(WT[WT.length - 1]));
   const tage = WT.map(x => addD(mo, wdOffset(x)));
   let h = `<div class="row sb wrap" style="margin-bottom:10px;gap:6px"><div class="row" style="gap:4px"><button class="ibtn" data-act="spWoche" data-v="-7" aria-label="Woche zurück">‹</button><b class="num" style="min-width:128px;text-align:center">KW ${kw(mo)} · ${fmtDs(mo).replace(/\.\d{4}$/, '')}–${fmtDs(sa).replace(/\.\d{4}$/, '')}</b><button class="ibtn" data-act="spWoche" data-v="7" aria-label="Woche vor">›</button></div>
-    <div class="row" style="gap:6px">${mo !== mondayOf(t) ? '<button class="btn sm sec" data-act="spWoche" data-v="0">Heute</button>' : ''}<button class="btn sm sec" data-act="einDatei" title="Foto, PDF, Text oder Kalender (.ics) vom Stundenplan">📷 Einlesen</button><button class="btn sm sec" data-act="spKopie">↺ Wie letzte Woche</button><button class="btn sm sec" data-act="fachEdit">Fächer</button></div></div>`;
+    <div class="row" style="gap:6px">${mo !== mondayOf(t) ? '<button class="btn sm sec" data-act="spWoche" data-v="0">Heute</button>' : ''}<button class="btn sm sec" data-act="einDatei" title="Foto, PDF, Text oder Kalender (.ics) vom Stundenplan">📷 Einlesen</button><button class="btn sm sec sp-stift ${UI.spStift ? 'an' : ''}" data-act="spStift" title="Stundenplan bearbeiten" aria-pressed="${UI.spStift ? 'true' : 'false'}">✏️${UI.spStift ? ' Fertig' : ''}</button></div></div>`;
   if (!Z.length) return h + `<div class="card" style="text-align:center;padding:18px"><div class="sub" style="margin-bottom:10px">Trag zuerst deine Unterrichtszeiten ein.</div><button class="btn sm" data-act="ausbEdit">Zeiten eintragen</button></div>`;
-  h += `<div class="sub" style="margin-bottom:6px">Tippe auf ein Feld, um ein Fach einzutragen. Tippe auf einen Tag, um ihn als Schultag (SCH) zu markieren.</div>`;
+  h += UI.spStift ? `<div class="sub" style="margin-bottom:6px">${UI.spPinsel ? (UI.spPinsel === 'x' ? 'Tippe auf die Felder, die frei werden sollen.' : `Tippe auf die Felder für <b>${esc((fachOf(UI.spPinsel) || {}).name || '')}</b>. Nochmal tippen macht das Feld frei.`) : 'Wähl unten ein Fach und tippe dann auf die Felder.'}</div>`
+    : `<div class="sub" style="margin-bottom:6px">Tippe auf ein Feld, um es zu bearbeiten, oder auf ✏️, um schnell mehrere Felder einzutragen.</div>`;
   { const fw = tage.map(d => ausbFerienAm(d)).find(Boolean);
     if (fw) h += `<div class="sp-ferien">🏖 <b>${esc(fw.n)}</b> in ${esc(LAENDER[S.settings.land])} (${fmtDs(fw.a)}${fw.b !== fw.a ? '–' + fmtDs(fw.b) : ''}). An Ferientagen ist keine Schule eingeplant.</div>`;
     else if (!S.settings.land && ausbMitFerien()) h += `<div class="sp-ferien">Wähle in den Einstellungen dein Bundesland, dann zeige ich dir hier die Schulferien.</div>`; }
@@ -11143,6 +11159,7 @@ ARB.stundenplan = () => {
       h += `<button type="button" class="sp-c ${x ? 'voll' : ''} ${dienst && !x ? 'dienst' : ''} ${fe ? 'fer' : ''}" data-act="spZelle" data-d="${d}" data-i="${i}" ${x ? `style="--f:${f ? f.color : SCH_FARBE}"` : ''}>${x ? `<b>${esc(f ? f.name : x.titel)}</b>${x.raum ? `<small>${esc(x.raum)}</small>` : ''}` : dienst ? '<small>Dienst</small>' : ''}</button>`; });
   });
   h += `</div></div>`;
+  if (UI.spStift) h += spPalette();
   /* Woche zusammengefasst */
   const std = tage.reduce((s, d) => s + (schulTag(d) ? schulStunden(d) : 0), 0), nT = tage.filter(schulTag).length;
   h += `<div class="grid3" style="margin-top:12px"><div class="stat"><div class="l">Schultage</div><div class="v">${nT}</div></div><div class="stat"><div class="l">Schulstunden</div><div class="v">${hm(std)}</div></div><div class="stat"><div class="l">Dienste</div><div class="v">${tage.filter(d => S.shifts[d]).length}</div></div></div>`;
@@ -11158,7 +11175,32 @@ ACT.spKopie = async () => {
   for (let k = 0; k < 7; k++) { const d0 = addD(mo, k - 7), d1 = addD(mo, k); if (schulTag(d0) && !schulTag(d1) && !S.shifts[d1] && !ausbFerienAm(d1)) S.sTag[d1] = {}; }
   save(); render(); toast(addD(mo, 0) && [0, 1, 2, 3, 4, 5, 6].some(k => ausbFerienAm(addD(mo, k))) ? 'Woche übernommen. Ferientage habe ich frei gelassen.' : 'Woche übernommen. Schultage wurden mit markiert.');
 };
+/* Stift-Modus (Toms Wunsch 28.11.2026): Kürzel deiner Fächer unter dem Plan, Fach wählen, dann Felder antippen */
+const fachKz = f => { if (!f) return ''; if (f.kurz) return f.kurz; const w = String(f.name || '').split(/[\s\/\-–]+/).filter(x => x.length > 2 && !/^(und|der|die|das|des|von|für)$/i.test(x));
+  return w.length >= 2 ? w.slice(0, 3).map(x => x[0].toUpperCase()).join('') : String(f.name || '').slice(0, 3); };
+/* Gleiche Kurzformen unterscheiden: „Einsatzrecht“ und „Einsatzlehre“ werden EiR und EiL */
+function fachKzAlle(F) {
+  const kz = {}, k0 = {}; F.forEach(f => kz[f.id] = k0[f.id] = fachKz(f));
+  F.forEach(f => { if (f.kurz) return; const gl = F.filter(g => g !== f && !g.kurz && k0[g.id].toLowerCase() === k0[f.id].toLowerCase()); if (!gl.length) return;
+    const n = f.name; let j = 0; while (j < n.length && gl.every(g => (g.name[j] || '') === n[j])) j++;
+    if (j < n.length) kz[f.id] = n.slice(0, 2) + n[j].toUpperCase(); });
+  return kz;
+}
+function spPalette() {
+  const F = S.school.faecher, p = UI.spPinsel, KZ = fachKzAlle(F);
+  return `<div class="sp-pal">${F.map(f => `<button type="button" class="sp-pk ${p === f.id ? 'an' : ''}" data-act="spPinsel" data-id="${f.id}" style="--f:${f.color}" title="${esc(f.name)}">${esc(KZ[f.id])}</button>`).join('')}<button type="button" class="sp-pk frei ${p === 'x' ? 'an' : ''}" data-act="spPinsel" data-id="x" title="Felder frei machen">⌫</button><button type="button" class="sp-pk plus" data-act="fachEdit" title="Fächer anlegen und bearbeiten" aria-label="Fächer anlegen und bearbeiten">+</button></div>
+    ${F.length ? '' : '<div class="sub" style="margin-top:6px">Noch keine Fächer. Tippe auf +, um sie anzulegen oder aus dem Archiv zu holen.</div>'}`;
+}
+ACT.spStift = () => { UI.spStift = !UI.spStift; if (!UI.spStift) UI.spPinsel = null; render(); };
+ACT.spPinsel = d => { UI.spPinsel = UI.spPinsel === d.id ? null : d.id; render(); };
 ACT.spZelle = d => {
+  if (UI.spStift && UI.spPinsel) {
+    ausbFix(); const mo = mondayOf(d.d), wd = pd(d.d).getDay(), i = +d.i, w = (S.school.wochen[mo] = S.school.wochen[mo] || {}), tag = (w[wd] = w[wd] || {}), x = tag[i];
+    if (UI.spPinsel === 'x' || (x && x.fach === UI.spPinsel)) { delete tag[i]; spTestSync(d.d, i, null); }
+    else { tag[i] = { fach: UI.spPinsel, titel: '', raum: x && x.raum || '' }; UI.spLetzt = UI.spPinsel; if (!schulTag(d.d) && !S.shifts[d.d] && !S.abs[d.d]) S.sTag[d.d] = {}; }
+    if (typeof undoGrund === 'function') undoGrund('Stundenplan ' + fmtDs(d.d));
+    save(); render(); return;
+  }
   ausbFix(); const mo = mondayOf(d.d), wd = pd(d.d).getDay(), i = +d.i, Z = ausbZeiten(), w = (S.school.wochen[mo] = S.school.wochen[mo] || {}), tag = (w[wd] = w[wd] || {}), x = tag[i] || {}, neu = !tag[i];
   const folge = []; for (let j = i + 1; j < Z.length && folge.length < 3; j++) if (!Z[j].p) folge.push(j);
   modal(`${['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][wd]} ${fmtDs(d.d)} · ${Z[i].von}–${Z[i].bis}`, `
@@ -18510,7 +18552,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 149;
+const APP_V = 150;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
