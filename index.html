@@ -4171,10 +4171,12 @@ function planTagH(d) { const s = S.shifts[d], t = s && stype(s.type); return t &
 function daStunden(d) { const a = S.abs[d]; if (!a || a.type !== 'Z') return 0; if (a.von && a.bis) { let x = tmin(a.bis) - tmin(a.von); if (x <= 0) x += 1440; return x / 60; } return a.hours != null && a.hours !== '' && !isNaN(+a.hours) ? +a.hours : planTagH(d); }
 function shiftSpan(date, s, actual = true) { // {a,b,pause} in Minuten ab 00:00 des Tages
   const t = stype(s.type); if (!t) return null;
-  const st = (actual && s.aStart) || t.start, en = (actual && s.aEnd) || t.end;
+  /* pStart/pEnd/pPause: geplante Zeiten nur für diesen Tag (z.B. vom Einlegeblatt), sonst die Zeiten der Schichtart */
+  const da = v => v !== undefined && v !== '' && v !== null, pst = s.pStart || t.start, pen = s.pEnd || t.end, ppa = da(s.pPause) ? +s.pPause : (+t.pause || 0);
+  const st = (actual && s.aStart) || pst, en = (actual && s.aEnd) || pen;
   if (!st || !en) return null;
   const a = tmin(st); let b = tmin(en); if (b <= a) b += 1440;
-  const pause = actual && s.aPause !== undefined && s.aPause !== '' && s.aPause !== null ? +s.aPause : (+t.pause || 0);
+  const pause = actual && da(s.aPause) ? +s.aPause : ppa;
   return { a, b, pause };
 }
 const spanH = sp => sp ? Math.max(0, (sp.b - sp.a - sp.pause) / 60) : 0;
@@ -10457,14 +10459,14 @@ function dayEdit(day) {
     <div class="sub" data-k="info"></div>`,
     v => {
       if (v.schTag !== undefined) { ausbFix(); if (v.schTag) { const hh = stdIn(v.schH); S.sTag[day] = hh != null && v.schH.trim() ? { h: hh } : {}; } else delete S.sTag[day]; }
-      if (v.type) S.shifts[day] = { type: v.type, extra: v.extra, aStart: v.aStart || '', aEnd: v.aEnd || '', aPause: v.aPause === '' ? undefined : +v.aPause, anr: v.anr.trim(), note: v.note, ma: !!v.ma || undefined }; else delete S.shifts[day];
+      if (v.type) { const alt = S.shifts[day], pl = alt && alt.type === v.type ? { pStart: alt.pStart, pEnd: alt.pEnd, pPause: alt.pPause } : {}; S.shifts[day] = Object.assign({ type: v.type, extra: v.extra, aStart: v.aStart || '', aEnd: v.aEnd || '', aPause: v.aPause === '' ? undefined : +v.aPause, anr: v.anr.trim(), note: v.note, ma: !!v.ma || undefined }, pl); } else delete S.shifts[day];
       if (v.abs) S.abs[day] = v.abs === 'Z' ? { type: 'Z', von: v.von || undefined, bis: v.bis || undefined, hours: v.von && v.bis ? undefined : stdIn(v.hours), ma: !!v.dama || undefined } : { type: v.abs }; else delete S.abs[day];
     }, { init: f => {
       const upd = () => { $('[data-k=zh]', f).style.display = f.abs.value === 'Z' ? '' : 'none';
         if (f.abs.value === 'Z') { const alt = S.abs[day], shAlt = S.shifts[day]; S.abs[day] = { type: 'Z', von: f.von.value, bis: f.bis.value, hours: stdIn(f.hours.value) }; if (f.type.value) S.shifts[day] = { type: f.type.value }; else delete S.shifts[day]; const h = daStunden(day); if (alt) S.abs[day] = alt; else delete S.abs[day]; if (shAlt) S.shifts[day] = shAlt; else delete S.shifts[day]; $('[data-k=dah]', f).innerHTML = `Zieht <b class="neg">${hm(h)} h</b> vom ${f.dama.checked ? 'Mehrarbeitskonto' : 'Überstundenkonto'} ab.`; }
-        const tmp = { type: f.type.value, extra: f.extra.checked, aStart: f.aStart.value, aEnd: f.aEnd.value, aPause: f.aPause.value === '' ? undefined : +f.aPause.value };
+        const alt0 = S.shifts[day], tmp = Object.assign({ type: f.type.value, extra: f.extra.checked, aStart: f.aStart.value, aEnd: f.aEnd.value, aPause: f.aPause.value === '' ? undefined : +f.aPause.value }, alt0 && alt0.type === f.type.value ? { pStart: alt0.pStart, pEnd: alt0.pEnd, pPause: alt0.pPause } : {});
         const ty = stype(tmp.type); if (!ty || !ty.start) { $('[data-k=info]', f).textContent = ''; return; }
-        const plan = tmp.extra ? 0 : spanH(shiftSpan(day, tmp, false)), ist = spanH(shiftSpan(day, tmp, true));
+        const plan = tmp.extra ? 0 : spanH(shiftSpan(day, tmp, false)), anrH = typeof bfZeit === 'function' && f.anr.value.trim() ? bfZeit(f.anr.value.trim().replace(',', ':')) : null, ist = anrH !== null ? anrH : spanH(shiftSpan(day, tmp, true));
         $('[data-k=info]', f).innerHTML = `Geplant ${hm(plan)} h · Ist ${hm(ist)} h · <b class="${ist - plan < 0 ? 'neg' : 'pos'}">Überstunden ${hm(ist - plan)} h</b>`; };
       f.addEventListener('input', upd); f.addEventListener('change', upd); upd(); } });
 }
@@ -11543,6 +11545,19 @@ function bfParse(T, ref) {
 }
 const bfSumme = tage => Object.values(tage).reduce((s, r) => s + (bfZeit(r.ges) || 0), 0);
 
+/* Kürzel vom Blatt → was in den Kalender kommt (Schichtart, Schule, Abwesenheit, frei). Gemerkt in S.bfMap */
+function bfKuerzelStandard(c) {
+  const alt = (S.bfMap || {})[c]; if (alt && (alt.art !== 'typ' || stype(alt.id))) return alt.art === 'sch' && !S.ausb ? { art: 'neu' } : Object.assign({}, alt);
+  if (c === 'DA' || c === 'Ü') return { art: 'abs', k: 'Z' };
+  if (c === 'T' && S.ausb) return { art: 'sch' };
+  if (c === 'T' && !S.shiftTypes.some(t => (t.code || '').toUpperCase() === 'T')) { const sch = S.shiftTypes.find(t => /^sch/i.test(t.code || '') || /schul/i.test(t.name || '')); if (sch) return { art: 'typ', id: sch.id }; }
+  const d = dpKuerzelStandard(c, {}); return d.art === 'neu' ? { art: 'neu' } : d;
+}
+function bfKuerzelOpt(c, m) {
+  const o = [...(S.ausb ? [['sch', '📚 Schule']] : []), ...S.shiftTypes.map(t => [`typ:${t.id}`, `${t.code} · ${t.name}`]), ['neu', `➕ Neue Schichtart „${c}“`], ['frei', '🌙 Frei, nichts eintragen'], ...Object.entries(ABS).map(([k, a]) => ['abs:' + k, '🏷️ ' + a.n])];
+  const w = m.art === 'typ' ? 'typ:' + m.id : m.art === 'abs' ? 'abs:' + m.k : m.art;
+  return o.map(([v, t]) => `<option value="${v}"${v === w ? ' selected' : ''}>${esc(t)}</option>`).join('');
+}
 /* Prüf-Fenster: jede Zeile lässt sich korrigieren, erst "Verbindlich übernehmen" speichert */
 function bfPruefen(r, docId) {
   if (!r.m) r.m = UI.dbM || UI.month;
@@ -11550,14 +11565,15 @@ function bfPruefen(r, docId) {
   const alle = Array.from({ length: n }, (_, i) => `${r.m}-${pad(i + 1)}`), leer = { art: '', von: '', pause: '', bis: '', ges: '', bem: '' };
   const zeile = d => { const x = r.tage[d] || leer, wd = WD[pd(d).getDay()], we = /Sa|So/.test(wd) ? ' bf-we' : '';
     return `<tr class="${x.ges || x.art ? '' : 'bf-leer'}${we}"><td><b>${+d.slice(8)}</b><small>${wd}</small></td>${['art', 'von', 'pause', 'bis', 'ges'].map(k => `<td><input class="in bf-in" name="${k}_${d}" value="${esc(x[k] || '')}" ${k === 'art' ? 'maxlength="4" autocapitalize="characters"' : 'inputmode="decimal" placeholder="--:--"'}></td>`).join('')}</tr>`; };
-  const erkannt = Object.keys(r.tage).length;
+  const erkannt = Object.keys(r.tage).length, kz = [...new Set(Object.values(r.tage).map(x => x.art).filter(c => c && c !== 'DF'))].sort();
   const m = modal(`Stundenbericht ${MON[mo - 1]} ${y}`, `
     <div class="sub" style="margin-bottom:8px">${erkannt ? `Ich habe ${erkannt} ${erkannt === 1 ? 'Tag' : 'Tage'} gelesen.` : 'Ich konnte keine Zeilen sicher lesen. Du kannst sie hier eintragen.'} Prüf bitte jede Zeile mit dem Foto${docId ? ` (<a href="#" data-act="bfAnsehen" data-id="${docId}">Foto ansehen</a>)` : ''}. Danach gilt dieser Monat als verbindlich: Überstunden und Einlegeblatt nehmen genau diese Werte.</div>
     <div class="grid2">${fSel('monat', 'Monat', MON.map((x, i) => [i + 1, x]), mo)}${fIn('jahr', 'Jahr', y, 'number')}</div>
     <div class="bf-tw"><table class="bf-t"><thead><tr><th>Tag</th><th>Art</th><th>von</th><th>Pause</th><th>bis</th><th>gesamt</th></tr></thead><tbody>${alle.map(zeile).join('')}</tbody></table></div>
     <div class="grid2" style="margin-top:10px">${fIn('ind', 'monatl. ind. Stundensoll', r.ind != null ? hmP(r.ind) : hmP(sollMonat(r.m)), 'text', 'inputmode="decimal"')}<label class="f"><span>Summe laut Blatt</span><input class="in" name="summeBlatt" value="${r.summe != null ? hmP(r.summe) : ''}" inputmode="decimal" placeholder="--:--"></label></div>
     <div class="bf-check" id="bfCheck"></div>
-    ${fChk('plan', 'Dienstplan dieses Monats an das Blatt anpassen', true)}`,
+    ${fChk('plan', 'Dienstplan dieses Monats an das Blatt anpassen', true)}
+    ${kz.length ? `<div class="sub" style="margin:8px 0 4px">So kommen die Kürzel in den Kalender (ich merke es mir):</div><div class="grid2">${kz.map(c => `<label class="f"><span>${esc(c)}${DP_NAMEN[c] ? ' · ' + esc(DP_NAMEN[c]) : ''}</span><select class="in" name="map_${esc(c)}">${bfKuerzelOpt(c, bfKuerzelStandard(c))}</select></label>`).join('')}</div>` : ''}`,
     v => {
       const mm = `${+v.jahr}-${pad(+v.monat)}`; if (!/^\d{4}-\d\d$/.test(mm)) { toast('Bitte Monat und Jahr prüfen.'); return false; }
       const tage = {}; for (const d of alle) { const x = {}; for (const k of ['art', 'von', 'pause', 'bis', 'ges']) x[k] = String(v[k + '_' + d] || '').trim().toUpperCase().replace(/(\d)[.,](\d\d)$/, '$1:$2'); if (x.art || x.ges) tage[mm + d.slice(7)] = Object.assign(x, { bem: (r.tage[d] || {}).bem || '' }); }
@@ -11565,6 +11581,8 @@ function bfPruefen(r, docId) {
       if (!S.dbFest) S.dbFest = {};
       S.dbFest[mm] = { tage, ind, summe: bfSumme(tage), summeBlatt: bfZeit(v.summeBlatt), doc: docId || (bfFest(mm) || {}).doc || '', am: today() };
       if (!S.indSoll) S.indSoll = {}; S.indSoll[mm] = ind;
+      if (!S.bfMap) S.bfMap = {};
+      for (const c of kz) { const w = String(v['map_' + c] || ''); S.bfMap[c] = w.startsWith('typ:') ? { art: 'typ', id: w.slice(4) } : w.startsWith('abs:') ? { art: 'abs', k: w.slice(4) } : { art: w || 'frei' }; }
       if (v.plan) bfPlanAnpassen(mm);
       UI.dbM = mm; setTimeout(() => toast(`🔒 ${MON[+mm.slice(5) - 1]} ${mm.slice(0, 4)} ist jetzt verbindlich (${hmS(bfSumme(tage) - ind)} h).`), 50);
     }, { still: true, saveLabel: '🔒 Verbindlich übernehmen' });
@@ -11581,14 +11599,43 @@ function bfPruefen(r, docId) {
 }
 /* Dienstplan an das Blatt anpassen: Uhrzeiten und gesamt als "tatsächlich", Kürzel nur, wenn es die Schichtart gibt */
 function bfPlanAnpassen(mm) {
-  const f = bfFest(mm); if (!f) return; const absK = Object.fromEntries(Object.entries(DB_ABS).map(([k, v]) => [v, k]));
+  const f = bfFest(mm); if (!f) return;
   for (const [d, x] of Object.entries(f.tage)) {
-    if (absK[x.art] && ABS[absK[x.art]]) { if (!S.abs[d]) S.abs[d] = { type: absK[x.art] }; continue; }
-    const ty = (S.shiftTypes || []).find(t => t.code && t.code.toUpperCase() === x.art);
-    let s = S.shifts[d]; if (!s && !ty) continue; if (!s) s = S.shifts[d] = { type: ty.id }; else if (ty && s.type !== ty.id && !stype(s.type)) s.type = ty.id;
-    if (x.von) s.aStart = x.von; if (x.bis) s.aEnd = x.bis; if (x.pause) { const p = bfZeit(x.pause); if (p !== null) s.aPause = Math.round(p * 60); }
-    if (x.ges) s.anr = x.ges;
+    if (!x.art || x.art === 'DF') continue;
+    let m = (S.bfMap || {})[x.art] || bfKuerzelStandard(x.art);
+    if (m.art === 'frei') continue;
+    if (m.art === 'abs') { if (ABS[m.k] && !S.abs[d]) S.abs[d] = { type: m.k }; continue; }
+    if (m.art === 'sch') { if (typeof ausbFix === 'function') ausbFix(); if (S.sTag && !S.sTag[d]) S.sTag[d] = {}; const s0 = S.shifts[d]; if (s0 && stype(s0.type) && (stype(s0.type).code || '').toUpperCase() === x.art) delete S.shifts[d]; continue; }
+    if (m.art === 'neu') { const ty0 = S.shiftTypes.find(t => (t.code || '').toUpperCase() === x.art);
+      const t = ty0 || { id: uid(), code: x.art.slice(0, 3), name: DP_NAMEN[x.art] || x.art, start: x.von || '', end: x.bis || '', pause: bfZeit(x.pause) ? Math.round(bfZeit(x.pause) * 60) : 0, color: DP_FARBEN[S.shiftTypes.length % DP_FARBEN.length] };
+      if (!ty0) S.shiftTypes.push(t); if (!S.bfMap) S.bfMap = {}; m = S.bfMap[x.art] = { art: 'typ', id: t.id }; }
+    let ty = stype(m.id); if (!ty) continue;
+    /* Gibt es eine Schichtart mit genau diesen Zeiten (z.B. Schule freitags kürzer)? Dann die nehmen */
+    if (x.von && x.bis) { const genau = S.shiftTypes.find(t => t.start === x.von && t.end === x.bis && (t.code || '')[0].toUpperCase() === (ty.code || '')[0].toUpperCase()); if (genau) ty = genau; }
+    S.shifts[d] = bfSchicht(ty.id, x, S.shifts[d]);
   }
+}
+/* Schicht aus einer Blatt-Zeile: die Zeiten vom Blatt gelten als geplant, damit ein normaler Dienst kein Plus oder Minus zeigt.
+   Nur wenn "gesamt" davon abweicht (z.B. Sport angerechnet), steht der Unterschied als Abgerechnet drin */
+function bfSchicht(typeId, x, alt) {
+  const s = { type: typeId }; if (alt && alt.note) s.note = alt.note; if (alt && alt.ma) s.ma = alt.ma; if (x.bem && !s.note) s.note = x.bem;
+  if (x.von && x.bis) { s.pStart = x.von; s.pEnd = x.bis; const p = bfZeit(x.pause); s.pPause = p ? Math.round(p * 60) : 0; }
+  const g = bfZeit(x.ges); if (g !== null) { const sp = shiftSpan('2000-01-03', s, false), h = sp ? spanH(sp) : null; if (h === null || Math.abs(h - g) > .01) s.anr = x.ges; }
+  return s;
+}
+/* Reparatur (V143): ältere Versionen haben bei Zeilen ohne Pause die Zeit davor als Beginn genommen ("18:00–18:00, Pause 350") */
+function bfReparatur() {
+  if (!S.dbFest || (S.settings && S.settings.bfRep >= 1)) return;
+  for (const f of Object.values(S.dbFest)) for (const [d, x] of Object.entries(f.tage || {})) {
+    const a = bfZeit(x.von), p = bfZeit(x.pause), b = bfZeit(x.bis), g = bfZeit(x.ges); if (a === null || p === null || b === null || g === null) continue;
+    let h1 = b - a; if (h1 <= 0) h1 += 24; let h2 = b - p; if (h2 <= 0) h2 += 24;
+    if (Math.abs(h1 - p - g) > .01 && Math.abs(h2 - g) < .01) { x.von = x.pause; x.pause = '';
+      const s = S.shifts[d]; if (s && s.aStart && s.aPause !== undefined && Math.abs(s.aPause - p * 60) < 1) S.shifts[d] = bfSchicht(s.type, x, s); }
+  }
+  /* Vom Blatt übernommene Dienste: Blatt-Zeiten als geplant, damit kein Minus durch abweichende Schichtart-Zeiten entsteht */
+  for (const f of Object.values(S.dbFest)) for (const [d, x] of Object.entries(f.tage || {})) { const s = S.shifts[d];
+    if (s && x.von && x.bis && (s.aStart === x.von || s.aStart === x.pause || (!s.aStart && s.anr === x.ges)) && (s.aEnd === x.bis || !s.aEnd)) S.shifts[d] = bfSchicht(s.type, x, s); }
+  S.settings.bfRep = 1;
 }
 /* Überstunden eines Tages in einem verbindlichen Monat: gesamt laut Blatt minus Soll (Monats-Soll gleichmäßig auf die Werktage) */
 function bfOtTag(d) {
@@ -17008,7 +17055,7 @@ const DP_MON = [/^jan/i, /^feb/i, /^m(ä|ae|a)r/i, /^apr/i, /^mai|^may/i, /^jun/
 const dpMonat = s => { s = String(s || '').trim(); if (!/^[A-Za-zÄÖÜäöü]{3,9}\.?$/.test(s)) return -1; return DP_MON.findIndex(r => r.test(s)); };
 const DP_WT = /^(mo|di|mi|do|fr|sa|so|mon|tue|wed|thu|fri|sat|sun)\.?$/i;
 const DP_ZEIT = /(\d{1,2})[:.](\d{2})\s*(?:uhr)?\s*[-–bis]+\s*(\d{1,2})[:.](\d{2})/i;
-const DP_NAMEN = { F: 'Frühdienst', S: 'Spätdienst', N: 'Nachtdienst', T: 'Tagdienst', LF: 'Langer Frühdienst', LN: 'Langer Nachtdienst', LS: 'Langer Spätdienst', LT: 'Langer Tagdienst', DU: 'Dienstunterricht', FL: 'Frühdienst lang', NL: 'Nachtdienst lang', SP: 'Spätdienst', TD: 'Tagdienst', ND: 'Nachtdienst', FD: 'Frühdienst', SD: 'Spätdienst', 'Ü': 'Überstundenausgleich', B: 'Bereitschaft', R: 'Rufbereitschaft' };
+const DP_NAMEN = { F: 'Frühdienst', S: 'Spätdienst', N: 'Nachtdienst', T: 'Tagdienst', LF: 'Langer Frühdienst', LN: 'Langer Nachtdienst', LS: 'Langer Spätdienst', LT: 'Langer Tagdienst', DU: 'Dienstunterricht', FL: 'Frühdienst lang', NL: 'Nachtdienst lang', SP: 'Spätdienst', TD: 'Tagdienst', ND: 'Nachtdienst', FD: 'Frühdienst', SD: 'Spätdienst', 'Ü': 'Überstundenausgleich', B: 'Bereitschaft', R: 'Rufbereitschaft', E: 'Einsatz' };
 const DP_FARBEN = ['#4f8cff', '#ffd166', '#b07cff', '#ff8a4c', '#38c7d6', '#ff6b9a', '#2ecc8f', '#e0a6ff', '#9ad35a', '#f08a5d'];
 const DP_FREI = /^(df|x|\*|-|–|frei|f\/|ft|ruhe|rt|aus|o)$/i, DP_URLAUB = /^(u|eu|url|urlaub)$/i, DP_KRANK = /^(k|kr|krank)$/i;
 
@@ -18329,7 +18376,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 142;
+const APP_V = 143;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -21200,6 +21247,7 @@ function pixelScene() {
 })();
 load();
 try { hilfsKontenMig(); recReparatur(); recReparatur2(); } catch (e) {}
+try { bfReparatur(); } catch (e) {}
 autoBook();
 render();
 hlLaden();
