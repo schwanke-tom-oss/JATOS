@@ -4255,7 +4255,9 @@ function otTag(d) {
 }
 /* Ab wann gerechnet wird: Tag nach dem übernommenen Stand, sonst ab dem ersten eingetragenen Tag. Gerechnet wird höchstens bis heute */
 function otStart() {
-  const st = S.settings.otStand; if (st && st.d) return addD(st.d, 1);
+  const st = S.settings.otStand; if (st && st.d) return addD(st.d, 1); return otStartRoh();
+}
+function otStartRoh() {
   let m = ''; for (const k in S.dbFest || {}) if (/^\d{4}-\d\d$/.test(k) && (!m || k + '-01' < m)) m = k + '-01';
   for (const d in S.shifts) if (!m || d < m) m = d; for (const d in S.abs) if (!m || d < m) m = d; for (const d in S.sTag || {}) if (!m || d < m) m = d; return m;
 }
@@ -4265,9 +4267,10 @@ function overtimeTotal(bis, von) {
     for (const d in S.shifts) if (!S.shifts[d].ma && d > ab && (!bis || d <= bis) && (!von || d > von)) o += dayWork(d).over;
     for (const d in S.abs) if (!S.abs[d].ma && d > ab && (!bis || d <= bis) && (!von || d > von)) o -= daStunden(d);
     return o; }
-  let a = otStart(); if (!a) return o; if (von && von.slice(0, 7) + '-01' > a) a = von.slice(0, 7) + '-01';
-  /* Ein verbindlicher Monat (Einlegeblatt) zählt sofort ganz, auch wenn er noch nicht vorbei ist */
-  let t = today(); if (bfFest(t.slice(0, 7))) { const [y, mo] = t.slice(0, 7).split('-').map(Number); t = `${t.slice(0, 7)}-${pad(dim(y, mo))}`; }
+  /* Monatsansicht (von gesetzt): der ganze Monat zählt, auch Tage vor einem übernommenen Stand. Fürs Konto zählt erst der Tag nach dem Stand */
+  let a = von ? otStartRoh() : otStart(); if (!a) return o; if (von && von.slice(0, 7) + '-01' > a) a = von.slice(0, 7) + '-01';
+  /* Monatsansicht: ein verbindlicher Monat (Einlegeblatt) zählt sofort ganz. Das Konto zählt nur bis heute, damit es zum Zeitportal passt */
+  let t = today(); if (von && bfFest(t.slice(0, 7))) { const [y, mo] = t.slice(0, 7).split('-').map(Number); t = `${t.slice(0, 7)}-${pad(dim(y, mo))}`; }
   const e = bis && bis < t ? bis : t;
   for (let d = a; d <= e; d = addD(d, 1)) if (!von || d > von) o += otTag(d);
   return o;
@@ -11625,7 +11628,7 @@ function bfSchicht(typeId, x, alt) {
 }
 /* Reparatur (V143): ältere Versionen haben bei Zeilen ohne Pause die Zeit davor als Beginn genommen ("18:00–18:00, Pause 350") */
 function bfReparatur() {
-  if (!S.dbFest || (S.settings && S.settings.bfRep >= 1)) return;
+  if (!S.dbFest || (S.settings && S.settings.bfRep >= 1)) return bfReparatur2();
   for (const f of Object.values(S.dbFest)) for (const [d, x] of Object.entries(f.tage || {})) {
     const a = bfZeit(x.von), p = bfZeit(x.pause), b = bfZeit(x.bis), g = bfZeit(x.ges); if (a === null || p === null || b === null || g === null) continue;
     let h1 = b - a; if (h1 <= 0) h1 += 24; let h2 = b - p; if (h2 <= 0) h2 += 24;
@@ -11635,7 +11638,16 @@ function bfReparatur() {
   /* Vom Blatt übernommene Dienste: Blatt-Zeiten als geplant, damit kein Minus durch abweichende Schichtart-Zeiten entsteht */
   for (const f of Object.values(S.dbFest)) for (const [d, x] of Object.entries(f.tage || {})) { const s = S.shifts[d];
     if (s && x.von && x.bis && (s.aStart === x.von || s.aStart === x.pause || (!s.aStart && s.anr === x.ges)) && (s.aEnd === x.bis || !s.aEnd)) S.shifts[d] = bfSchicht(s.type, x, s); }
+  S.settings.bfRep = 1; bfReparatur2(); return;
   S.settings.bfRep = 1;
+}
+/* Reparatur 2 (V144): Monate, die schon verbindlich sind, aber deren Tage nie in den Kalender kamen (Kürzel ohne passende Schichtart), einmal nachtragen */
+function bfReparatur2() {
+  if (!S.dbFest || (S.settings && S.settings.bfRep >= 2)) return;
+  for (const m of Object.keys(S.dbFest)) { const f = S.dbFest[m]; if (!f || !f.tage) continue;
+    const leer = Object.entries(f.tage).filter(([d, x]) => x.art && x.art !== 'DF' && !S.shifts[d] && !S.abs[d] && !(S.sTag && S.sTag[d])).length;
+    if (leer) bfPlanAnpassen(m); }
+  S.settings.bfRep = 2;
 }
 /* Überstunden eines Tages in einem verbindlichen Monat: gesamt laut Blatt minus Soll (Monats-Soll gleichmäßig auf die Werktage) */
 function bfOtTag(d) {
@@ -18376,7 +18388,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 143;
+const APP_V = 144;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
