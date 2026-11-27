@@ -11028,6 +11028,9 @@ ACT.ausbEdit = () => {
     <div class="sub" style="margin:-4px 0 6px">Pausen bitte als eigene Zeile mit Haken „Pause“ eintragen, sie zählen nicht als Schulzeit.</div>
     <div id="azListe">${ausbZeiten().length || !neu ? ausbZeiten().map(zeile).join('') : a.zeiten.map(zeile).join('')}</div>
     <div class="row" style="gap:6px;margin:6px 0 12px"><button type="button" class="btn sm sec" data-az-neu="0">+ Stunde</button><button type="button" class="btn sm sec" data-az-neu="1">+ Pause</button><button type="button" class="btn sm sec" data-az-std>Vorschlag für die Art</button></div>
+    <h3>Stundenplan</h3>
+    ${fChk('gleich', 'Mein Stundenplan ist jede Woche gleich', a.gleich !== undefined ? !!a.gleich : a.art !== 'polizei')}
+    <div class="sub" style="margin:-4px 0 10px">An: ein eingelesener Plan gilt für alle Wochen. Aus: jeder Plan gilt nur für seine Woche (z.B. Polizeischule mit Wochenplan), andere Wochen bleiben, wie sie sind.</div>
     <h3>Schultage</h3>
     <div class="az-tage">${[1, 2, 3, 4, 5, 6, 0].map(w => `<label class="az-t"><input type="checkbox" name="wt${w}" ${(a.tage || [1, 2, 3, 4, 5, 6]).includes(w) ? 'checked' : ''}><span>${WDK[w]}</span></label>`).join('')}</div>
     <div class="sub" style="margin:4px 0 10px">Nur diese Tage zeigt der Stundenplan, z.B. nur Di und Do.</div>
@@ -11045,7 +11048,7 @@ ACT.ausbEdit = () => {
     v => {
       const zeiten = []; for (const k in v) { const mm = /^zv(\d+)$/.exec(k); if (!mm) continue; const i = mm[1]; if (v['zv' + i] && v['zb' + i]) zeiten.push({ von: v['zv' + i], bis: v['zb' + i], p: !!v['zp' + i] }); }
       zeiten.sort((x, y) => x.von < y.von ? -1 : 1);
-      const alt = ausbZeiten(), o = Object.assign(S.ausb || {}, { an: true, art: v.art, name: v.name.trim(), ende: v.ende || '', zeiten, modus: v.modus, festH: numIn(v.festH) || 0, zaehlt: !!v.zaehlt, ferien: !!v.ferien, tage: [1, 2, 3, 4, 5, 6, 0].filter(w => v['wt' + w]) });
+      const alt = ausbZeiten(), o = Object.assign(S.ausb || {}, { an: true, art: v.art, name: v.name.trim(), ende: v.ende || '', zeiten, modus: v.modus, festH: numIn(v.festH) || 0, zaehlt: !!v.zaehlt, ferien: !!v.ferien, gleich: !!v.gleich, tage: [1, 2, 3, 4, 5, 6, 0].filter(w => v['wt' + w]) });
       if (!o.tage.length) o.tage = [1, 2, 3, 4, 5];
       /* Stunden im Stundenplan hängen an der Zeile: bei geänderten Zeiten nach Uhrzeit neu zuordnen */
       if (alt.length && JSON.stringify(alt) !== JSON.stringify(zeiten)) for (const mo in S.school.wochen) for (const wd in S.school.wochen[mo]) { const t = S.school.wochen[mo][wd], n = {};
@@ -18433,7 +18436,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 146;
+const APP_V = 147;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -19432,7 +19435,7 @@ async function spLesen(text, name, buf, mime) {
       for (const x of g) x.fach = fein; } }
   const zeiten = [...new Map(st.map(x => [x.von, { von: x.von, bis: x.bis }])).values()].sort((a, b) => a.von < b.von ? -1 : 1);
   const titel = (T.split('\n').map(l => l.trim()).find(l => /stundenplan|wochenplan|klasse|kurs|semester|vorlesung/i.test(l) && l.length < 60) || '').slice(0, 60);
-  return { stunden: st, zeiten, titel, woche: spWoche(T) };
+  return { stunden: st, zeiten, titel, woche: spWoche(T), text: T.slice(0, 4000) };
 }
 
 /* Plan nur für eine bestimmte Woche („45. KW vom 02.11. bis 08.11.2026“, „KW 45/2026“, „Woche vom 02.11.2026“): Montag dieser Woche, sonst '' (Plan gilt jede Woche).
@@ -19690,6 +19693,8 @@ function spImportFenster(r, fname) {
   ausbFix(); const st = r.stunden; if (!st.length) return ask('Ich habe in dem Dokument keine Stunden mit Wochentag und Uhrzeit gefunden.', 'OK', 'Schließen');
   const tage = [...new Set(st.map(x => x.wd))].sort((a, b) => (a || 7) - (b || 7)), Z = r.zeiten;
   const faecher = [...new Set(st.map(x => x.fach))], kurzVon = {}; st.forEach(x => { if (x.kurz) kurzVon[x.fach] = x.kurz; });
+  const T0 = String(r.text || '') + ' ' + (r.titel || ''), artR = /polizei|bpol|polizeiakademie|polizeischule/i.test(T0) ? 'polizei' : /universit|hochschule|vorlesung|semester|seminar/i.test(T0) ? 'uni' : /berufsschule|berufskolleg|bbs\b/i.test(T0) ? 'berufsschule' : /pflege|krankenhaus|klinik/i.test(T0) ? 'pflege' : /notfallsanit|rettungsdienst/i.test(T0) ? 'notsan' : 'schule';
+  const neuA = !S.ausb, gleich0 = S.ausb && S.ausb.gleich !== undefined ? !!S.ausb.gleich : !r.woche;
   const mitDatum = st.some(x => x.d), mo0 = mitDatum ? mondayOf(st.map(x => x.d).sort()[0]) : r.woche || mondayOf(today());
   const geraten = st.filter(x => x.geraten).length;
   const raster = `<div class="spi-wrap"><table class="spi"><tr><th></th>${tage.map(w => `<th>${WDK[w]}</th>`).join('')}</tr>${Z.map(z => `<tr><td class="num">${z.von}<small>${z.bis}</small></td>${tage.map(w => { const x = st.find(y => y.wd === w && y.von === z.von); return `<td>${x ? `<b>${esc(x.fach)}</b>${x.raum ? `<small>${esc(x.raum)}</small>` : ''}` : ''}</td>`; }).join('')}</tr>`).join('')}</table></div>`;
@@ -19697,10 +19702,12 @@ function spImportFenster(r, fname) {
   modal('🕘 Stundenplan erkannt', `<div class="sub" style="margin-bottom:8px">${st.length} Stunden an ${tage.length} Tagen, ${faecher.length} Fächer${r.titel ? ' · ' + esc(r.titel) : ''}. Bitte kurz prüfen. Was du bei den Fächern änderst, merke ich mir für das nächste Mal.</div>${geraten ? `<div class="sp-ferien">⚠️ Bei ${geraten} Stunden war eine Uhrzeit im Bild nicht lesbar. Ich habe sie aus den Nachbarstunden ergänzt.</div>` : ''}${raster}
     <h3 style="margin-top:12px">Fächer</h3><div class="spi-f">${faecher.map((f, i) => `<label class="f"><span>${kurzVon[f] ? esc(kurzVon[f]) + ' → ' : ''}${vorh(f) ? '✓ vorhanden' : 'neu'}</span><input class="in" name="f${i}" value="${esc(f)}"></label>`).join('')}</div>
     ${fChk('zeiten', 'Unterrichtszeiten aus dem Plan übernehmen (' + Z.length + ' Stunden, ' + Z[0].von + '–' + Z[Z.length - 1].bis + ')', !ausbZeiten().length || JSON.stringify(ausbZeiten().map(z => z.von)) !== JSON.stringify(Z.map(z => z.von)))}
-    ${mitDatum ? '<div class="sub">Die Termine haben feste Daten und kommen genau in ihre Wochen.</div>' : (r.woche ? `<div class="sub">Der Plan gilt für die ${spIsoKw(r.woche)}. KW (ab ${fmtD(r.woche)}). Ich trage ihn nur dort ein, andere Wochen bleiben, wie sie sind.</div>` : '') + fIn('ab', r.woche ? 'Woche vom' : 'Ab der Woche vom', mo0, 'date') + fChk('alle', 'Jede Woche bis zum Ende der Ausbildung so eintragen' + (S.settings.land && ausbMitFerien() ? ' (Ferien bleiben frei)' : ''), !r.woche)}`,
+    ${mitDatum ? '<div class="sub">Die Termine haben feste Daten und kommen genau in ihre Wochen.</div>' : (r.woche ? `<div class="sub">Der Plan gilt für die ${spIsoKw(r.woche)}. KW (ab ${fmtD(r.woche)}). Ich trage ihn nur dort ein, andere Wochen bleiben, wie sie sind.</div>` : '') + fIn('ab', r.woche ? 'Woche vom' : 'Ab der Woche vom', mo0, 'date') + fChk('alle', 'Jede Woche bis zum Ende der Ausbildung so eintragen' + (S.settings.land && ausbMitFerien() ? ' (Ferien bleiben frei)' : ''), gleich0)}
+    ${neuA ? `<h3 style="margin-top:12px">Deine Schule / Ausbildung</h3><div class="sub" style="margin:-4px 0 6px">Du hast noch keine angelegt. Ich lege sie damit an, ändern kannst du alles später unter Arbeit.</div>${fSel('aArt', 'Art', Object.entries(AUSB_ART).map(([k, x]) => [k, x[1] + ' ' + x[0]]), artR)}${fIn('aName', 'Name (optional)', '', 'text', 'placeholder="z.B. Polizeiakademie"')}` : ''}`,
     v => {
       const neuName = {}; faecher.forEach((f, i) => { const n = (v['f' + i] || '').trim() || f; neuName[f] = n; if (n !== f) { S.spKurz = S.spKurz || {}; S.spKurz[lowN(kurzVon[f] || f)] = n; } });
-      if (!S.ausb) S.ausb = { an: true, art: 'schule', name: r.titel || 'Schule', ende: '', zeiten: [], zaehlt: false, modus: 'plan', festH: 0, ferien: true, tage: tage.slice() };
+      if (!S.ausb) { const ar = AUSB_ART[v.aArt] ? v.aArt : artR; S.ausb = { an: true, art: ar, name: (v.aName || '').trim(), ende: '', zeiten: [], zaehlt: ar === 'polizei', modus: 'plan', festH: ar === 'polizei' ? 8 : 0, ferien: ar !== 'polizei' && ar !== 'uni', tage: tage.slice() }; }
+      S.ausb.an = true; if (!mitDatum) S.ausb.gleich = !!v.alle;
       if (v.zeiten || !ausbZeiten().length) { const alt = ausbZeiten(); S.ausb.zeiten = Z.map(z => ({ von: z.von, bis: z.bis, p: false })); if (alt.length) for (const m in S.school.wochen) for (const w in S.school.wochen[m]) { const t = S.school.wochen[m][w], n = {}; for (const i in t) { const z = alt[i]; const j = z ? S.ausb.zeiten.findIndex(y => y.von === z.von) : -1; if (j >= 0) n[j] = t[i]; } S.school.wochen[m][w] = n; } }
       S.ausb.tage = [...new Set([...(S.ausb.tage || []), ...tage])];
       const ZZ = ausbZeiten(), idOf = {}; let nf = 0;
