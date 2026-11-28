@@ -3974,6 +3974,37 @@ table.spi td.spi-off i{display:block;font-style:normal;opacity:.55;font-size:9.5
 .sp-pk:active{transform:scale(.94)}
 .sp-pk.frei{--f:#9aa3b5}
 .sp-pk.plus{--f:#9aa3b5;background:transparent;border-style:dashed;font-size:18px;font-weight:400}
+/* Beruf & Lohn (Punkt 15) */
+.fa-bereiche.bw{grid-template-columns:repeat(5,1fr)}
+@media (max-width:420px){.fa-bereiche.bw{grid-template-columns:repeat(4,1fr)}}
+.lohn-k{border-left:3px solid var(--f,#4f8cff)}
+.lohn-k .dot{display:inline-block;width:10px;height:10px;border-radius:50%;vertical-align:middle}
+.lohn-gr{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.04)}
+.lohn-gr .bar{margin:6px 0 4px}
+.lohn-tage{margin-top:10px}
+.lohn-tage summary{cursor:pointer;color:var(--muted,#9aa3b5);font-size:13px;padding:4px 0}
+/* Schule & Studium (Punkt 15) */
+.zr-k .t td:first-child{white-space:nowrap;max-width:120px;overflow:hidden;text-overflow:ellipsis}
+.zr-k .t .dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle}
+.st-cd{display:flex;align-items:baseline;gap:8px;margin:12px 0 4px;padding:10px 12px;border-radius:12px;background:rgba(79,140,255,.10)}
+.st-cd b.num{font-size:26px;line-height:1}
+.st-lp{padding:8px 0;border-top:1px solid var(--line);cursor:pointer}
+.st-lp .bar{margin:6px 0 4px}
+.st-lp .dot,.ha-z .dot{display:inline-block;width:8px;height:8px;border-radius:50%;vertical-align:middle}
+.ha-z{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.ha-z .t{font-weight:600}
+.ha-z .s{font-size:12px;color:var(--muted,#9aa3b5)}
+.ha-c{flex:none;width:24px;height:24px;border-radius:8px;border:2px solid rgba(79,209,197,.7);background:transparent;cursor:pointer}
+.ha-c:active{transform:scale(.9)}
+.ha-z.spaet .ha-c{border-color:#ff5d6c}
+
+/* Stundenplan gesperrt an Diensttagen */
+.sp-sperr{all:unset;box-sizing:border-box;position:relative;z-index:2;display:flex;align-items:center;justify-content:center;margin:2px;border-radius:12px;cursor:pointer;
+  border:1px solid color-mix(in srgb,var(--f) 45%,transparent);background:repeating-linear-gradient(135deg,color-mix(in srgb,var(--f) 22%,#0b1020) 0 10px,color-mix(in srgb,var(--f) 14%,#080b16) 10px 20px)}
+.sp-sperr span{writing-mode:vertical-rl;transform:rotate(180deg);font-weight:700;font-size:15px;letter-spacing:.06em;color:#eef2fb;white-space:nowrap}
+.sp-sperr small{font-weight:500;font-size:11px;opacity:.75;letter-spacing:0}
+.st-alt{margin-top:12px}
+.st-alt summary{cursor:pointer;color:var(--muted,#9aa3b5);font-size:13px}
 
 </style>
 </head>
@@ -4241,8 +4272,9 @@ function shiftSpan(date, s, actual = true) { // {a,b,pause} in Minuten ab 00:00 
   return { a, b, pause };
 }
 const spanH = sp => sp ? Math.max(0, (sp.b - sp.a - sp.pause) / 60) : 0;
-function dayWork(date) {
-  const s = S.shifts[date]; if (!s) return { plan: 0, ist: 0, over: 0 };
+const _neben = s => typeof schichtNeben === 'function' && schichtNeben(s);
+function dayWork(date, alle) {
+  const s = S.shifts[date]; if (!s || (!alle && _neben(s))) return { plan: 0, ist: 0, over: 0 };
   const plan = s.extra ? 0 : spanH(shiftSpan(date, s, false));
   let ist = spanH(shiftSpan(date, s, true));
   if (s.anr !== undefined && s.anr !== '') { const x = String(s.anr).replace(',', '.'), h = x.includes(':') ? +x.split(':')[0] + (+x.split(':')[1] || 0) / 60 : +x; if (!isNaN(h)) ist = h; }
@@ -4250,7 +4282,7 @@ function dayWork(date) {
 }
 function duzFor(date) { // Minuten je DUZ-Kategorie
   const r = { nacht: 0, samstag: 0, sonntag: 0, feiertag: 0 };
-  const s = S.shifts[date]; if (!s) return r;
+  const s = S.shifts[date]; if (!s || _neben(s)) return r;
   const sp = shiftSpan(date, s, true); if (!sp) return r;
   let curDay = date, base = 0, wd = pd(date).getDay(), hol = !!holiday(date);
   for (let m = sp.a; m < sp.b; m++) {
@@ -4276,7 +4308,7 @@ function duzMonth(ymStr) {
 const DWZ = { std: 2.40, n06: 1, we: 20, max: 108, uebMax: 135 };
 function dwzRoh(ym) {
   const r = { nacht: 0, n06: 0, we: 0, wechsel: 0, beg: [] };
-  for (const d of Object.keys(S.shifts).filter(x => x.startsWith(ym)).sort()) { const s = S.shifts[d], sp = shiftSpan(d, s, true); if (!sp) continue;
+  for (const d of Object.keys(S.shifts).filter(x => x.startsWith(ym)).sort()) { const s = S.shifts[d], sp = _neben(s) ? null : shiftSpan(d, s, true); if (!sp) continue;
     let weM = 0; for (let m = sp.a; m < sp.b; m++) { const tag = m >= 1440 ? addD(d, 1) : d, h = Math.floor((m % 1440) / 60), wd = pd(tag).getDay();
       if (h >= 20 || h < 6) r.nacht++; if (h < 6) r.n06++; if (wd === 0 || wd === 6 || holiday(tag)) weM++; }
     if (weM * 2 > sp.b - sp.a) r.we++; r.beg.push(sp.a % 1440); }
@@ -4307,7 +4339,7 @@ function sollMonat(m) { const e = sollEigen(m); return e !== null ? e : sollAuto
 function sollTag(d) { const b = sollBasis(d); if (!b) return 0; const m = d.slice(0, 7), e = sollEigen(m); if (e === null) return b; const a = sollAuto(m); return a > 0 ? b * e / a : 0; }
 function otTag(d) {
   if (S.dbFest && S.dbFest[d.slice(0, 7)] && !otPlanModus()) { const bf = bfOtTag(d); if (bf !== null) return bf; }
-  const s = S.shifts[d], a = S.abs[d];
+  const s0 = S.shifts[d], s = s0 && !_neben(s0) ? s0 : null, a = S.abs[d];
   if (otPlanModus()) { let o = 0; if (s && !s.ma) o += dayWork(d).over; if (a && !a.ma) o -= daStunden(d); return o; }
   const w = s ? dayWork(d) : { plan: 0, ist: 0 }, ist = (s ? (s.ma ? w.plan : w.ist) : 0) + (typeof schulIst === 'function' ? schulIst(d) : 0), soll = sollTag(d);
   if (a && a.type === 'Z') { if (a.ma) return ist - soll + Math.max(0, soll - ist); const da = daStunden(d); return s ? Math.max(0, ist - da) - soll : -da; }
@@ -5724,7 +5756,7 @@ VIEWS.heute = () => {
   const ot = overtimeTotal();
   const wk = mondayOf(t); const wCount = S.workouts.filter(w => w.date >= wk && w.date <= t).length; const fg = S.sgoals.find(g => g.kind === 'freq');
   const lastW = [...S.workouts].sort((a, b) => a.date < b.date ? 1 : -1)[0];
-  const dienstKacheln = () => `<div class="tile wide dc3-tile" data-act="goto" data-tab="arbeit" data-sub="dienstplan">${dcRing()}<span class="lbl">🚓 Dienst</span><div class="row" style="gap:6px;margin-top:4px">${shiftLine(t)}</div><span class="sub">Morgen: ${shiftLine(tm).replace(/<span class="chip"[^>]*>[^<]*<\/span> /, '').replace(/<span class="sub">/, '<span>')}</span></div>`;
+  const dienstKacheln = () => `<div class="tile wide dc3-tile" data-act="goto" data-tab="arbeit" data-sub="dienstplan">${dcRing()}<span class="lbl">${dienstLbl(S.shifts[t])}</span><div class="row" style="gap:6px;margin-top:4px">${shiftLine(t)}</div><span class="sub">Morgen: ${shiftLine(tm).replace(/<span class="chip"[^>]*>[^<]*<\/span> /, '').replace(/<span class="sub">/, '<span>')}</span></div>`;
   h += `<div class="tiles">
     ${typeof ausbAktiv === 'function' && ausbAktiv() ? arbeitSchulKachel(t, shiftLine) : dienstKacheln()}
     ${heuteAn('notiz') ? notizKachel() : ''}</div>`;
@@ -5784,8 +5816,8 @@ ACT.settings = () => {
     <div class="typesw">${[['neu', '✦ Nachtglas (neu)'], ['klassisch', 'Klassisch']].map(([v, l]) => `<label><input type="radio" name="design" value="${v}" ${(s.design === 'klassisch' ? 'klassisch' : 'neu') === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>
     ${fChk('bewegung', 'Bewegung und Animationen (Nachtglas)', !s.ruhig)}
     <div class="typesw">${[['oben', '⬆︎ Reiter oben'], ['unten', '⬇︎ Reiter unten']].map(([v, l]) => `<label><input type="radio" name="bar" value="${v}" ${(s.bar || 'oben') === v ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>
-    <h3>Zulagen-Sätze § 4 EZulV (€ pro Stunde, ab 04/2025)</h3><div class="sub" style="margin:-4px 0 8px">Die Zulage für Dienst zu wechselnden Zeiten (2,40 € je Nachtstunde, 1 € 0–6 Uhr, 20 € Wochenende) rechnet die App fest. Die Nacht-Zulage hier gilt nur, wenn § 17a nicht erfüllt ist.</div>
-    <div class="grid2">${fMoney('nacht', 'Nacht 20–6 Uhr', s.duz.nacht)}${fMoney('samstag', 'Samstag 13–20 Uhr', s.duz.samstag)}${fMoney('sonntag', 'Sonntag', s.duz.sonntag)}${fMoney('feiertag', 'Feiertag', s.duz.feiertag)}</div>
+    ${typeof berufEinstHtml === 'function' ? berufEinstHtml() : ''}<div ${typeof berufPolizei !== 'function' || berufPolizei() ? '' : 'hidden'}><h3>Zulagen-Sätze § 4 EZulV (€ pro Stunde, ab 04/2025)</h3><div class="sub" style="margin:-4px 0 8px">Die Zulage für Dienst zu wechselnden Zeiten (2,40 € je Nachtstunde, 1 € 0–6 Uhr, 20 € Wochenende) rechnet die App fest. Die Nacht-Zulage hier gilt nur, wenn § 17a nicht erfüllt ist.</div>
+    <div class="grid2">${fMoney('nacht', 'Nacht 20–6 Uhr', s.duz.nacht)}${fMoney('samstag', 'Samstag 13–20 Uhr', s.duz.samstag)}${fMoney('sonntag', 'Sonntag', s.duz.sonntag)}${fMoney('feiertag', 'Feiertag', s.duz.feiertag)}</div></div>
     <h3>🧙 JATOS</h3>
     ${fChk('jatos', 'JATOS anzeigen (Schloss und Begleiter)', s.jatos !== false)}
     ${fSel('jstil', 'Stil', [['pixel', 'Pixel-Burg (neu)'], ['klassisch', 'Klassisch']], s.jstil || 'pixel')}
@@ -5830,6 +5862,7 @@ ACT.import = () => {
     const f = inp.files[0]; if (!f) return; const r = new FileReader();
     r.onload = async () => {
       let d; try { d = JSON.parse(r.result); } catch (e) { toast('Die Datei ist keine gültige Sicherung.'); return; }
+      if (d && d.jatosReise && d.trip && typeof reiseImportFenster === 'function') { _modalStack.forEach(m => m.remove()); _modalStack = []; reiseImportFenster(d); return; }
       if (!d || !d.settings || !Array.isArray(d.tx)) { toast('Die Datei ist keine Alltagsplaner-Sicherung.'); return; }
       if (!await ask(`Sicherung vom ${d.settings.lastBackup ? fmtD(d.settings.lastBackup) : '?'}${d.settings.name ? ' (' + d.settings.name + ')' : ''} importieren?\n\nAlle aktuellen Daten auf diesem Gerät werden ersetzt.`, 'Importieren')) return;
       const hl = d.health; delete d.health; const docs = d.docs; delete d.docs; localStorage.setItem(KEY, JSON.stringify(d));
@@ -10447,11 +10480,12 @@ function gszSchildNeu() { gszSchildKlasse(); if (!GS.d || !GS.el) return; gsTags
 VIEWS.arbeit = () => {
   const _m = today().slice(0, 7); let _c = 0, _h = 0; for (const d in S.shifts) if (d.startsWith(_m)) { const w = dayWork(d); if (w.ist) { _c++; _h += w.ist; } }
   const _ot = overtimeTotal(), _v = vacation(+today().slice(0, 4)), sch = typeof ausbAktiv === 'function' && ausbAktiv();
-  let h = header('Arbeit', '', `Überstundenkonto <b class="${_ot < 0 ? 'neg' : 'pos'}">${hm(_ot)} h</b>. Im ${MON[+_m.slice(5) - 1]} ${_c} Dienste mit ${hm(_h)} Stunden, noch <b>${dec(_v.rest, 0)} Urlaubstage</b> übrig.`);
+  const _kt = typeof arbeitKopfText === 'function' ? arbeitKopfText() : null;
+  let h = header('Arbeit', '', _kt !== null ? _kt : `Überstundenkonto <b class="${_ot < 0 ? 'neg' : 'pos'}">${hm(_ot)} h</b>. Im ${MON[+_m.slice(5) - 1]} ${_c} Dienste mit ${hm(_h)} Stunden, noch <b>${dec(_v.rest, 0)} Urlaubstage</b> übrig.`);
   if (['stunden', 'urlaub', 'beurteilung'].includes(UI.sub.arbeit)) UI.sub.arbeit = 'zeit';
   if (['kalender', 'schule'].includes(UI.sub.arbeit)) UI.sub.arbeit = sch ? 'stundenplan' : 'dienstplan';
   /* Mit Schule/Studium (v_schule2.js) kommen Stundenplan und Noten dazu, sonst nur ein + zum Hinzufügen */
-  const L = [['dienstplan', '🗓️ Dienstplan'], ...(sch ? [['stundenplan', '📚 Stundenplan']] : []), ['zeit', sch ? '⏱️ Stunden & Urlaub' : '⏱️ Stunden, DUZ & Urlaub'], ['aufgaben', '✅ Aufgaben & Termine'], ...(sch ? [['noten', '🎓 Noten']] : [])];
+  const L = [['dienstplan', '🗓️ Dienstplan'], ...(sch ? [['stundenplan', '📚 Stundenplan']] : []), ['zeit', hauptLohn() ? '💶 Stunden & Lohn' : beruf().bezahl === 'keins' ? '💶 Nebenjob' : sch || !berufPolizei() ? '⏱️ Stunden & Urlaub' : '⏱️ Stunden, DUZ & Urlaub'], ['aufgaben', '✅ Aufgaben & Termine'], ...(sch ? [['noten', '🎓 Noten']] : [])];
   if (!L.some(x => x[0] === UI.sub.arbeit)) UI.sub.arbeit = 'dienstplan';
   h += `<div class="seg-zr">${seg('arbeit', L)}<button class="ibtn" data-act="ausbEdit" title="${sch ? 'Schule / Studium einstellen' : 'Schule / Studium hinzufügen'}" aria-label="${sch ? 'Schule / Studium einstellen' : 'Schule / Studium hinzufügen'}">${sch ? '🎓' : '+'}</button></div>`;
   return h + ARB[UI.sub.arbeit]();
@@ -10474,13 +10508,13 @@ ARB.dienstplan = () => {
   let h = `<div class="row sb wrap" style="margin-bottom:10px">${mnav()}<div class="row" style="gap:6px"><button class="btn sm sec" data-act="dpImport">📥 Einlesen</button><button class="btn sm sec" data-act="schEdit">Schichtarten</button></div></div>`;
   h += `<div class="sub" style="margin-bottom:6px">${UI.paint ? 'Tippe auf die Tage, um sie einzutragen. Nochmal auf die Schicht tippen zum Beenden.' : 'Schicht wählen und dann Tage antippen. Oder einen Tag antippen für Details (Zeiten, Überstunden).'}</div>`;
   if (!S.shiftTypes.length) h += `<div class="card" style="text-align:center;padding:18px"><div class="sub" style="margin-bottom:10px">Du hast noch keine Schichtarten. Lege deine Dienste mit Kürzel und Zeiten selbst an.</div><button class="btn sm" data-act="schOne">+ Erste Schichtart anlegen</button></div>`;
-  h += `<div class="palette">${S.shiftTypes.map(t => `<button style="background:${t.color}" class="${UI.paint === t.id ? 'on' : ''}" data-act="paint" data-v="${t.id}">${esc(t.code)}</button>`).join('')}
+  h += `<div class="palette">${stAktiv().map(t => `<button style="background:${t.color}" class="${UI.paint === t.id ? 'on' : ''}" data-act="paint" data-v="${t.id}">${esc(t.code)}</button>`).join('')}
     ${absAktiv().map(k => `<button style="background:${ABS[k].c}" class="${UI.paint === 'abs:' + k ? 'on' : ''}" data-act="paint" data-v="abs:${k}" title="${ABS[k].n}">${absKz(k)}</button>`).join('')}
     ${typeof ausbAktiv === 'function' && ausbAktiv() ? `<button style="background:${SCH_FARBE}" class="${UI.paint === 'sch' ? 'on' : ''}" data-act="paint" data-v="sch" title="Schultag">SCH</button>` : ''}
     <button style="background:#2c3242;color:#e9ecf3" class="${UI.paint === 'del' ? 'on' : ''}" data-act="paint" data-v="del">⌫</button></div>`;
   h += `<div class="card dp2-karte" style="padding:8px">${monthGrid(m, { act: 'dpDay', cls: d => { const s = S.shifts[d], a = S.abs[d], t = s && stype(s.type);
       if (a && ABS[a.type]) return 'dp2 dp2-abw dp2-' + a.type.toLowerCase() + (['U', 'S'].includes(a.type) ? ' dp2-urlaub' : '');
-      if (t) return 'dp2 dp2-' + schichtZeit(t, s);
+      if (t) return 'dp2 dp2-' + (stSperrt(t) ? schichtZeit(t, s) : 'sch');
       if (S.sTag && S.sTag[d]) return 'dp2 dp2-sch';
       return ''; }, html: d => {
     const s = S.shifts[d], a = S.abs[d]; let x = '';
@@ -10488,7 +10522,7 @@ ARB.dienstplan = () => {
     if (a && ABS[a.type]) { x += `<span class="chip" style="background:${ABS[a.type].c}">${absKz(a.type)}</span>`; if (a.type === 'Z') x += `<span style="font-size:10px" class="neg">−${hm(daStunden(d))}</span>`; else if (['U', 'S'].includes(a.type)) x += '<span class="dp2-frei">frei</span>'; }
     if (S.sTag && S.sTag[d]) x += `${!s && !a ? fsymSvg('buch', 'dp2-sym') : ''}<span class="chip" style="background:${SCH_FARBE}">SCH</span>`;
     return x; } })}</div>`;
-  h += `<div class="legend">${S.shiftTypes.map(t => `<span><i class="chip" style="background:${t.color};height:16px;min-width:20px">${esc(t.code)}</i>${esc(t.name)}${t.start ? ' ' + t.start + '–' + t.end : ''}</span>`).join('')}${absAktiv().map(k => `<span><i class="chip" style="background:${ABS[k].c};height:16px;min-width:20px">${absKz(k)}</i>${ABS[k].n}${k === 'Z' ? ' (zieht vom Überstundenkonto ab)' : ''}</span>`).join('')}${typeof ausbAktiv === 'function' && ausbAktiv() ? `<span><i class="chip" style="background:${SCH_FARBE};height:16px;min-width:20px">SCH</i>Schultag</span>` : ''}<span><b class="pos">+</b> = zusätzlicher Dienst</span></div>`;
+  h += `<div class="legend">${stAktiv().map(t => `<span><i class="chip" style="background:${t.color};height:16px;min-width:20px">${esc(t.code)}</i>${esc(t.name)}${t.start ? ' ' + t.start + '–' + t.end : ''}</span>`).join('')}${absAktiv().map(k => `<span><i class="chip" style="background:${ABS[k].c};height:16px;min-width:20px">${absKz(k)}</i>${ABS[k].n}${k === 'Z' ? ' (zieht vom Überstundenkonto ab)' : ''}</span>`).join('')}${typeof ausbAktiv === 'function' && ausbAktiv() ? `<span><i class="chip" style="background:${SCH_FARBE};height:16px;min-width:20px">SCH</i>Schultag</span>` : ''}<span><b class="pos">+</b> = zusätzlicher Dienst</span></div>`;
   // Monatssumme
   let plan = 0, ist = 0, cnt = 0; for (const d in S.shifts) if (d.startsWith(m)) { const w = dayWork(d); plan += w.plan; ist += w.ist; if (w.ist) cnt++; }
   const uM = overtimeTotal(`${m}-31`, addM(m, -1) + '-31');
@@ -10512,7 +10546,7 @@ function dayEdit(day) {
   const s = S.shifts[day] || {}, a = S.abs[day] || {};
   const t = stype(s.type);
   modal(fmtD(day) + (holiday(day) ? ' · ' + holiday(day) : ''), `
-    ${fSel('type', 'Dienst laut Plan', [['', '– kein Dienst –'], ...S.shiftTypes.map(x => [x.id, `${x.code} · ${x.name}${x.start ? ' ' + x.start + '–' + x.end : ''}`])], s.type || '')}
+    ${fSel('type', 'Dienst laut Plan', [['', '– kein Dienst –'], ...S.shiftTypes.filter(x => !x.bis || x.id === s.type).map(x => [x.id, `${x.code} · ${x.name}${x.start ? ' ' + x.start + '–' + x.end : ''}`])], s.type || '')}
     ${fChk('extra', 'Zusätzlicher Dienst (nicht im Plan → komplett Überstunden)', s.extra)}${fChk('ma', 'Angeordnete Mehrarbeit (zählt aufs Mehrarbeitskonto)', s.ma)}
     <h3>Tatsächlich gearbeitet <span class="muted">(leer = wie geplant)</span></h3>
     <div class="grid3">${fIn('aStart', 'Beginn', s.aStart || '', 'time')}${fIn('aEnd', 'Ende', s.aEnd || '', 'time')}${fIn('aPause', 'Pause (Min.)', s.aPause ?? '', 'number')}</div>
@@ -10532,12 +10566,15 @@ function dayEdit(day) {
         const alt0 = S.shifts[day], tmp = Object.assign({ type: f.type.value, extra: f.extra.checked, aStart: f.aStart.value, aEnd: f.aEnd.value, aPause: f.aPause.value === '' ? undefined : +f.aPause.value }, alt0 && alt0.type === f.type.value ? { pStart: alt0.pStart, pEnd: alt0.pEnd, pPause: alt0.pPause } : {});
         const ty = stype(tmp.type); if (!ty || !ty.start) { $('[data-k=info]', f).textContent = ''; return; }
         const plan = tmp.extra ? 0 : spanH(shiftSpan(day, tmp, false)), anrH = typeof bfZeit === 'function' && f.anr.value.trim() ? bfZeit(f.anr.value.trim().replace(',', ':')) : null, ist = anrH !== null ? anrH : spanH(shiftSpan(day, tmp, true));
+        if (ty.taet || (typeof hauptLohn === 'function' && hauptLohn())) { $('[data-k=info]', f).innerHTML = `Gearbeitet ${hm(ist)} h${ty.taet && taetOf(ty.taet) ? ' für ' + esc(taetOf(ty.taet).name) + ', zählt nicht zum Überstundenkonto' : ''}.`; return; }
         $('[data-k=info]', f).innerHTML = `Geplant ${hm(plan)} h · Ist ${hm(ist)} h · <b class="${ist - plan < 0 ? 'neg' : 'pos'}">Überstunden ${hm(ist - plan)} h</b>`; };
       f.addEventListener('input', upd); f.addEventListener('change', upd); upd(); } });
 }
 ACT.schEdit = () => {
-  const rows = S.shiftTypes.map(t => `<div class="it click" data-act="schOne" data-id="${t.id}"><span class="chip" style="background:${t.color}">${esc(t.code)}</span><div class="grow"><div class="t">${esc(t.name)}</div><div class="s">${t.start ? `${t.start}–${t.end} · Pause ${t.pause || 0} Min. · ${hm(spanH(shiftSpan('2000-01-03', { type: t.id }, false)))} h` : 'ohne Arbeitszeit'}</div></div><button type="button" class="ibtn" data-act="schDel" data-id="${t.id}" aria-label="Löschen">×</button></div>`).join('');
-  modal('Schichtarten', `<div class="sub" style="margin-bottom:10px">Lege deine Dienste mit festen Zeiten an. Im Dienstplan wählst du dann nur noch das Kürzel.</div>${rows ? `<div class="card tight list" style="background:var(--card)">${rows}</div>` : '<div class="sub" style="margin-bottom:10px">Noch keine Schichtarten. Lege z.&nbsp;B. „F · Früh 06:00–14:00“ an.</div>'}<button type="button" class="btn sec full" data-act="schOne">+ Neue Schichtart</button>`, null);
+  const zeile = t => `<div class="it click" data-act="schOne" data-id="${t.id}"><span class="chip" style="background:${t.color}">${esc(t.code)}</span><div class="grow"><div class="t">${esc(t.name)}</div><div class="s">${t.start ? `${t.start}–${t.end} · Pause ${t.pause || 0} Min. · ${hm(spanH(shiftSpan('2000-01-03', { type: t.id }, false)))} h` : 'ohne Arbeitszeit'}</div></div><button type="button" class="ibtn" data-act="schDel" data-id="${t.id}" aria-label="Löschen">×</button></div>`, rows = stAktiv().map(zeile).join(''), alte = S.shiftTypes.filter(t => t.bis);
+  modal('Schichtarten', `<div class="sub" style="margin-bottom:10px">Lege deine Dienste mit festen Zeiten an. Im Dienstplan wählst du dann nur noch das Kürzel.</div>${rows ? `<div class="card tight list" style="background:var(--card)">${rows}</div>` : '<div class="sub" style="margin-bottom:10px">Noch keine Schichtarten. Lege z.&nbsp;B. „F · Früh 06:00–14:00“ an.</div>'}<button type="button" class="btn sec full" data-act="schOne">+ Neue Schichtart</button>
+    <button type="button" class="btn sec full" data-act="dstWechsel" style="margin-top:6px">🏢 Dienststelle gewechselt</button>
+    ${alte.length ? `<details class="st-alt"><summary>Alte Schichtarten (${alte.length})</summary><div class="sub" style="margin:4px 0 6px">Sie stehen weiter an deinen alten Tagen, nur nicht mehr in der Auswahl.</div><div class="card tight list" style="background:var(--card)">${alte.map(t => `<div class="it"><span class="chip" style="background:${t.color}">${esc(t.code)}</span><div class="grow"><div class="t">${esc(t.name)}</div><div class="s">bis ${fmtDs(t.bis)}${t.start ? ' · ' + t.start + '–' + t.end : ''}</div></div><button type="button" class="btn sm sec" data-act="stZurueck" data-id="${t.id}">Wieder nutzen</button></div>`).join('')}</div></details>` : ''}`, null);
 };
 /* Abwesenheiten im selben Fenster: jede lässt sich löschen, gelöschte lassen sich wieder hinzufügen */
 function absListe() {
@@ -10552,9 +10589,11 @@ ACT.schOne = d => {
   _modalStack.forEach(m => m.remove()); _modalStack = [];
   modal(isNew ? 'Neue Schichtart' : 'Schichtart', `<div class="grid2">${fIn('code', 'Kürzel (1–3 Zeichen)', t.code || '', 'text', 'maxlength="3"')}${fIn('name', 'Name', t.name || '')}</div>
     <div class="grid3">${fIn('start', 'Beginn', t.start || '', 'time')}${fIn('end', 'Ende', t.end || '', 'time')}${fIn('pause', 'Pause (Min.)', t.pause || 0, 'number')}</div>
-    ${fIn('color', 'Farbe', t.color, 'color')}<div class="sub">Für „Frei“ oder Ähnliches Beginn und Ende leer lassen.</div>`,
-    v => { if (!v.code.trim() || !v.name.trim()) return false; const o = Object.assign(isNew ? { id: uid() } : t, { code: v.code.trim(), name: v.name.trim(), start: v.start, end: v.end, pause: +v.pause || 0, color: v.color }); if (isNew) S.shiftTypes.push(o); },
-    { del: isNew ? null : () => stLoeschen(t) });
+    ${fIn('color', 'Farbe', t.color, 'color')}${(S.taetig || []).length ? fSel('taet', 'Gehört zu', [['', BERUFE[beruf().art] ? BERUFE[beruf().art][0] + ' (Hauptberuf)' : 'Hauptberuf'], ...S.taetig.map(x => [x.id, x.name])], t.taet || '') : ''}<div class="sub">Für „Frei“ oder Ähnliches Beginn und Ende leer lassen.</div>
+    ${fChk('sperr', 'Stundenplan an diesen Tagen sperren', isNew ? true : stSperrt(t))}<div class="sub" style="margin:-4px 0 10px">An Tagen mit dieser Schicht kann man keine Fächer eintragen, z.B. bei Spätdienst. Ohne Haken bleibt der Stundenplan frei, etwa bei Schule oder Lehrgang.</div>
+    ${!isNew && t.start && Object.values(S.shifts).some(x => x.type === t.id) ? `<div data-k="ab" hidden>${fIn('ab', 'Neue Zeiten gelten ab', today(), 'date')}<div class="sub" style="margin:-4px 0 10px">Tage davor behalten die alten Zeiten, deine Überstunden bleiben gleich.</div></div>` : ''}`,
+    v => { if (!v.code.trim() || !v.name.trim()) return false; if (!isNew) stZeitenSichern(t, v); const o = Object.assign(isNew ? { id: uid() } : t, { code: v.code.trim(), name: v.name.trim(), start: v.start, end: v.end, pause: +v.pause || 0, color: v.color }); if (v.taet !== undefined) { if (v.taet) o.taet = v.taet; else delete o.taet; } o.spFrei = v.sperr ? 0 : 1; if (isNew) S.shiftTypes.push(o); },
+    { del: isNew ? null : () => stLoeschen(t), init: f => { const ab = $('[data-k=ab]', f); if (!ab) return; const z = () => { ab.hidden = f.start.value === (t.start || '') && f.end.value === (t.end || '') && String(+f.pause.value || 0) === String(+t.pause || 0); }; f.addEventListener('input', z); z(); } });
 };
 async function stLoeschen(t) {
   const tage = Object.keys(S.shifts).filter(d => S.shifts[d].type === t.id);
@@ -10583,7 +10622,7 @@ ARB.stunden = () => {
     <div class="sub" style="margin-top:8px">${otPlanModus() ? `Überstunden = Abweichung vom Dienstplan.${soll ? ` Zum Vergleich: ${dec(soll, 1)} h Soll pro Woche.` : ''}` : `Überstunden = Ist minus Soll. Soll: ${dec(soll, 1)} h pro Woche, also ${hm(soll / 5)} an jedem Werktag, Feiertage (${esc(LAENDER[S.settings.land] || 'bundesweit')}) frei. Urlaub zählt wie ein Soll-Tag, DA zieht ab. Umstellen in den Einstellungen.`}</div></div>`;
   // Zulagen wie im Zeitportal (§ 17a/17b EZulV), dazu Sonn-, Feiertags- und Samstagszulage (§ 4 EZulV)
   const zw = dwzMonat(m), z = duzMonth(m), r = S.settings.duz, nachtDuz = zw.ok ? 0 : z.nacht * (r.nacht || 0), duzEur = nachtDuz + z.samstag * (r.samstag || 0) + z.sonntag * (r.sonntag || 0) + z.feiertag * (r.feiertag || 0);
-  h += `<div class="card zl" id="zl"><div class="row sb"><h2 style="margin:0">Zulagen ${MON[mo - 1]}</h2><b class="num" style="font-size:20px">${eur(zw.eur)}</b></div>
+  if (berufPolizei()) h += `<div class="card zl" id="zl"><div class="row sb"><h2 style="margin:0">Zulagen ${MON[mo - 1]}</h2><b class="num" style="font-size:20px">${eur(zw.eur)}</b></div>
     <div class="row sb" style="margin:6px 0 2px"><span>§ 17a EZulV für DwZ erfüllt?</span><b class="${zw.ok ? 'pos' : 'neg'}">${zw.ok ? 'ja' : 'nein'}</b></div>
     <table class="t"><tr><th></th><th>Anzahl</th><th>Betrag</th></tr>
     <tr><td>zu vergütende Nachtstunden${zw.uebIn ? ` <span class="sub">inkl. ${hm(zw.uebIn)} aus Vormonat</span>` : ''}</td><td class="num">${hm(zw.bez)}</td><td class="num">${eur(zw.eNacht)}</td></tr>
@@ -10598,7 +10637,7 @@ ARB.stunden = () => {
     <div class="sub" style="margin-top:8px">${S.settings.land ? 'Feiertage: ' + LAENDER[S.settings.land] : '<span class="wrn">Bundesland in den Einstellungen wählen, damit Feiertage erkannt werden.</span>'}. Sätze ab 04/2025.</div></div>`;
   // Tagesliste
   const days = Object.keys(S.shifts).filter(d => d.startsWith(m) && (stype(S.shifts[d].type) || {}).start).sort();
-  if (days.length) h += `<h3>Dienste im ${MON[mo - 1]}</h3><div class="card tight list">${days.map(d => { const s = S.shifts[d], t = stype(s.type), w = dayWork(d); if (!t) return ''; return `<div class="it click" data-act="dpDayEdit" data-d="${d}"><span class="chip" style="background:${t.color}">${esc(t.code)}</span><div class="grow"><div class="t">${fmtD(d)}</div><div class="s">${t.start ? `${s.aStart || t.start}–${s.aEnd || t.end}` : t.name}${s.note ? ' · ' + esc(s.note) : ''}</div></div><div style="text-align:right"><div class="num">${hm(w.ist)}</div>${Math.abs(w.over) > .01 ? `<div class="s num ${w.over > 0 ? 'pos' : 'neg'}">${w.over > 0 ? '+' : ''}${hm(w.over)}</div>` : ''}</div></div>`; }).join('')}</div>`;
+  if (days.length) h += `<h3>Dienste im ${MON[mo - 1]}</h3><div class="card tight list">${days.map(d => { const s = S.shifts[d], t = stype(s.type), w = dayWork(d, true); if (!t) return ''; return `<div class="it click" data-act="dpDayEdit" data-d="${d}"><span class="chip" style="background:${t.color}">${esc(t.code)}</span><div class="grow"><div class="t">${fmtD(d)}</div><div class="s">${t.start ? `${s.aStart || t.start}–${s.aEnd || t.end}` : t.name}${s.note ? ' · ' + esc(s.note) : ''}</div></div><div style="text-align:right"><div class="num">${hm(w.ist)}</div>${Math.abs(w.over) > .01 ? `<div class="s num ${w.over > 0 ? 'pos' : 'neg'}">${w.over > 0 ? '+' : ''}${hm(w.over)}</div>` : ''}</div></div>`; }).join('')}</div>`;
   return h;
 };
 ACT.dpDayEdit = d => dayEdit(d.d);
@@ -10701,6 +10740,34 @@ function ratEdit(r) {
       f.addEventListener('input', calc); calc(); } });
 }
 const areaRow = (a, i) => `<div style="display:grid;grid-template-columns:1fr 64px 74px;gap:6px;margin-bottom:6px"><input class="in" name="an${i}" placeholder="Bereich" value="${esc(a.name)}"><input class="in" name="aw${i}" placeholder="Gew." inputmode="decimal" value="${esc(a.w ?? 1)}" title="Gewichtung"><input class="in" name="ag${i}" placeholder="Note" inputmode="decimal" value="${esc(a.grade ?? '')}"></div>`;
+
+/* ---------- Dienststelle wechseln, Stundenplan sperren (28.11.2026) ---------- */
+const stAktiv = () => S.shiftTypes.filter(t => !t.bis);
+/* Sperrt eine Schicht den Stundenplan? Neu angelegte: ja (Haken). Alte ohne Angabe: ja, außer Schule (SCH, SCF), weitere Tätigkeit oder ohne Zeiten */
+function stSperrt(t) { if (!t) return false; if (t.spFrei !== undefined) return !t.spFrei; return !!t.start && !t.taet && !/^SC/i.test(t.code || '') && !/schul|lehrgang|seminar/i.test(t.name || ''); }
+function spGesperrt(d) { const s = S.shifts[d]; return s && !S.abs[d] ? (stSperrt(stype(s.type)) ? stype(s.type) : null) : null; }
+/* Geänderte Zeiten gelten ab einem Datum: Tage davor bekommen die alten Zeiten fest eingetragen */
+function stZeitenSichern(t, v) {
+  const neuP = +v.pause || 0; if ((v.start || '') === (t.start || '') && (v.end || '') === (t.end || '') && neuP === (+t.pause || 0)) return;
+  if (!t.start) return; const ab = v.ab || today(); let n = 0;
+  for (const d in S.shifts) { const s = S.shifts[d]; if (s.type !== t.id || d >= ab) continue;
+    if (!s.pStart) s.pStart = t.start; if (!s.pEnd) s.pEnd = t.end; if (s.pPause === undefined || s.pPause === '' || s.pPause === null) s.pPause = +t.pause || 0; n++; }
+  if (n) setTimeout(() => toast(`✓ ${n} ${n === 1 ? 'alter Tag behält' : 'alte Tage behalten'} die bisherigen Zeiten.`), 60);
+}
+ACT.dstWechsel = () => {
+  const L = stAktiv(); _modalStack.forEach(m => m.remove()); _modalStack = [];
+  modal('🏢 Dienststelle gewechselt', `<div class="sub" style="margin:-4px 0 10px">Die alten Schichtarten verschwinden ab dem Datum aus der Auswahl. An deinen alten Tagen bleiben sie mit ihren Zeiten stehen, Überstunden und Zulagen ändern sich nicht. Danach legst du die Schichten der neuen Dienststelle an.</div>
+    ${fIn('ab', 'Neue Dienststelle ab', today(), 'date')}
+    <h3>Diese Schichtarten gehören zur alten Dienststelle</h3>${L.map(t => fChk('st_' + t.id, `<span class="chip" style="background:${t.color};height:18px;min-width:22px">${esc(t.code)}</span> ${esc(t.name)}${t.start ? ' ' + t.start + '–' + t.end : ''}`, stSperrt(t))).join('')}`,
+    v => { if (!v.ab) return false; const bis = addD(v.ab, -1); let n = 0;
+      for (const t of L) if (v['st_' + t.id]) { t.bis = bis; n++; if (UI.paint === t.id) UI.paint = null;
+        /* Zeiten an den alten Tagen festhalten, falls die Schichtart später doch geändert wird */
+        for (const d in S.shifts) { const s = S.shifts[d]; if (s.type === t.id && d <= bis && t.start) { if (!s.pStart) s.pStart = t.start; if (!s.pEnd) s.pEnd = t.end; if (s.pPause === undefined || s.pPause === '' || s.pPause === null) s.pPause = +t.pause || 0; } } }
+      const spaeter = Object.keys(S.shifts).filter(d => d >= v.ab && L.some(t => v['st_' + t.id] && t.id === S.shifts[d].type)).length;
+      setTimeout(() => { toast(`✓ ${n} alte Schichtarten abgelegt.${spaeter ? ` ${spaeter} Tage ab ${fmtDs(v.ab)} haben noch alte Schichten, die kannst du im Dienstplan ersetzen.` : ''} Jetzt die neuen anlegen.`); ACT.schEdit(); }, 60); },
+    { saveLabel: 'Wechseln' });
+};
+ACT.stZurueck = d => { const t = stype(d.id); if (!t) return; delete t.bis; save(); _modalStack.forEach(m => m.remove()); _modalStack = []; render(); ACT.schEdit(); };
 
 /* ---------- Zeitkonten: Überstunden, Mehrarbeit, Urlaub und Zulagen als 3D-Anzeigen (wie im Zeitportal, im Nachtglas-Stil) ---------- */
 
@@ -10865,7 +10932,7 @@ const sEvOn = d => S.sEv.filter(e => d >= e.date && d <= (e.to || e.date));
 const sEvLbl = e => `${(SK[e.cat] || SK.sonst)[2]} ${e.title || (SK[e.cat] || SK.sonst)[0]}`;
 function fachSchnitt(fid) { const n = S.school.noten.filter(x => x.fach === fid && x.grade !== '' && x.grade != null && !isNaN(+x.grade)); if (!n.length) return null; return sum(n, x => +x.grade * (+x.w || 1)) / sum(n, x => +x.w || 1); }
 function gesamtSchnitt() { const a = S.school.faecher.map(f => fachSchnitt(f.id)).filter(x => x !== null); return a.length ? a.reduce((s, x) => s + x, 0) / a.length : null; }
-const noteKl = g => g === null ? '' : g <= 2.5 ? 'pos' : g <= 3.5 ? 'wrn' : 'neg';
+const noteKl = g => g === null || g === undefined || isNaN(g) ? '' : typeof noteGut === 'function' ? noteGut(g) : g <= 2.5 ? 'pos' : g <= 3.5 ? 'wrn' : 'neg';
 
 /* Kalender: nur besondere Ereignisse */
 ARB.kalender = () => {
@@ -11148,13 +11215,17 @@ ARB.stundenplan = () => {
     if (fw) h += `<div class="sp-ferien">🏖 <b>${esc(fw.n)}</b> in ${esc(LAENDER[S.settings.land])} (${fmtDs(fw.a)}${fw.b !== fw.a ? '–' + fmtDs(fw.b) : ''}). An Ferientagen ist keine Schule eingeplant.</div>`;
     else if (!S.settings.land && ausbMitFerien()) h += `<div class="sp-ferien">Wähle in den Einstellungen dein Bundesland, dann zeige ich dir hier die Schulferien.</div>`; }
   h += `<div class="sp-wrap"><div class="sp" lang="de" style="grid-template-columns:44px repeat(${tage.length},minmax(0,1fr));min-width:${Math.min(330, 70 + tage.length * 44)}px"><div class="sp-k"></div>`;
+  /* Tage mit Dienst (Haken „Stundenplan sperren“ bei der Schichtart): eine Spalte über den ganzen Tag, hochkant beschriftet */
+  const gesp = tage.map(d => spGesperrt(d));
+  gesp.forEach((st, k) => { if (!st) return; const s = S.shifts[tage[k]];
+    h += `<button type="button" class="sp-sperr" data-act="spSperr" data-d="${tage[k]}" style="grid-column:${k + 2};grid-row:2 / span ${Z.length};--f:${st.color}"><span>${esc(st.name)}${st.start ? ` <small>${s.aStart || s.pStart || st.start}–${s.aEnd || s.pEnd || st.end}</small>` : ''}</span></button>`; });
   h += tage.map((d, i) => { const s = S.shifts[d] && stype(S.shifts[d].type), a = S.abs[d];
     const fe = ausbFerienAm(d) && !schulTag(d);
     return `<button type="button" class="sp-tag ${d === t ? 'heute' : ''} ${schulTag(d) ? 'sch' : ''} ${fe ? 'fer' : ''}" data-act="spTag" data-d="${d}"><b>${WDK[WT[i]]}</b><span class="num">${pd(d).getDate()}.</span>${fe && !s && !a ? '<i class="chip" style="background:' + FER_FARBE + ';color:#1a1300">Ferien</i>' : s ? `<i class="chip" style="background:${s.color}">${esc(s.code)}</i>` : a && ABS[a.type] ? `<i class="chip" style="background:${ABS[a.type].c}">${absKz(a.type)}</i>` : schulTag(d) ? '<i class="chip" style="background:' + SCH_FARBE + '">SCH</i>' : '<i class="sp-leer">–</i>'}</button>`; }).join('');
   Z.forEach((z, i) => {
-    if (z.p) { h += `<div class="sp-pz"></div><div class="sp-pause" style="grid-column:span ${tage.length}">Pause ${z.von}–${z.bis}</div>`; return; }
+    if (z.p) { h += `<div class="sp-pz"></div><div class="sp-pause" style="grid-column:2 / span ${tage.length};grid-row:${i + 2}">Pause ${z.von}–${z.bis}</div>`; return; }
     h += `<div class="sp-z num">${z.von}<small>${z.bis}</small></div>`;
-    tage.forEach((d, k) => { const x = (w[WT[k]] || {})[i], f = null, dienst = S.shifts[d] && !schulTag(d) && (stype(S.shifts[d].type) || {}).start, fe = !x && !schulTag(d) && ausbFerienAm(d);
+    tage.forEach((d, k) => { if (gesp[k]) return; const x = (w[WT[k]] || {})[i], f = null, dienst = false, fe = !x && !schulTag(d) && ausbFerienAm(d);
       if (x) { h += spZelleHtml(d, i, x); return; }
       h += `<button type="button" class="sp-c ${x ? 'voll' : ''} ${dienst && !x ? 'dienst' : ''} ${fe ? 'fer' : ''}" data-act="spZelle" data-d="${d}" data-i="${i}" ${x ? `style="--f:${f ? f.color : SCH_FARBE}"` : ''}>${x ? `<b>${esc(f ? f.name : x.titel)}</b>${x.raum ? `<small>${esc(x.raum)}</small>` : ''}` : dienst ? '<small>Dienst</small>' : ''}</button>`; });
   });
@@ -11194,6 +11265,7 @@ function spPalette() {
 ACT.spStift = () => { UI.spStift = !UI.spStift; if (!UI.spStift) UI.spPinsel = null; render(); };
 ACT.spPinsel = d => { UI.spPinsel = UI.spPinsel === d.id ? null : d.id; render(); };
 ACT.spZelle = d => {
+  if (spGesperrt(d.d)) { ACT.spSperr(d); return; }
   if (UI.spStift && UI.spPinsel) {
     ausbFix(); const mo = mondayOf(d.d), wd = pd(d.d).getDay(), i = +d.i, w = (S.school.wochen[mo] = S.school.wochen[mo] || {}), tag = (w[wd] = w[wd] || {}), x = tag[i];
     if (UI.spPinsel === 'x' || (x && x.fach === UI.spPinsel)) { delete tag[i]; spTestSync(d.d, i, null); }
@@ -11277,6 +11349,8 @@ function ferienAm(d, land) { for (const f of ferienListe(land || S.settings.land
 function ferienZeigen() { const v = S.settings.ferienZeigen; return v === undefined ? !!(S.ausb && ausbAktiv(today()) && ausbMitFerien()) : !!v; }
 function ferienNaechste(t) { return ferienListe(S.settings.land).find(f => f.b >= t) || null; }
 function ferienBis() { const L = ferienListe(S.settings.land); return L.length ? L[L.length - 1].b : null; }
+
+ACT.spSperr = d => { const st = spGesperrt(d.d); toast(`${st ? esc(st.name) : 'Dienst'} am ${fmtDs(d.d)}: an diesem Tag ist der Stundenplan gesperrt. Das stellst du bei der Schichtart mit dem Haken „Stundenplan sperren“ um.`); };
 
 /* ---------- Stundenplan, Dienstplan und Heute, Runde 2 (Toms Wünsche 27.11.2026 nachmittags) ----------
    Fächer bekommen ein dezentes Linien-Symbol im Hintergrund (wie die Sterne bei der Nachtschicht), Tests in einer Stunde
@@ -11398,11 +11472,13 @@ ACT.fachOne = d => {
   const knoepfe = [['', 'Auto'], ['-', 'Keins'], ...Object.entries(FSYM).map(([k, v]) => [k, v[0]])].map(([k, n]) => `<label class="fe-w" title="${esc(n)}"><input type="radio" name="sym" value="${k}" ${wahl === k ? 'checked' : ''}><span>${k && k !== '-' ? fsymSvg(k) : `<small>${n}</small>`}</span></label>`).join('');
   modal(isNew ? 'Neues Fach' : 'Fach', `${fIn('name', 'Name', f.name || '', 'text', 'placeholder="z.B. Einsatzrecht"')}
     <div class="row" style="gap:8px"><div class="grow">${fIn('kurz', 'Kürzel (wie im Stundenplan)', f.kurz || '', 'text', 'placeholder="z.B. ER" maxlength="12" autocapitalize="characters"')}</div><div style="width:84px">${fIn('color', 'Farbe', f.color, 'color')}</div></div>
+    ${notSys() === 'uni' ? `<div class="grid2">${fIn('ects', 'ECTS', f.ects || '', 'number', 'placeholder="z.B. 5"')}${fSel('sem', 'Semester', [['', '– alle –'], ...semListe().map(s => [s.id, s.name])], f.sem || '')}</div>` : ''}
     <div class="f"><span>Symbol im Hintergrund</span><div class="fe-wahl">${knoepfe}</div></div>
     <div class="sub" id="feVor" style="margin-top:4px"></div>`,
     v => { const name = v.name.trim(); if (!name) return false;
       if (S.school.faecher.some(x => x !== f && x.name.toLowerCase() === name.toLowerCase())) { toast('Dieses Fach gibt es schon.'); return false; }
       const o = Object.assign(isNew ? { id: uid() } : f, { name, color: v.color, sym: v.sym || '', kurz: (v.kurz || '').trim() });
+      if (v.ects !== undefined) { o.ects = numIn(v.ects) || 0; if (v.sem) o.sem = v.sem; else delete o.sem; }
       if (!o.sym) delete o.sym; if (!o.kurz) delete o.kurz; if (isNew) S.school.faecher.push(o);
       fachZurueck(); },
     { del: isNew ? null : () => { S.school.faecher = S.school.faecher.filter(x => x !== f); S.school.noten = S.school.noten.filter(x => x.fach !== f.id); setTimeout(ACT.fachEdit, 0); },
@@ -11499,8 +11575,8 @@ function arbeitSchulKachel(t, shiftLine) {
   else if (sch) innen = `<span class="sub">${esc(ausbName())}${ausbZeiten()[0] ? ', ab ' + ausbZeiten()[0].von + ' Uhr' : ''}. Fächer trägst du im Stundenplan ein.</span>`;
   else if (fe && !S.shifts[t]) { const r = dayDiff(t, fe.b); innen = `<span class="sub">🏖 ${esc(fe.n)}${r ? `, noch ${r === 1 ? 'bis morgen' : r + ' Tage bis ' + fmtD(fe.b)}` : ', heute ist der letzte Tag'}.</span>`; }
   else innen = `<div class="row" style="gap:6px;margin-top:4px">${shiftLine(t)}</div>`;
-  const lbl = sch ? `${ausbIcon()} ${esc(ausbName())}` : S.shifts[t] ? '🚓 Dienst' : `🚓 Dienst & ${ausbIcon()} Schule`;
-  const info = [g !== null ? `Schnitt <b class="${noteKl(g)}">${dec(g, 2)}</b>` : '', pr ? `${esc(sEvLbl(pr))} ${dayDiff(t, pr.date) ? 'in ' + dayDiff(t, pr.date) + ' Tagen' : 'heute'}` : '', fn && dayDiff(t, fn.a) <= 60 ? `${esc(fn.n)} in ${dayDiff(t, fn.a)} ${dayDiff(t, fn.a) === 1 ? 'Tag' : 'Tagen'}` : ''].filter(Boolean).join(' · ');
+  const nurSch = beruf().bezahl === 'keins' && !(S.taetig || []).length, lbl = sch || (nurSch && !S.shifts[t]) ? `${ausbIcon()} ${esc(ausbName())}` : S.shifts[t] ? dienstLbl(S.shifts[t]) : `${dienstLbl()} & ${ausbIcon()} Schule`;
+  const info = [g !== null ? `Schnitt <b class="${noteKl(g)}">${dec(g, 2)}</b>` : '', pr ? `${esc(sEvLbl(pr))} ${dayDiff(t, pr.date) ? 'in ' + dayDiff(t, pr.date) + ' Tagen' : 'heute'}` : '', fn && dayDiff(t, fn.a) <= 60 ? `${esc(fn.n)} in ${dayDiff(t, fn.a)} ${dayDiff(t, fn.a) === 1 ? 'Tag' : 'Tagen'}` : '', typeof haHeuteText === 'function' ? haHeuteText(t) : ''].filter(Boolean).join(' · ');
   const ring = dcRing();
   return `<div class="tile wide dc3-tile hk-tile" data-act="goto" data-tab="arbeit" data-sub="${sch ? 'stundenplan' : 'dienstplan'}">${ring}<div class="hk-kopf${ring ? ' mit-ring' : ''}"><span class="lbl">${lbl}</span><span class="sub">Morgen: ${esc(tagKurz(addD(t, 1)))}</span>${info ? `<span class="sub">${info}</span>` : ''}</div>${innen}</div>`;
 }
@@ -11528,6 +11604,354 @@ function spTestSync(d, i, daten) {
   if (alt) Object.assign(alt, { title, time: z ? z.von : '', fach: daten.fach || '' });
   else S.sEv.push({ id: uid(), cat: 'test', date: d, time: z ? z.von : '', title, fach: daten.fach || '', spRef: ref });
 }
+
+/* ---------- Beruf, Bezahlart, weitere Tätigkeit (Roadmap Punkt 15, 28.11.2026) ----------
+   Beim ersten Start wählt man, was man macht. Mit Festgehalt gibt es Überstunden wie bisher (Polizei zusätzlich EZulV und DUZ).
+   Mit Stundenlohn oder Minijob: Stunden mal Lohn plus Zuschläge, brutto. Eine weitere Tätigkeit (z.B. Schule plus Minijob,
+   Hauptberuf plus Wochenende in der Bäckerei) hat eigene Schichtarten mit eigener Farbe im selben Dienstplan.
+   Werte (Recherche 28.11.2026): Mindestlohn 12,82 € (2025), 13,90 € (2026), 14,60 € (2027). Minijob-Grenze 556 €, 603 €, 633 €.
+   Zuschläge wie steuerfrei nach § 3b EStG üblich: Nacht 20–6 Uhr 25 %, 0–4 Uhr 40 % (Arbeit vor 0 Uhr begonnen), Sonntag 50 %,
+   Feiertag 125 %, 24.12. ab 14 Uhr, 25./26.12. und 1. Mai 150 %, 31.12. ab 14 Uhr 125 %. Sonntag und Feiertag zählen nicht doppelt,
+   der Nachtzuschlag kommt dazu. Werkstudent: in der Vorlesungszeit höchstens 20 Stunden pro Woche, mehr nur bis 26 Wochen im Jahr. */
+const BERUFE = { polizei: ['Polizei', '👮'], pflege: ['Pflege / Krankenhaus', '🏥'], gastro: ['Gastronomie', '🍽️'], handel: ['Einzelhandel', '🛒'], buero: ['Büro', '💼'], minijob: ['Minijob', '🧾'], schueler: ['Schüler', '🎒'], azubi: ['Azubi', '🛠️'], student: ['Student', '🎓'], sonst: ['Sonstiges', '✨'] };
+const BERUF_SCHULE = { schueler: 'schule', azubi: 'berufsschule', student: 'uni' };
+const BEZAHL = { fest: 'Festgehalt (Monatsgehalt)', stunde: 'Stundenlohn', minijob: 'Minijob', keins: 'Kein Lohn (nur Schule / Studium)' };
+const MINDESTLOHN = { 2025: 12.82, 2026: 13.90, 2027: 14.60 }, MINIJOB_GRENZE = { 2025: 556, 2026: 603, 2027: 633 };
+const jahrWert = (T, y) => { const ks = Object.keys(T).map(Number).sort(); let v = T[ks[0]]; for (const k of ks) if (y >= k) v = T[k]; return v; };
+const ZUSCHL_STD = { nacht: 25, nacht0: 40, sonntag: 50, feiertag: 125, hoch: 150 };
+const ZUSCHL_N = { nacht: 'Nacht 20–6 Uhr', nacht0: 'Nacht 0–4 Uhr (vor 0 Uhr begonnen)', sonntag: 'Sonntag', feiertag: 'Feiertag', hoch: 'Weihnachten und 1. Mai' };
+const TAET_FARBEN = ['#ff8a4c', '#5fd08d', '#b07cff', '#ffd166', '#4fd1c5', '#ff6b9a'];
+
+function berufFix() {
+  if (!S.taetig) S.taetig = [];
+  if (S.beruf && S.beruf.art !== undefined) return;
+  /* Wer schon Daten hat (Tom, Jan), bleibt bei Polizei und wird nicht gefragt */
+  const alt = Object.keys(S.shifts || {}).length || (S.tx || []).length || (S.settings && S.settings.name);
+  S.beruf = alt ? { art: 'polizei', bezahl: 'fest', gewaehlt: 1 } : { art: '', bezahl: 'fest', gewaehlt: 0 };
+}
+const beruf = () => { berufFix(); return S.beruf; };
+const berufPolizei = () => beruf().art === 'polizei';
+const lohnArt = b => ['stunde', 'minijob'].includes(b);
+const hauptLohn = () => lohnArt(beruf().bezahl);
+const taetOf = id => (S.taetig || []).find(t => t.id === id);
+const schichtTaet = s => { const t = s && stype(s.type); return t && t.taet && taetOf(t.taet) ? t.taet : ''; };
+const schichtNeben = s => !!schichtTaet(s);
+const zuschlCfg = o => Object.assign({}, ZUSCHL_STD, (o && o.zuschl) || {});
+
+/* Minuten einer Schicht nach Zuschlagsart (Pausen anteilig abgezogen) */
+function lohnMinuten(d, s) {
+  const r = { min: 0, nacht: 0, nacht0: 0, sonntag: 0, feiertag: 0, hoch: 0 }, sp = shiftSpan(d, s, true); if (!sp) return r;
+  const roh = { nacht: 0, nacht0: 0, sonntag: 0, feiertag: 0, hoch: 0 };
+  for (let m = sp.a; m < sp.b; m++) {
+    const tag = m >= 1440 ? addD(d, Math.floor(m / 1440)) : d, h = Math.floor((m % 1440) / 60), md = tag.slice(5), wd = pd(tag).getDay();
+    if (m >= 1440 && h < 4) roh.nacht0++; else if (h >= 20 || h < 6) roh.nacht++;
+    if (md === '12-25' || md === '12-26' || md === '05-01' || (md === '12-24' && h >= 14)) roh.hoch++;
+    else if (holiday(tag) || (md === '12-31' && h >= 14)) roh.feiertag++;
+    else if (wd === 0) roh.sonntag++;
+  }
+  const ges = sp.b - sp.a, f = ges ? Math.max(0, ges - sp.pause) / ges : 0;
+  r.min = Math.max(0, ges - sp.pause); for (const k in roh) r[k] = roh[k] * f; return r;
+}
+/* Ein Tag: Stunden, Grundlohn, Zuschläge in Euro */
+function lohnTag(d, o) {
+  const s = S.shifts[d], z = zuschlCfg(o), lohn = +o.lohn || 0, r = { h: 0, grund: 0, zus: {}, eur: 0 };
+  if (!s) return r; const m = lohnMinuten(d, s); r.h = m.min / 60; r.grund = r.h * lohn;
+  if (o.mitZ !== false) for (const k of Object.keys(ZUSCHL_STD)) { const e = m[k] / 60 * lohn * (+z[k] || 0) / 100; if (m[k]) r.zus[k] = { h: m[k] / 60, eur: e }; r.eur += e; }
+  r.eur += r.grund; return r;
+}
+/* Monat für eine Tätigkeit ('' = Hauptberuf) */
+function lohnMonat(ym, tid) {
+  const o = tid ? taetOf(tid) : beruf(), r = { h: 0, grund: 0, zus: {}, eur: 0, tage: [] }; if (!o) return r;
+  for (const d of Object.keys(S.shifts).filter(x => x.startsWith(ym)).sort()) {
+    if (schichtTaet(S.shifts[d]) !== (tid || '')) continue; const t = lohnTag(d, o); if (!t.h) continue;
+    r.h += t.h; r.grund += t.grund; r.eur += t.eur; r.tage.push([d, t]);
+    for (const k in t.zus) { const x = (r.zus[k] = r.zus[k] || { h: 0, eur: 0 }); x.h += t.zus[k].h; x.eur += t.zus[k].eur; }
+  }
+  return r;
+}
+/* Geldeingang im Folgemonat, der zu dieser Tätigkeit passt (Notiz enthält den Namen, sonst Kategorie Lohn/Gehalt) */
+function lohnEingang(ym, o) {
+  const n = addM(ym, 1), name = lowN(o && o.name || ''), cat2 = c => { const k = cat(c); return k && /lohn|gehalt|minijob/i.test(k.name); };
+  const L = (S.tx || []).filter(t => t.type === 'ein' && t.date && t.date.startsWith(n));
+  const f = (name.length >= 3 ? L.filter(t => lowN(t.note || '').includes(name)) : []);
+  return (f.length ? f : L.filter(t => cat2(t.cat))).sort((a, b) => b.amount - a.amount)[0] || null;
+}
+function lohnKarte(ym, tid) {
+  const o = tid ? taetOf(tid) : beruf(), mo = lohnMonat(ym, tid), y = +ym.slice(0, 4), ml = jahrWert(MINDESTLOHN, y), gr = jahrWert(MINIJOB_GRENZE, y), z = zuschlCfg(o);
+  const titel = tid ? `${esc(o.name)}` : 'Dein Lohn', mj = (o.bezahl || '') === 'minijob', ein = lohnEingang(ym, tid ? o : null);
+  let h = `<div class="card lohn-k" ${tid ? `style="--f:${o.color}"` : ''}><div class="row sb"><h2 style="margin:0">${tid ? '<i class="dot" style="background:' + o.color + '"></i> ' : '💶 '}${titel} · ${MON[+ym.slice(5) - 1]}</h2><b class="num" style="font-size:20px">${eur(mo.eur)}</b></div>
+    <div class="sub" style="margin:2px 0 8px">brutto, ${mj ? 'Minijob' : 'Stundenlohn'} ${o.lohn ? eur(+o.lohn) + ' pro Stunde' : '<span class="wrn">noch kein Stundenlohn eingetragen</span>'}</div>
+    <table class="t"><tr><td>${hm(mo.h)} Stunden × ${eur(+o.lohn || 0)}</td><td class="num">${eur(mo.grund)}</td></tr>
+    ${Object.keys(ZUSCHL_STD).filter(k => mo.zus[k] && mo.zus[k].eur > .004).map(k => `<tr><td>${ZUSCHL_N[k]} <span class="sub">${hm(mo.zus[k].h)} h × ${z[k]} %</span></td><td class="num">${eur(mo.zus[k].eur)}</td></tr>`).join('')}
+    <tr><td><b>Brutto gesamt</b></td><td class="num"><b>${eur(mo.eur)}</b></td></tr></table>`;
+  if (mj) { const p = Math.min(100, mo.eur / gr * 100); let jahr = 0; for (let m = `${y}-01`; m <= ym; m = addM(m, 1)) jahr += lohnMonat(m, tid).eur;
+    h += `<div class="lohn-gr"><div class="row sb"><span>Minijob-Grenze ${y}</span><b class="${mo.eur > gr ? 'neg' : ''}">${eur(mo.eur)} von ${eur(gr)}</b></div><div class="bar"><i style="width:${p}%;${mo.eur > gr ? 'background:#ff5d6c' : ''}"></i></div>
+      <div class="sub">${mo.eur > gr ? 'Über der Grenze. Erlaubt ist das nur selten und unvorhersehbar, höchstens zwei Monate im Jahr.' : `Noch ${eur(gr - mo.eur)} bis zur Grenze.`} Im Jahr bisher ${eur(jahr)} von ${eur(gr * 12)}.</div></div>`; }
+  if (o.lohn && +o.lohn < ml && !['schueler'].includes(beruf().art)) h += `<div class="sp-ferien">⚠️ Dein Stundenlohn liegt unter dem Mindestlohn ${y} (${eur(ml)}). Für Schüler unter 18 und manche Azubis gilt er nicht, sonst lohnt sich ein Blick in den Vertrag.</div>`;
+  if (o.werk) { const wo = werkWochen(y, tid); h += `<div class="lohn-gr"><div class="row sb"><span>Werkstudent: Wochen über 20 Stunden ${y}</span><b class="${wo.n > 26 ? 'neg' : ''}">${wo.n} von 26</b></div><div class="sub">Diese Woche ${hm(wo.jetzt)} Stunden. In der Vorlesungszeit höchstens 20 Stunden pro Woche, mehr ist nur in den Semesterferien oder bis 26 Wochen im Jahr erlaubt.</div></div>`; }
+  h += ein ? `<div class="sub" style="margin-top:8px">💳 Eingang am ${fmtDs(ein.date)}: <b>${eur(ein.amount)}</b>. Das ist meist netto, also etwas weniger als brutto.</div>`
+    : `<div class="sub" style="margin-top:8px">Den Lohn für ${MON[+ym.slice(5) - 1]} erwartest du meist im ${MON[+addM(ym, 1).slice(5) - 1]}. Sobald er in Finanzen eingeht, zeige ich ihn hier zum Vergleich.</div>`;
+  if (mo.tage.length) h += `<details class="lohn-tage"><summary>${mo.tage.length} ${mo.tage.length === 1 ? 'Schicht' : 'Schichten'} im ${MON[+ym.slice(5) - 1]}</summary>${mo.tage.map(([d, t]) => { const s = S.shifts[d], st = stype(s.type); return `<div class="it click" data-act="dpDayEdit" data-d="${d}"><span class="chip" style="background:${st.color}">${esc(st.code)}</span><div class="grow"><div class="t">${WDK[pd(d).getDay()]} ${fmtDs(d)}</div><div class="s">${hm(t.h)} h</div></div><b class="num">${eur(t.eur)}</b></div>`; }).join('')}</details>`;
+  return h + `</div>`;
+}
+function werkWochen(y, tid) {
+  const wo = {}; for (const d in S.shifts) { if (!d.startsWith(String(y)) || schichtTaet(S.shifts[d]) !== (tid || '')) continue; const k = mondayOf(d); wo[k] = (wo[k] || 0) + lohnMinuten(d, S.shifts[d]).min / 60; }
+  return { n: Object.values(wo).filter(h => h > 20.001).length, jetzt: wo[mondayOf(today())] || 0 };
+}
+
+/* ---------- Auswahl beim ersten Start ---------- */
+ACT.berufWahl = () => {
+  berufFix(); _modalStack.forEach(m => m.remove()); _modalStack = [];
+  const b = S.beruf, kach = Object.entries(BERUFE).map(([k, [n, ic]]) => `<label class="fa-b"><input type="radio" name="art" value="${k}" ${b.art === k ? 'checked' : ''}><span class="fa-i">${ic}</span><span class="fa-n">${n}</span></label>`).join('');
+  modal('👋 Was machst du?', `<div class="sub" style="margin:-4px 0 10px">Damit baut sich JATOS passend für dich um. Du kannst alles später in den Einstellungen ändern.</div>
+    <div class="fa-bereiche bw">${kach}</div>
+    <div id="bwMehr" hidden style="margin-top:12px">
+      <div id="bwBez">${fSel('bezahl', 'Wie wirst du bezahlt?', [['fest', BEZAHL.fest], ['stunde', BEZAHL.stunde], ['minijob', BEZAHL.minijob]], b.bezahl || 'fest')}</div>
+      <div id="bwLohn">${fMoney('lohn', 'Stundenlohn brutto (€)', b.lohn || '')}</div>
+      <div id="bwNeben">${fChk('neben', 'Ich arbeite nebenbei, z.B. Minijob oder Werkstudent', false)}<div id="bwNebenL" hidden>${fIn('nName', 'Wo?', '', 'text', 'placeholder="z.B. Bäckerei"')}${fMoney('nLohn', 'Stundenlohn brutto (€)', '')}</div></div>
+      <div class="sub" id="bwInfo"></div>
+    </div>`,
+    v => {
+      if (!v.art) { toast('Wähl kurz aus, was du machst.'); return false; }
+      const schule = BERUF_SCHULE[v.art];
+      Object.assign(S.beruf, { art: v.art, bezahl: v.art === 'polizei' ? 'fest' : schule ? 'keins' : v.art === 'minijob' ? 'minijob' : v.bezahl, lohn: num(v.lohn) || S.beruf.lohn || '', gewaehlt: 1 });
+      if (schule && typeof ausbFix === 'function') { ausbFix(); if (!S.ausb) S.ausb = { an: true, art: schule, name: '', ende: '', zeiten: ausbZeitenStd(schule), zaehlt: false, modus: 'plan', festH: 0, ferien: schule !== 'uni', tage: [1, 2, 3, 4, 5] }; S.ausb.an = true;
+        if (schule === 'uni' && !S.ausb.noten) S.ausb.noten = 'uni'; }
+      if ((schule || v.neben) && v.neben) taetNeu({ name: (v.nName || '').trim() || (v.art === 'student' ? 'Nebenjob' : 'Minijob'), bezahl: v.art === 'student' ? 'stunde' : 'minijob', lohn: num(v.nLohn), werk: v.art === 'student' });
+      if (lohnArt(S.beruf.bezahl) && !S.shiftTypes.some(t => !t.taet)) S.shiftTypes.push({ id: uid(), code: 'S', name: 'Schicht', start: '09:00', end: '17:00', pause: 30, color: '#4f8cff' });
+      if (v.art !== 'polizei' && S.settings) S.settings.absAktiv = ['U', 'K'];
+      setTimeout(() => toast(`✓ Eingerichtet für ${BERUFE[v.art][0]}.`), 50);
+    }, { saveLabel: 'Los geht’s', still: true, init: fm => {
+      const zeig = () => { const a = (fm.querySelector('input[name=art]:checked') || {}).value; $('#bwMehr', fm).hidden = !a; if (!a) return; const sch = !!BERUF_SCHULE[a];
+        $('#bwBez', fm).hidden = a === 'polizei' || a === 'minijob' || sch; const bez = a === 'minijob' ? 'minijob' : fm.bezahl.value;
+        $('#bwLohn', fm).hidden = a === 'polizei' || sch || !lohnArt(bez); $('#bwNeben', fm).hidden = !sch && a !== 'polizei' && false;
+        $('#bwNeben', fm).hidden = !sch; $('#bwNebenL', fm).hidden = !fm.neben.checked;
+        $('#bwInfo', fm).textContent = a === 'polizei' ? 'Mit Überstundenkonto, Dienstausgleich, DUZ und Zulagen nach EZulV.' : sch ? 'Du bekommst Stundenplan, Noten, Hausaufgaben und Prüfungen.' : lohnArt(bez) ? `Die App rechnet Stunden mal Lohn plus Zuschläge (brutto). Mindestlohn ${new Date().getFullYear()}: ${eur(jahrWert(MINDESTLOHN, new Date().getFullYear()))}.` : 'Mit Überstundenkonto (Ist minus Soll) und Urlaub.'; };
+      fm.querySelectorAll('input[name=art]').forEach(r => r.addEventListener('change', zeig)); fm.bezahl.addEventListener('change', zeig); fm.neben.addEventListener('change', zeig); zeig(); } });
+};
+function taetNeu(o) { const t = Object.assign({ id: uid(), color: TAET_FARBEN[(S.taetig || []).length % TAET_FARBEN.length], zuschl: {} }, o); S.taetig.push(t);
+  S.shiftTypes.push({ id: uid(), code: (t.name || 'N').slice(0, 2).toUpperCase(), name: t.name, start: '', end: '', pause: 0, color: t.color, taet: t.id }); return t; }
+
+/* ---------- Einstellungen: Beruf & Bezahlung ---------- */
+function berufEinstHtml() {
+  const b = beruf(); return `<h3>💼 Beruf & Bezahlung</h3><div class="row sb" style="gap:10px;align-items:center;margin-bottom:12px"><span>${b.art ? BERUFE[b.art][1] + ' ' + BERUFE[b.art][0] : 'Noch nicht gewählt'}<span class="sub" style="display:block">${BEZAHL[b.bezahl] || ''}${(S.taetig || []).length ? ' · plus ' + S.taetig.map(t => esc(t.name)).join(', ') : ''}</span></span><button type="button" class="btn sm sec" data-act="berufEdit">Ändern</button></div>`;
+}
+ACT.berufEdit = () => {
+  berufFix(); _modalStack.forEach(m => m.remove()); _modalStack = [];
+  const b = S.beruf, z = zuschlCfg(b);
+  const taet = (S.taetig || []).map(t => `<div class="it click" data-act="taetEdit" data-id="${t.id}" data-zurueck="1"><i class="dot" style="background:${t.color}"></i><div class="grow"><div class="t">${esc(t.name)}</div><div class="s">${BEZAHL[t.bezahl] || ''}${t.lohn ? ' · ' + eur(+t.lohn) + '/h' : ''}${t.werk ? ' · Werkstudent' : ''}</div></div></div>`).join('');
+  modal('💼 Beruf & Bezahlung', `${fSel('art', 'Was machst du hauptsächlich?', Object.entries(BERUFE).map(([k, [n, ic]]) => [k, ic + ' ' + n]), b.art || 'sonst')}
+    ${fSel('bezahl', 'Bezahlung', Object.entries(BEZAHL).map(([k, n]) => [k, n]), b.bezahl || 'fest')}
+    <div id="beLohn">${fMoney('lohn', 'Stundenlohn brutto (€)', b.lohn || '')}
+      <h3 style="margin-top:6px">Zuschläge in %</h3><div class="sub" style="margin:-4px 0 6px">Vorgaben wie üblich (steuerfrei nach § 3b EStG). Das sind nur Beispielwerte, trag ein, was in deinem Vertrag steht. 0 heißt kein Zuschlag.</div>
+      <div class="grid2">${Object.keys(ZUSCHL_STD).map(k => fIn('z_' + k, ZUSCHL_N[k], z[k], 'number')).join('')}</div></div>
+    <h3 style="margin-top:10px">Weitere Tätigkeiten</h3><div class="sub" style="margin:-4px 0 6px">Zum Beispiel Schule plus Minijob oder dein Beruf plus Wochenende in der Bäckerei. Jede bekommt eine eigene Farbe und eigene Schichtarten im Dienstplan.</div>
+    ${taet ? `<div class="card tight list" style="background:var(--card)">${taet}</div>` : ''}<button type="button" class="btn sec full" data-act="taetEdit" data-zurueck="1" style="margin-top:6px">+ Weitere Tätigkeit</button>`,
+    v => { Object.assign(b, { art: v.art, bezahl: v.bezahl, lohn: num(v.lohn) || '', gewaehlt: 1 }); b.zuschl = {}; Object.keys(ZUSCHL_STD).forEach(k => { const x = numIn(v['z_' + k]); if (!isNaN(x) && x !== ZUSCHL_STD[k]) b.zuschl[k] = x; }); },
+    { init: fm => { const zeig = () => { $('#beLohn', fm).hidden = !lohnArt(fm.bezahl.value); }; fm.bezahl.addEventListener('change', zeig); zeig(); } });
+};
+ACT.taetEdit = d => {
+  berufFix(); const t = d.id ? taetOf(d.id) : { color: TAET_FARBEN[S.taetig.length % TAET_FARBEN.length], bezahl: 'minijob' }, neu = !t.id, z = zuschlCfg(t), st0 = (!neu && S.shiftTypes.find(s => s.taet === t.id)) || {};
+  _modalStack.forEach(m => m.remove()); _modalStack = [];
+  modal(neu ? 'Weitere Tätigkeit' : esc(t.name), `${fIn('name', 'Name', t.name || '', 'text', 'placeholder="z.B. Bäckerei, Nachhilfe, Kellnern"')}
+    <div class="row" style="gap:8px"><div class="grow">${fSel('bezahl', 'Bezahlung', [['minijob', 'Minijob'], ['stunde', 'Stundenlohn'], ['fest', 'Festes Monatsgeld']], t.bezahl)}</div><div style="width:84px">${fIn('color', 'Farbe', t.color, 'color')}</div></div>
+    ${fMoney('lohn', 'Stundenlohn brutto (€)', t.lohn || '')}
+    <div class="grid3">${fIn('start', 'Meist von', st0.start || '', 'time')}${fIn('end', 'bis', st0.end || '', 'time')}${fIn('pause', 'Pause (Min.)', st0.pause || 0, 'number')}</div>
+    ${fChk('werk', 'Werkstudent (20-Stunden-Grenze im Semester beachten)', !!t.werk)}
+    ${fChk('mitZ', 'Zuschläge für Nacht, Sonntag und Feiertag', t.mitZ !== false)}
+    <div class="grid2" id="taZ">${Object.keys(ZUSCHL_STD).map(k => fIn('z_' + k, ZUSCHL_N[k] + ' %', z[k], 'number')).join('')}</div>
+    <div class="sub">${neu ? 'Ich lege dafür gleich eine eigene Schichtart in der Farbe an. Weichen die Zeiten mal ab, tippst du im Dienstplan auf den Tag.' : 'Schichtarten dieser Tätigkeit findest du im Dienstplan unter Schichtarten.'} Die Stunden zählen nicht zu deinem Überstundenkonto.</div>`,
+    v => { if (!v.name.trim()) return false; const daten = { name: v.name.trim(), bezahl: v.bezahl, color: v.color, lohn: num(v.lohn) || '', werk: !!v.werk, mitZ: !!v.mitZ, zuschl: {} };
+      Object.keys(ZUSCHL_STD).forEach(k => { const x = numIn(v['z_' + k]); if (!isNaN(x) && x !== ZUSCHL_STD[k]) daten.zuschl[k] = x; });
+      const zt = { start: v.start || '', end: v.end || '', pause: +v.pause || 0 };
+      if (neu) { const n = taetNeu(daten), s = S.shiftTypes.find(x => x.taet === n.id); if (s) Object.assign(s, zt); } else { Object.assign(t, daten); S.shiftTypes.filter(s => s.taet === t.id).forEach(s => { s.color = t.color; s.name = s.name || t.name; }); if (st0.id) Object.assign(st0, zt); }
+      (d.zurueck && setTimeout(ACT.berufEdit, 0)); },
+    { del: neu ? null : async () => { const st = S.shiftTypes.filter(s => s.taet === t.id); for (const s of st) await stLoeschen(s); S.taetig = S.taetig.filter(x => x !== t); (d.zurueck && setTimeout(ACT.berufEdit, 0)); },
+      init: fm => { const zeig = () => { $('#taZ', fm).hidden = !fm.mitZ.checked; }; fm.mitZ.addEventListener('change', zeig); zeig(); } });
+};
+
+/* ---------- Arbeit-Reiter: Stunden & Lohn ---------- */
+function taetKarten(ym) { return (S.taetig || []).filter(t => lohnArt(t.bezahl)).map(t => lohnKarte(ym, t.id)).join(''); }
+{ const _zeit = ARB.zeit;
+  ARB.zeit = () => {
+    const m = UI.month;
+    if (hauptLohn()) return `<div class="row sb" style="margin-bottom:10px">${mnav()}</div>` + lohnKarte(m, '') + taetKarten(m) + `<h2 class="zeit-tr">🌴 Urlaub & Abwesenheiten</h2>` + ARB.urlaub();
+    if (beruf().bezahl === 'keins') { const t = taetKarten(m); return `<div class="row sb" style="margin-bottom:10px">${mnav()}</div>` + (t || `<div class="card"><h2>💶 Nebenjob</h2><div class="sub" style="margin-bottom:10px">Du jobbst nebenbei, zum Beispiel im Minijob, als Werkstudent oder mit Nachhilfe? Leg es hier an. Die Schichten trägst du im Dienstplan ein und ich rechne Stunden mal Lohn aus.</div></div>`) + `<button type="button" class="btn sec full" data-act="taetEdit">+ Weitere Tätigkeit</button>`; }
+    const h = _zeit(), t = taetKarten(m); if (!t) return h;
+    const i = h.indexOf('<h2 class="zeit-tr">'); return i < 0 ? h + t : h.slice(0, i) + t + h.slice(i);
+  }; }
+/* Kopfzeile im Reiter Arbeit */
+function arbeitKopfText() {
+  const _m = today().slice(0, 7), b = beruf();
+  if (hauptLohn()) { const mo = lohnMonat(_m, ''); return `Im ${MON[+_m.slice(5) - 1]} ${mo.tage.length} ${mo.tage.length === 1 ? 'Schicht' : 'Schichten'} mit ${hm(mo.h)} Stunden, das sind ungefähr <b>${eur(mo.eur)}</b> brutto.`; }
+  if (b.bezahl === 'keins') { const tt = (S.taetig || [])[0]; if (tt) { const mo = lohnMonat(_m, tt.id); return `${esc(tt.name)} im ${MON[+_m.slice(5) - 1]}: ${hm(mo.h)} Stunden, ungefähr <b>${eur(mo.eur)}</b> brutto.`; } return `${typeof ausbName === 'function' ? esc(ausbName()) : 'Schule'}: Stundenplan, Noten und Termine.`; }
+  return null;
+}
+/* Bezeichnung der Dienst-Kachel auf Heute: Polizei „Dienst“, sonst „Arbeit“ oder der Name der weiteren Tätigkeit */
+function dienstLbl(s) {
+  const tt = s && schichtTaet(s) ? taetOf(schichtTaet(s)) : null; if (tt) return '💼 ' + esc(tt.name);
+  const b = beruf(); if (b.art === 'polizei' || !b.art) return '🚓 Dienst'; if (b.bezahl === 'keins') return (S.taetig || [])[0] ? '💼 ' + esc(S.taetig[0].name) : '💼 Nebenjob';
+  return (BERUFE[b.art] || BERUFE.sonst)[1] + ' Arbeit';
+}
+
+/* ---------- Schule & Studium für alle (Roadmap Punkt 15, 28.11.2026) ----------
+   Notensysteme: Schule 1–6, Oberstufe 0–15 Punkte, Studium 1,0–5,0 mit ECTS. Zeugnis-Rechner (schriftlich/mündlich gewichtet),
+   Hausaufgaben mit Abgabetag, für Studenten Semester, Module mit ECTS, Prüfungsphase mit Countdown und einfachem Lernplan. */
+const NOTSYS = {
+  note: { n: 'Noten 1 bis 6', min: 1, max: 6, ph: 'z.B. 2 oder 2,3', klein: true },
+  punkte: { n: 'Punkte 0 bis 15 (Oberstufe)', min: 0, max: 15, ph: 'z.B. 11', klein: false },
+  uni: { n: 'Studium 1,0 bis 5,0 mit ECTS', min: 1, max: 5, ph: 'z.B. 1,7', klein: true }
+};
+const notSys = () => { const a = S.ausb || {}; return NOTSYS[a.noten] ? a.noten : a.art === 'uni' ? 'uni' : 'note'; };
+const notFmt = (g, st) => g === null || g === undefined || isNaN(g) ? '–' : notSys() === 'punkte' ? dec(g, st ? 1 : 0) : dec(g, st ? 2 : 1);
+/* Punkte in eine Note umrechnen (Oberstufe): 15–13 = 1, 12–10 = 2 usw., als Kommazahl (17 − P) / 3 */
+const punkteZuNote = p => Math.min(6, Math.max(0.67, (17 - p) / 3));
+const gewS = () => { const x = +((S.ausb || {}).gewS); return isNaN(x) || (S.ausb || {}).gewS === undefined ? 50 : Math.max(0, Math.min(100, x)); };
+const SK_HA = 'ha';
+SK.ha = ['Hausaufgabe', '#4fd1c5', '📒'];
+if (!SK_SCHULE.includes('ha')) SK_SCHULE.push('ha');
+
+/* Schnitt je Fach: mit schriftlich/mündlich gewichtet, sonst einfacher gewichteter Schnitt */
+function notenListe(fid) { return S.school.noten.filter(x => x.fach === fid && x.grade !== '' && x.grade != null && !isNaN(+x.grade)); }
+const wSchnitt = n => n.length ? sum(n, x => +x.grade * (+x.w || 1)) / sum(n, x => +x.w || 1) : null;
+function fachTeile(fid) { const n = notenListe(fid); return { s: wSchnitt(n.filter(x => x.art === 's')), m: wSchnitt(n.filter(x => x.art === 'm')), o: wSchnitt(n.filter(x => !x.art)), alle: n }; }
+function fachSchnitt(fid) {
+  const t = fachTeile(fid); if (!t.alle.length) return null;
+  if (notSys() === 'uni' || (t.s === null && t.m === null)) return wSchnitt(t.alle);
+  /* Noten ohne Art zählen zur schriftlichen Seite */
+  const sch = wSchnitt(t.alle.filter(x => x.art !== 'm')), mu = t.m;
+  if (sch === null) return mu; if (mu === null) return sch;
+  const f = gewS() / 100; return sch * f + mu * (1 - f);
+}
+const zeugnisNote = g => g === null ? null : notSys() === 'uni' ? g : Math.round(g);
+function gesamtSchnitt() {
+  const F = S.school.faecher.map(f => [f, fachSchnitt(f.id)]).filter(x => x[1] !== null); if (!F.length) return null;
+  if (notSys() === 'uni') { const e = sum(F, x => +x[0].ects || 0); if (e > 0) return sum(F, x => x[1] * (+x[0].ects || 0)) / e; }
+  return F.reduce((s, x) => s + x[1], 0) / F.length;
+}
+function noteGut(g) { const s = notSys(); if (s === 'punkte') return g >= 10 ? 'pos' : g >= 5 ? 'wrn' : 'neg'; if (s === 'uni') return g <= 2.5 ? 'pos' : g <= 4.0 ? 'wrn' : 'neg'; return g <= 2.5 ? 'pos' : g <= 3.5 ? 'wrn' : 'neg'; }
+
+/* ---------- Note eintragen ---------- */
+function gradeEdit(n) {
+  const isNew = !n.id, sy = NOTSYS[notSys()], uni = notSys() === 'uni';
+  modal(isNew ? (uni ? 'Neue Modulnote' : 'Neue Note') : 'Note', `${fSel('fach', uni ? 'Modul' : 'Fach', S.school.faecher.map(f => [f.id, f.name]), n.fach)}
+    <div class="grid2">${fIn('grade', uni ? 'Note (1,0 bis 5,0)' : notSys() === 'punkte' ? 'Punkte (0 bis 15)' : 'Note (1 bis 6)', n.grade ?? '', 'text', `inputmode="decimal" placeholder="${sy.ph}"`)}${fIn('w', 'Gewichtung', n.w ?? 1, 'number')}</div>
+    ${uni ? '' : `<div class="typesw">${[['s', '✍️ Schriftlich'], ['m', '🗣️ Mündlich']].map(([k, l]) => `<label><input type="radio" name="art" value="${k}" ${(n.art || 's') === k ? 'checked' : ''}><span>${l}</span></label>`).join('')}</div>`}
+    ${fIn('title', 'Wofür (optional)', n.title || '', 'text', `placeholder="${uni ? 'z.B. Klausur, Hausarbeit' : 'z.B. Klassenarbeit 1, Referat'}"`)}${fIn('date', 'Datum', n.date || today(), 'date')}
+    <div class="sub">${uni ? 'Die Gesamtnote rechne ich nach ECTS gewichtet. Die ECTS stellst du beim Modul ein.' : `Schriftlich und mündlich zählen gerade ${gewS()} zu ${100 - gewS()}. Gewichtung 2 zählt innerhalb doppelt.`}</div>`,
+    v => { const g = numIn(v.grade); if (String(v.grade).trim() === '' || isNaN(g)) return false;
+      if (g < sy.min || g > sy.max) { toast(`Bitte eine Zahl von ${dec(sy.min, 0)} bis ${dec(sy.max, 0)}.`); return false; }
+      const o = Object.assign(isNew ? { id: uid() } : n, { fach: v.fach, grade: g, w: numIn(v.w) || 1, title: v.title.trim(), date: v.date }); if (!uni) o.art = v.art || 's';
+      if (isNew) S.school.noten.push(o); },
+    { del: isNew ? null : () => { S.school.noten = S.school.noten.filter(x => x !== n); } });
+}
+
+/* ---------- Reiter Noten ---------- */
+ARB.noten = () => {
+  ausbFix(); const sc = S.school, g = gesamtSchnitt(), t = today(), sy = notSys(), uni = sy === 'uni';
+  const pr = S.sEv.filter(e => ['pruef', 'test'].includes(e.cat) && e.date >= t).sort((a, b) => a.date < b.date ? -1 : 1);
+  const zweit = uni ? `<div class="l">ECTS geschafft</div><div class="v">${ectsGeschafft()}<span class="sub" style="font-size:13px"> / ${ectsZiel()}</span></div>`
+    : `<div class="l">Nächster Test</div><div class="v" style="font-size:17px">${pr[0] ? (dayDiff(t, pr[0].date) ? 'in ' + dayDiff(t, pr[0].date) + ' Tagen' : 'heute') : '–'}</div>`;
+  let h = `<div class="grid2" style="margin-bottom:12px"><div class="stat"><div class="l">${uni ? 'Schnitt (nach ECTS)' : 'Notenschnitt'}</div><div class="v ${noteKl(g)}">${g === null ? '–' : notFmt(g, 1)}</div>${sy === 'punkte' && g !== null ? `<div class="sub">ungefähr Note ${dec(punkteZuNote(g), 1)}</div>` : ''}</div><div class="stat">${zweit}</div></div>`;
+  if (uni) h += studiumKarte();
+  h += `<div class="card"><div class="row sb"><h2 style="margin:0">🎓 ${uni ? 'Module' : 'Noten'}</h2><div class="row" style="gap:6px"><button class="btn sm sec" data-act="notSysEdit" aria-label="Notensystem und Gewichtung">⚙️</button><button class="btn sm sec" data-act="fachEdit">${uni ? 'Module' : 'Fächer'}</button><button class="btn sm" data-act="gradeNew">+ Note</button></div></div>`;
+  if (!sc.faecher.length) h += `<div class="sub" style="margin-top:8px">Lege zuerst deine ${uni ? 'Module' : 'Fächer'} an, dann kannst du Noten eintragen.</div>`;
+  h += sc.faecher.filter(f => !uni || !f.sem || f.sem === (semJetzt() || {}).id || notenListe(f.id).length).map(f => { const s = fachSchnitt(f.id), n = sc.noten.filter(x => x.fach === f.id).sort((a, b) => a.date < b.date ? -1 : 1);
+    return `<div class="sk-fach"><div class="row sb"><span><i class="dot" style="background:${f.color}"></i> <b>${esc(f.name)}</b>${uni && f.ects ? ` <span class="sub">${dec(+f.ects, 0)} ECTS</span>` : ''}</span><b class="num ${noteKl(s)}">${notFmt(s, 1)}</b></div>
+      <div class="sk-noten">${n.map(x => `<button type="button" class="sk-note ${noteKl(+x.grade)}" data-act="gradeEdit" data-id="${x.id}" title="${esc(x.title || '')} ${x.date ? fmtDs(x.date) : ''}">${notFmt(+x.grade)}${x.art === 'm' ? '<small>m</small>' : ''}${+x.w > 1 ? `<small>×${x.w}</small>` : ''}</button>`).join('')}<button type="button" class="sk-note neu" data-act="gradeNew" data-f="${f.id}">+</button></div></div>`; }).join('');
+  h += `</div>`;
+  if (!uni && sc.faecher.some(f => notenListe(f.id).length)) h += zeugnisKarte();
+  if (pr.length) h += `<div class="card"><h2>📝 Anstehende Tests & Prüfungen</h2>${pr.slice(0, 6).map(sEvZeile).join('')}</div>`;
+  return h;
+};
+function zeugnisKarte() {
+  const sy = notSys(), F = S.school.faecher.map(f => [f, fachTeile(f.id), fachSchnitt(f.id)]).filter(x => x[2] !== null);
+  const zn = F.map(x => zeugnisNote(x[2])), schnitt = zn.length ? zn.reduce((a, b) => a + b, 0) / zn.length : null;
+  return `<div class="card zr-k"><div class="row sb"><h2 style="margin:0">📜 Zeugnis-Rechner</h2><button class="btn sm sec" data-act="notSysEdit">${gewS()} / ${100 - gewS()}</button></div>
+    <div class="sub" style="margin:2px 0 8px">Schriftlich zählt ${gewS()} %, mündlich ${100 - gewS()} %. So stünde es heute auf dem Zeugnis.</div>
+    <table class="t"><tr><th>Fach</th><th>✍️</th><th>🗣️</th><th>Zeugnis</th></tr>
+    ${F.map(([f, t, s], i) => `<tr><td><i class="dot" style="background:${f.color}"></i> ${esc(f.kurz || f.name)}</td><td class="num">${notFmt(t.s !== null || t.o !== null ? wSchnitt(t.alle.filter(x => x.art !== 'm')) : null, 1)}</td><td class="num">${notFmt(t.m, 1)}</td><td class="num"><b class="${noteKl(zn[i])}">${notFmt(zn[i])}</b> <span class="sub">${notFmt(s, 1)}</span></td></tr>`).join('')}
+    <tr><td><b>Durchschnitt</b></td><td></td><td></td><td class="num"><b class="${noteKl(schnitt)}">${notFmt(schnitt, 1)}</b></td></tr></table>
+    <div class="sub" style="margin-top:6px">Die Zeugnisnote ist gerundet${sy === 'punkte' && schnitt !== null ? `, ${notFmt(schnitt, 1)} Punkte sind ungefähr die Note ${dec(punkteZuNote(schnitt), 1)}` : ''}. Am Ende entscheidet die Lehrkraft.</div></div>`;
+}
+ACT.notSysEdit = () => {
+  ausbFix(); if (!S.ausb) return toast('Leg zuerst Schule oder Studium an.');
+  modal('Notensystem', `${fSel('noten', 'So wird bewertet', Object.entries(NOTSYS).map(([k, x]) => [k, x.n]), notSys())}
+    <div id="nsGew">${fIn('gewS', 'Schriftlich in % (der Rest ist mündlich)', gewS(), 'number', 'min="0" max="100" step="5"')}<div class="sub" style="margin:-4px 0 10px">Üblich ist 50 zu 50. In Hauptfächern zählt schriftlich oft mehr, z.B. 60 oder 66.</div></div>
+    <div id="nsUni">${fIn('ectsZiel', 'ECTS für den Abschluss', ectsZiel(), 'number')}<div class="sub" style="margin:-4px 0 10px">Bachelor meist 180, Master meist 120.</div></div>`,
+    v => { S.ausb.noten = v.noten; S.ausb.gewS = Math.max(0, Math.min(100, numIn(v.gewS))); if (v.ectsZiel) S.ausb.ectsZiel = numIn(v.ectsZiel) || 180; },
+    { init: fm => { const z = () => { $('#nsGew', fm).hidden = fm.noten.value === 'uni'; $('#nsUni', fm).hidden = fm.noten.value !== 'uni'; }; fm.noten.addEventListener('change', z); z(); } });
+};
+
+/* ---------- Studium: Semester, ECTS, Prüfungsphase, Lernplan ---------- */
+const ectsZiel = () => +((S.ausb || {}).ectsZiel) || 180;
+const ectsGeschafft = () => dec(sum(S.school.faecher.filter(f => { const s = fachSchnitt(f.id); return s !== null && s <= 4.0; }), f => +f.ects || 0), 0);
+const semListe = () => ((S.ausb || {}).semester || []).slice().sort((a, b) => a.von < b.von ? -1 : 1);
+const semJetzt = (d = today()) => semListe().find(s => d >= s.von && d <= s.bis) || semListe().filter(s => s.von > d)[0] || semListe().slice(-1)[0] || null;
+/* Vorschlag für das laufende Semester: Wintersemester 1.10.–31.3., Sommersemester 1.4.–30.9. (wie an den meisten Hochschulen) */
+function semVorschlag(d = today()) {
+  const y = +d.slice(0, 4), m = +d.slice(5, 7);
+  if (m >= 4 && m <= 9) return { name: `Sommersemester ${y}`, von: `${y}-04-01`, bis: `${y}-09-30`, vlBis: `${y}-07-17`, pVon: `${y}-07-20`, pBis: `${y}-08-07` };
+  const a = m >= 10 ? y : y - 1; return { name: `Wintersemester ${a}/${String(a + 1).slice(2)}`, von: `${a}-10-01`, bis: `${a + 1}-03-31`, vlBis: `${a + 1}-02-06`, pVon: `${a + 1}-02-09`, pBis: `${a + 1}-02-27` };
+}
+const inVorlesung = d => { const s = semListe().find(x => d >= x.von && d <= x.bis); return s ? d <= (s.vlBis || s.bis) : true; };
+const lernTage = ects => Math.max(5, Math.min(21, Math.round((+ects || 5) * 1.5)));
+function studiumKarte() {
+  const t = today(), s = semJetzt();
+  if (!s) return `<div class="card"><h2>🗓️ Semester</h2><div class="sub" style="margin-bottom:8px">Trag dein Semester ein, dann zähle ich bis zur Prüfungsphase runter und mache dir einen Lernplan.</div><button class="btn sm" data-act="semEdit">+ Semester</button></div>`;
+  const tot = Math.max(1, dayDiff(s.von, s.bis)), p = Math.max(0, Math.min(100, dayDiff(s.von, t) / tot * 100)), bisP = s.pVon ? dayDiff(t, s.pVon) : null, inP = s.pVon && t >= s.pVon && t <= (s.pBis || s.pVon);
+  const pr = S.sEv.filter(e => e.cat === 'pruef' && e.date >= t && e.date <= s.bis).sort((a, b) => a.date < b.date ? -1 : 1);
+  let h = `<div class="card st-k"><div class="row sb"><h2 style="margin:0">🗓️ ${esc(s.name)}</h2><button class="btn sm sec" data-act="semEdit" data-id="${s.id}">Bearbeiten</button></div>
+    <div class="bar" style="margin:10px 0 4px"><i style="width:${p}%"></i></div><div class="row sb sub"><span>${fmtDs(s.von)}</span><span>${t <= (s.vlBis || s.bis) ? 'Vorlesungen bis ' + fmtDs(s.vlBis || s.bis) : 'Vorlesungsfreie Zeit'}</span><span>${fmtDs(s.bis)}</span></div>`;
+  if (inP) h += `<div class="st-cd"><b>Prüfungsphase läuft</b><span class="sub">bis ${fmtD(s.pBis || s.pVon)}</span></div>`;
+  else if (bisP !== null && bisP > 0) h += `<div class="st-cd"><b class="num">${bisP}</b><span class="sub">${bisP === 1 ? 'Tag' : 'Tage'} bis zur Prüfungsphase (${fmtDs(s.pVon)}${s.pBis ? '–' + fmtDs(s.pBis) : ''})</span></div>`;
+  h += `<h3>📚 Lernplan</h3>`;
+  if (!pr.length) h += `<div class="sub">Trag deine Prüfungen unter „Aufgaben & Termine“ als Prüfung mit Modul ein. Dann sage ich dir, wann du mit dem Lernen anfangen solltest.</div><button class="btn sm sec" style="margin-top:6px" data-act="sEvNew" data-d="${s.pVon || t}" data-cat="pruef">+ Prüfung</button>`;
+  else h += pr.map(e => { const f = fachOf(e.fach), lt = lernTage(f && f.ects), ab = addD(e.date, -lt), noch = dayDiff(t, e.date), los = dayDiff(t, ab);
+    const st = los > 0 ? `Lernstart am ${fmtD(ab)}, in ${los} ${los === 1 ? 'Tag' : 'Tagen'}` : `<b class="wrn">Jetzt lernen</b>, noch ${noch} ${noch === 1 ? 'Tag' : 'Tage'}`, pp = Math.max(0, Math.min(100, (lt - Math.max(0, noch)) / lt * 100));
+    return `<div class="st-lp" data-act="sEvEdit" data-id="${e.id}"><div class="row sb"><span><i class="dot" style="background:${f ? f.color : SK.pruef[1]}"></i> <b>${esc(e.title || (f ? f.name : 'Prüfung'))}</b></span><span class="num sub">${fmtDs(e.date)}</span></div><div class="bar"><i style="width:${los > 0 ? 0 : pp}%"></i></div><div class="sub">${st} · ${lt} Lerntage${f && f.ects ? ' für ' + dec(+f.ects, 0) + ' ECTS' : ''}</div></div>`; }).join('');
+  return h + `<div class="sub" style="margin-top:8px">Faustregel: pro ECTS etwa anderthalb Lerntage, mindestens 5 und höchstens 21.</div></div>`;
+}
+ACT.semEdit = d => {
+  ausbFix(); if (!S.ausb) return; if (!S.ausb.semester) S.ausb.semester = [];
+  const s = d.id ? S.ausb.semester.find(x => x.id === d.id) : semVorschlag(), neu = !s.id;
+  modal(neu ? 'Neues Semester' : esc(s.name), `${fIn('name', 'Name', s.name || '')}
+    <div class="grid2">${fIn('von', 'Semester von', s.von || '', 'date')}${fIn('bis', 'bis', s.bis || '', 'date')}</div>
+    ${fIn('vlBis', 'Letzter Vorlesungstag', s.vlBis || '', 'date')}
+    <div class="grid2">${fIn('pVon', 'Prüfungsphase von', s.pVon || '', 'date')}${fIn('pBis', 'bis', s.pBis || '', 'date')}</div>
+    <div class="sub">Die Daten sind ein Vorschlag wie an den meisten Hochschulen. Schau kurz in deinen Semesterplan und pass sie an.</div>`,
+    v => { if (!v.von || !v.bis || v.bis < v.von) return false; const o = Object.assign(neu ? { id: uid() } : s, { name: v.name.trim() || 'Semester', von: v.von, bis: v.bis, vlBis: v.vlBis || '', pVon: v.pVon || '', pBis: v.pBis || '' }); if (neu) S.ausb.semester.push(o); },
+    { del: neu ? null : () => { S.ausb.semester = S.ausb.semester.filter(x => x !== s); S.school.faecher.forEach(f => { if (f.sem === s.id) delete f.sem; }); } });
+};
+/* Werkstudent: nur Wochen in der Vorlesungszeit zählen für die 20-Stunden-Grenze */
+function werkWochen(y, tid) {
+  const wo = {}; for (const d in S.shifts) { if (!d.startsWith(String(y)) || schichtTaet(S.shifts[d]) !== (tid || '')) continue; const k = mondayOf(d); wo[k] = (wo[k] || 0) + lohnMinuten(d, S.shifts[d]).min / 60; }
+  return { n: Object.entries(wo).filter(([k, h]) => h > 20.001 && inVorlesung(addD(k, 2))).length, jetzt: wo[mondayOf(today())] || 0 };
+}
+
+/* ---------- Hausaufgaben ---------- */
+const haOffen = () => (S.sEv || []).filter(e => e.cat === SK_HA && !e.done).sort((a, b) => a.date < b.date ? -1 : 1);
+function haKarte() {
+  const t = today(), L = haOffen(), fertig = (S.sEv || []).filter(e => e.cat === SK_HA && e.done && e.date >= addD(t, -7)).length;
+  return `<div class="card ha-k"><div class="row sb"><h2 style="margin:0">📒 Hausaufgaben</h2><button class="btn sm" data-act="haNew">+ Hausaufgabe</button></div>
+    ${L.length ? L.slice(0, 12).map(e => { const f = fachOf(e.fach), n = dayDiff(t, e.date);
+      return `<div class="ha-z${n < 0 ? ' spaet' : ''}"><button type="button" class="ha-c" data-act="haDone" data-id="${e.id}" aria-label="Erledigt"></button><div class="grow click" data-act="sEvEdit" data-id="${e.id}"><div class="t">${esc(e.title || 'Hausaufgabe')}</div><div class="s">${f ? `<i class="dot" style="background:${f.color}"></i> ${esc(f.name)} · ` : ''}${n < 0 ? `<b class="neg">überfällig seit ${fmtDs(e.date)}</b>` : n === 0 ? '<b class="wrn">heute fällig</b>' : n === 1 ? 'bis morgen' : 'bis ' + fmtD(e.date)}</div></div></div>`; }).join('')
+      : `<div class="sub" style="margin-top:6px">Keine offenen Hausaufgaben${fertig ? `, ${fertig} diese Woche erledigt 🎉` : ''}.</div>`}</div>`;
+}
+ACT.haNew = d => { ausbFix(); const t = today(), wd = pd(t).getDay(); sEvEdit({ cat: SK_HA, date: d.d || addD(t, wd === 5 ? 3 : wd === 6 ? 2 : 1) }); };
+ACT.haDone = d => { const e = byId(S.sEv, d.id); if (!e) return; e.done = !e.done; save(); render(); if (e.done) toast('✓ Erledigt'); };
+{ const alt = ARB.aufgaben; ARB.aufgaben = () => { const h = alt(); return typeof ausbAktiv === 'function' && ausbAktiv() && S.ausb && ['schule', 'berufsschule', 'uni'].includes(S.ausb.art) || haOffen().length ? haKarte() + h : h; }; }
+/* Termine ohne Hausaufgaben (die haben ihre eigene Karte) */
+function termineKarte() {
+  ausbFix(); const t = today(), l = S.sEv.filter(e => e.cat !== SK_HA && (e.to || e.date) >= t).sort((a, b) => ((a.date || '') + (a.time || '')) < ((b.date || '') + (b.time || '')) ? -1 : 1);
+  return `<div class="card"><div class="row sb"><h2 style="margin:0">📅 Termine${ausbAktiv() ? ', Tests & Klausuren' : ''}</h2><button class="btn sm" data-act="sEvNew" data-d="${UI.wDate || t}">+ Termin</button></div>
+    ${l.length ? l.slice(0, 10).map(sEvZeile).join('') : `<div class="sub" style="margin-top:6px">${ausbAktiv() ? 'Trag hier Tests, Klausuren, Prüfungen und andere Termine ein.' : 'Trag hier Termine ein, zum Beispiel Arzt oder Besprechung.'}</div>`}
+    ${l.length > 10 ? `<div class="sub" style="margin-top:6px">+ ${l.length - 10} weitere</div>` : ''}</div>`;
+}
+{ const alt = ACT.sEvNew; ACT.sEvNew = d => d.cat ? sEvEdit({ date: d.d || today(), cat: d.cat }) : alt(d); }
+/* Hausaufgaben für die Heute-Kachel */
+function haHeuteText(t) { const L = haOffen().filter(e => e.date <= addD(t, 1)); if (!L.length) return ''; const sp = L.filter(e => e.date < t).length;
+  return `📒 ${L.length} ${L.length === 1 ? 'Hausaufgabe' : 'Hausaufgaben'} ${sp ? `<b class="neg">(${sp} überfällig)</b>` : 'bis morgen'}`; }
 
 /* ---------- Dienstbuch-Einlegeblatt: Monatsbericht nach Toms Vorlage, druckbar ---------- */
 const DB_ABS = { U: 'EU', K: 'K', S: 'SU', D: 'DR', Z: 'DA', L: 'LG' };
@@ -15322,7 +15746,7 @@ function tripEdit(tr) {
 function tripDetail(tr) {
   const t = today(), dd = tr.from ? dayDiff(t, tr.from) : null, days = tripDays(tr), sp = tripSpent(tr), vorbei = tr.from && (tr.to || tr.from) < t;
   const ortZ = istRund(tr) ? rundZeile(tr) : [tr.ort && tr.ort !== tr.name ? tr.ort : '', ...tripLaender(tr).map(landName)].filter(Boolean).join(', ');
-  let h = `<header class="kopf"><div class="row sb"><button class="btn sm sec" data-act="tripBack">‹ Alle Reisen</button><button class="ibtn" data-act="tripEdit" data-id="${tr.id}" aria-label="Reise bearbeiten">✎</button></div>
+  let h = `<header class="kopf"><div class="row sb"><button class="btn sm sec" data-act="tripBack">‹ Alle Reisen</button><div class="row" style="gap:6px"><button class="ibtn" data-act="tripTeilen" data-id="${tr.id}" title="Reise teilen" aria-label="Reise teilen">📤</button><button class="ibtn" data-act="tripEdit" data-id="${tr.id}" aria-label="Reise bearbeiten">✎</button></div></div>
     <h1>${tripFlaggen(tr)} ${esc(tr.name)}</h1><p class="take">${ortZ ? '📍 ' + esc(ortZ) + ' · ' : ''}${tr.from ? `${fmtD(tr.from)}${tr.to && tr.to !== tr.from ? ' – ' + fmtD(tr.to) : ''} · ${days.length} ${days.length === 1 ? 'Tag' : 'Tage'}` : 'Wunschziel ohne Datum'}${dd !== null && dd > 0 ? ` · noch <b>${dd} Tage</b> ⏳` : dd !== null && (tr.to || tr.from) >= t ? ' · <b>Gerade unterwegs</b> 🌴' : ''}</p></header>`;
   const sec = UI.tripSec || 'uebersicht';
   const SEC = [['uebersicht', '📋 Übersicht'], ['stationen', '📍 Stationen'], ['route', '🗺️ Route'], ['wege', '🎫 Tickets & Wege'], ['hotels', '🏨 Unterkünfte'], ['plan', '🗓️ Tagesplan'], ['packen', '🧳 Packliste'], ['ausgaben', '💶 Ausgaben']], alle = !!S.settings.reiseAlle;
@@ -16347,6 +16771,67 @@ const docListe = tr => (tr.docs || []).length ? `<div class="doc-grid">${tr.docs
 ACT.rueckreise = d => { const tr = trp(d), J = tripJourneys(tr); if (!J.length) return; const hin = J[0].segs, dat = tr.to || '';
   const neu = hin.slice().reverse().map(s => ({ id: uid(), type: s.type, airline: s.airline || '', from: s.to, to: s.from, via: segStops(s).slice(1, -1).reverse().join(', '), date: dat, dep: '', arrDate: dat, arr: '', no: '', seat: '', gate: '', ref: s.ref || '', cost: 0, note: '' }));
   tr.segs.push(...neu); save(); UI.tripSec = 'wege'; render(); toast(`↩ Rückreise angelegt (${neu.length} ${neu.length === 1 ? 'Fahrt' : 'Fahrten'}, ${dat ? fmtD(dat) : 'Datum offen'}). Trag noch Zeiten und Nummern ein.`); };
+
+/* ---------- Reise teilen per Datei (Roadmap Punkt 8, 28.11.2026) ----------
+   Eine Reise als Datei (AirDrop, WhatsApp). Ganz ohne Server: der andere wirft die Datei in sein JATOS (Heute, Einwerfen).
+   Beträge und Fotos gehen nur mit, wenn man sie anhakt. Verknüpfungen zum eigenen Haushaltsbuch gehen nie mit. */
+const REISE_KOSTEN = new Set(['cost', 'amount', 'budget', 'preis', 'price']);
+function reisePaket(tr, opt) {
+  const t = JSON.parse(JSON.stringify(tr));
+  const raus = o => { if (Array.isArray(o)) o.forEach(raus); else if (o && typeof o === 'object') for (const k of Object.keys(o)) { if (k === 'tx' || (!opt.geld && REISE_KOSTEN.has(k))) delete o[k]; else raus(o[k]); } };
+  raus(t);
+  if (!opt.geld) t.exp = [];
+  if (!opt.fotos) { delete t.fotos; delete t.foto; delete t.erinnerung; }
+  if (!opt.docs) t.docs = [];
+  return t;
+}
+ACT.tripTeilen = d => {
+  const tr = byId(S.trips, d.id); if (!tr) return;
+  const nDocs = (tr.docs || []).length, nFotos = (tr.fotos || []).length + (tr.foto && !(tr.fotos || []).length ? 1 : 0), geld = !!((tr.exp || []).length || tr.budget || [...(tr.segs || []), ...(tr.hotels || [])].some(x => x && x.cost));
+  modal('📤 Reise teilen', `<div class="sub" style="margin:-4px 0 10px">Ich mache aus „${esc(tr.name || 'Reise')}“ eine Datei. Die schickst du per AirDrop oder WhatsApp, zum Beispiel an Jan. Er wirft sie in seinem JATOS auf Heute ein und hat die Reise mit Fahrten, Hotels und Tagesplan.</div>
+    ${nDocs ? fChk('docs', `Tickets und Unterlagen mitschicken (${nDocs})`, true) : ''}
+    ${geld ? fChk('geld', 'Beträge mitschicken (Kosten, Budget, Ausgaben)', false) : ''}
+    ${nFotos || tr.erinnerung ? fChk('fotos', 'Fotos und Erinnerungen mitschicken', false) : ''}
+    <div class="sub" style="margin-top:6px">Was mit deinem Haushaltsbuch verknüpft ist, bleibt immer bei dir.</div>`,
+    v => { reiseTeilenDatei(tr, { docs: !!v.docs, geld: !!v.geld, fotos: !!v.fotos }); }, { saveLabel: 'Datei teilen', still: true });
+};
+async function reiseTeilenDatei(tr, opt) {
+  const t = reisePaket(tr, opt), docs = {};
+  if (opt.docs) for (const m of tr.docs || []) { if (!m.id || docs[m.id]) continue; try { const r = await docGet(m.id); if (r && r.buf) docs[m.id] = { name: r.name, mime: r.mime, b64: bufB64(r.buf) }; } catch (e) {} }
+  const paket = { jatosReise: 1, app: typeof APP_V !== 'undefined' ? APP_V : 0, erstellt: today(), trip: t, docs };
+  const name = `reise-${lowN(tr.name || 'reise').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'reise'}${tr.from ? '-' + tr.from : ''}.json`;
+  const blob = new Blob([JSON.stringify(paket)], { type: 'application/json' }), file = new File([blob], name, { type: 'application/json' });
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file], title: tr.name || 'Reise' }); toast('📤 Reise geteilt'); return; } catch (e) { if (e.name === 'AbortError') return; }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 3000); toast('📤 Reise-Datei gespeichert');
+}
+/* Einlesen: aus einDatei und dem Sicherungs-Import */
+async function reiseDateiVersuchen(f) {
+  if (!(/\.json$/i.test(f.name || '') || /json/.test(f.type || ''))) return false;
+  let d; try { d = JSON.parse(await f.text()); } catch (e) { return false; }
+  if (!d || !d.jatosReise || !d.trip) return false;
+  reiseImportFenster(d); return true;
+}
+function reiseImportFenster(d) {
+  const t = d.trip, n = (k) => (t[k] || []).length, gleich = (S.trips || []).find(x => lowN(x.name) === lowN(t.name) && (x.from || '') === (t.from || ''));
+  const bisD = typeof t.to === 'string' && /^\d{4}-/.test(t.to) ? t.to : '', zeit = t.from ? `${fmtD(t.from)}${bisD && bisD !== t.from ? ' bis ' + fmtD(bisD) : ''}` : '';
+  const teile = [[n('segs'), 'Fahrten'], [n('hotels'), 'Unterkünfte'], [n('plan'), 'Tage im Plan'], [n('stops'), 'Stationen'], [Object.keys(d.docs || {}).length, 'Unterlagen'], [n('exp'), 'Ausgaben']].filter(x => x[0]);
+  modal('🧳 Reise erhalten', `<div class="card tight" style="background:var(--card);padding:12px"><b>${esc(t.name || 'Reise')}</b>${zeit ? `<div class="sub">${zeit}</div>` : ''}${teile.length ? `<div class="sub" style="margin-top:4px">${teile.map(x => x[0] + ' ' + x[1]).join(' · ')}</div>` : ''}</div>
+    ${gleich ? fSel('wie', 'Diese Reise hast du schon', [['ersetzen', 'Mit der neuen Version ersetzen'], ['neu', 'Als zweite Reise speichern']], 'ersetzen') : ''}
+    <div class="sub" style="margin-top:8px">Die Reise wird bei dir gespeichert. Danach kannst du alles selbst ändern, das ändert nichts beim Absender.</div>`,
+    async v => {
+      const neu = JSON.parse(JSON.stringify(t)); delete neu.tx;
+      for (const id in d.docs || {}) { try { const x = d.docs[id]; await docPut(id, { name: x.name, mime: x.mime, buf: b64Buf(x.b64) }); } catch (e) {} }
+      const ersetzen = gleich && (v.wie || 'ersetzen') === 'ersetzen';
+      if (ersetzen) { neu.id = gleich.id; if (!d.trip.exp || !d.trip.exp.length) neu.exp = gleich.exp || []; S.trips[S.trips.indexOf(gleich)] = neu; }
+      else { neu.id = uid(); (S.trips = S.trips || []).push(neu); }
+      ['segs', 'hotels', 'plan', 'stops', 'pack', 'exp', 'docs', 'tickets'].forEach(k => { if (neu[k] == null) neu[k] = []; });
+      save(); UI.tab = 'reisen'; UI.trip = neu.id; UI.tripSec = 'uebersicht'; render(); window.scrollTo(0, 0);
+      toast(`🧳 „${neu.name || 'Reise'}“ ${ersetzen ? 'aktualisiert' : 'gespeichert'}.`);
+    }, { saveLabel: 'Reise speichern', still: true });
+}
 
 /* ---------- Bahn: Wegekürzel auf Fahrkarten, kleine Bahnhöfe, DB-Tickets und Reisepläne auslesen (ganz offline) ---------- */
 
@@ -17379,7 +17864,7 @@ function dpiMalen() {
   const codes = Object.keys(cnt).sort((a, b) => cnt[b] - cnt[a]);
   codes.forEach(c => { if (!DPI.map[c]) DPI.map[c] = dpKuerzelStandard(c, r.legende); });
   let ni = 0; codes.forEach(c => { if (DPI.map[c].art === 'neu' && !DPI.map[c].farbe) DPI.map[c].farbe = DP_FARBEN[(S.shiftTypes.length + ni++) % DP_FARBEN.length]; });
-  const opt = c => { const m = DPI.map[c]; const o = [...S.shiftTypes.map(t => [`typ:${t.id}`, `${t.code} · ${t.name}${t.start ? ' ' + t.start + '–' + t.end : ''}`]), ['neu', '➕ Neue Schichtart anlegen'], ['frei', '🌙 Frei – nichts eintragen'], ...Object.entries(ABS).map(([k, a]) => ['abs:' + k, '🏷️ ' + a.n])];
+  const opt = c => { const m = DPI.map[c]; const o = [...stAktiv().map(t => [`typ:${t.id}`, `${t.code} · ${t.name}${t.start ? ' ' + t.start + '–' + t.end : ''}`]), ['neu', '➕ Neue Schichtart anlegen'], ['frei', '🌙 Frei – nichts eintragen'], ...Object.entries(ABS).map(([k, a]) => ['abs:' + k, '🏷️ ' + a.n])];
     const v = m.art === 'typ' ? 'typ:' + m.id : m.art === 'abs' ? 'abs:' + m.k : m.art; return `<select class="in" data-k="art" data-c="${esc(c)}">${o.map(([k, l]) => `<option value="${k}" ${k === v ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select>`; };
   const nDienst = sel.filter(([, c]) => ['typ', 'neu'].includes(DPI.map[c].art)).length, nFrei = sel.length - nDienst;
   let h = `<div class="dpi-info"><b>${esc(r.titel || DPI.fname)}</b><br><span class="sub">${esc(DPI.fname)} · ${r.gl.length > 1 ? r.gl.length + ' Dienstgruppen' : '1 Plan'} · ${fmtDs(alle[0])} bis ${fmtDs(alle[alle.length - 1])}</span></div>`;
@@ -18552,7 +19037,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 150;
+const APP_V = 151;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
@@ -18947,6 +19432,7 @@ function einArt(name, mime, text) {
 }
 async function einDatei(f) {
   if (f.size > 60e6) return toast('Die Datei ist zu groß.');
+  if (typeof reiseDateiVersuchen === 'function' && await reiseDateiVersuchen(f)) return;
   const mime = f.type || EIN_MIME(f.name) || '';
   let art = /\.(csv|txt|ics)$/i.test(f.name) || /^text\//.test(mime) ? '' : einArt(f.name, mime, ''), text = '', buf = null; /* Textdateien erst lesen: eine CSV kann Konto, Dienst- oder Stundenplan sein */
   if (!art && /^image\//.test(mime) && await kbVersuchen(f)) return; // Kalenderbild einer Dienstplan-App (T/N in jedem Tag)
@@ -20324,7 +20810,7 @@ function jatosTips(tab) {
   if (tab === 'arbeit') {
     r.push('Schneller Trick: Tipp oben auf eine Schicht wie F und dann auf alle Tage. Schon steht der Dienstplan!');
     r.push('Länger geblieben? Tipp auf den Tag und trag die echte Endzeit ein, ich rechne die Überstunden.');
-    const ot = overtimeTotal(); if (Math.abs(ot) > .1) r.push(`Dein Überstundenkonto steht bei ${hm(ot)} Stunden.`);
+    const ot = typeof beruf === 'function' && beruf().bezahl !== 'fest' ? 0 : overtimeTotal(); if (Math.abs(ot) > .1) r.push(`Dein Überstundenkonto steht bei ${hm(ot)} Stunden.`);
     r.push(`Du hast noch ${dec(vacation(+t.slice(0, 4)).rest, 0)} Urlaubstage. Wie wäre es mit einem Ausflug zu meinem Schloss? 🏰`);
     if (!S.settings.duz.nacht) r.push('Trag unter ⚙︎ deine DUZ-Sätze ein, dann rechne ich die Zulage in Euro aus.');
     if (!S.settings.land) r.push('Sag mir unter ⚙︎ dein Bundesland, dann kenne ich alle Feiertage.');
@@ -21649,11 +22135,13 @@ function pixelScene() {
 load();
 try { hilfsKontenMig(); recReparatur(); recReparatur2(); } catch (e) {}
 try { bfReparatur(); } catch (e) {}
+try { berufFix(); } catch (e) {}
 try { undoStart(); } catch (e) {}
 autoBook();
 render();
 hlLaden();
 try { jtJatosGruss(); } catch (e) {}
+if (S.beruf && !S.beruf.gewaehlt) setTimeout(() => { try { if (!_modalStack.length) ACT.berufWahl(); } catch (e) {} }, 700);
 let _sy = 0;
 addEventListener('scroll', () => { const y = scrollY, b = document.body; b.classList.toggle('gescrollt', y > 8);
   // Leiste oben beim Runterscrollen ausblenden, beim Hochscrollen wieder zeigen
