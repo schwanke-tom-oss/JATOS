@@ -4114,6 +4114,21 @@ html.ruhig .sa-ic *{animation:none!important}
 .lf-pk .sa-ic.gross svg.pk{width:92px;height:92px}
 .lf-wh{margin-top:16px}
 .lf-it .sa-ic{flex:none}
+/* Verlauf: Suche und Sportarten-Chips */
+.vl-kopf{display:flex;gap:8px;margin:0 0 10px}
+.vl-kopf .vl-q{flex:1;min-width:0}
+.vl-kopf .vl-reset{flex:none;padding:0 14px;border-radius:999px;border:1px solid var(--line,rgba(255,255,255,.12));background:transparent;color:inherit;font:inherit;font-weight:600}
+.vl-arten{flex-wrap:wrap}
+.vl-arten button small{opacity:.6;font-weight:500;margin-left:2px}
+.vl-arten button[hidden]{display:none!important}
+/* Health-Import: Sportarten einzeln */
+.hl-arth{margin:14px 0 6px}
+.hl-arten{display:flex;flex-direction:column;gap:4px;max-height:46vh;overflow:auto;margin-bottom:8px}
+.hl-arten .chk>span{display:flex;align-items:center;gap:10px;flex:1}
+.hl-arten .chk>span>span{flex:1}
+.hl-arten .chk b{opacity:.7;font-weight:600}
+.hl-arten .chk .sa-ic{width:34px!important;height:34px;flex:0 0 34px!important;padding:0}
+.hl-arten .sa-ic svg.pk{width:32px;height:32px}
 
 </style>
 </head>
@@ -13523,17 +13538,21 @@ async function hlImportDatei(file) {
     m.close(); hlImportFrage(erg);
   } catch (err) { m.close(); toast('Import fehlgeschlagen: ' + err.message); }
 }
+/* Sportarten im Export, häufigste zuerst */
+function hlArten(erg) { const z = {}; erg.wos.forEach(w => { z[w.typ] = (z[w.typ] || 0) + 1; }); return Object.entries(z).sort((a, b) => b[1] - a[1]); }
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-hl-alle]'); if (!b) return; const an = b.dataset.hlAlle === '1'; let el = b; while (el && !el.querySelector('.hl-arten')) el = el.parentElement; if (el) el.querySelectorAll('.hl-arten input[type=checkbox]').forEach(c => { c.checked = an; }); });
 function hlImportFrage(erg) {
   const n = k => erg.wos.filter(k).length, laeufe = n(w => w.typ === 'Running'), geh = n(w => w.typ === 'Walking' || w.typ === 'Hiking'), kraft = n(w => /Strength/.test(w.typ)), rest = erg.wos.length - laeufe - geh - kraft;
-  const tage = new Set(Object.values(erg.d).flatMap(o => Object.keys(o))).size, routen = erg.wos.filter(w => w.gpx).length;
+  const tage = new Set(Object.values(erg.d).flatMap(o => Object.keys(o))).size, routen = erg.wos.filter(w => w.gpx && w.typ === 'Running').length;
   modal('Gefunden', `<div class="hl-gef"><div><b>${laeufe}</b><span>Läufe${routen ? `, ${routen} mit Strecke` : ''}</span></div><div><b>${rest}</b><span>andere Trainings</span></div><div><b>${geh}</b><span>Spaziergänge / Wanderungen</span></div><div><b>${dec(tage, 0)}</b><span>Tage mit Körperwerten</span></div></div>
-    ${fChk('laeufe', 'Läufe übernehmen', true)}${rest ? fChk('rest', 'Andere Trainings übernehmen (Radfahren, Schwimmen …)', true) : ''}${geh ? fChk('geh', 'Spaziergänge und Wanderungen übernehmen', false) : ''}${kraft ? fChk('kraft', `Krafttrainings aus Health übernehmen (${kraft}, ohne Übungen)`, false) : ''}${fChk('werte', 'Körperwerte übernehmen (Puls, VO2max, Schlaf, Gewicht …)', true)}
+    <h3 class="hl-arth">Welche Sportarten übernehmen?</h3><div class="hl-arten">${hlArten(erg).map(([t, k]) => fChk('t_' + t, `${typeof sportIcon === 'function' ? sportIcon({ typ: t, sart: SA_HK[t] }) : ''}<span>${esc(HK_WO[t] || t)}${/Strength/.test(t) ? ' <small class="sub">ohne Übungen</small>' : ''}</span><b>${k}</b>`, true)).join('')}</div>
+    ${erg.wos.length > 1 ? `<div class="row" style="gap:8px;margin:2px 0 8px"><button type="button" class="btn sec sm" data-hl-alle="1">Alle an</button><button type="button" class="btn sec sm" data-hl-alle="0">Alle aus</button></div>` : ''}${fChk('werte', 'Körperwerte übernehmen (Puls, VO2max, Schlaf, Gewicht …)', true)}
     <div class="sub">Schon übernommene Trainings werden nicht doppelt angelegt. Die Körperwerte ersetzen den letzten Health-Import.</div>`,
     async v => {
       let neu = 0, akt = 0;
       for (const w of erg.wos) {
         const lauf = w.typ === 'Running', geh = w.typ === 'Walking' || w.typ === 'Hiking', kr = /Strength/.test(w.typ);
-        if ((lauf && !v.laeufe) || (geh && !v.geh) || (kr && !v.kraft) || (!lauf && !geh && !kr && !v.rest)) continue;
+        if (!v['t_' + w.typ]) continue;
         const date = w.start.slice(0, 10), o = { kind: lauf ? 'lauf' : kr ? 'kraft' : 'sonst', name: lauf ? 'Lauf' : HK_WO[w.typ] || w.typ, date, zeit: w.start.slice(11, 16), dur: w.dur, hk: w.start, src: 'health' };
         if (w.dist) o.dist = Math.round(w.dist * 100) / 100; for (const k of ['kcal', 'hr', 'hrMax', 'watt', 'hm', 'steps', 'indoor', 'laps', 'pausen', 'bahn', 'ort']) if (w[k] != null) o[k] = w[k];
         o.typ = w.typ; if (typeof SA_HK !== 'undefined' && SA_HK[w.typ]) o.sart = SA_HK[w.typ];
@@ -14223,11 +14242,12 @@ function lwGewinnHtml(w, g) {
 }
 
 /* ---------- Laufen-Reiter: auch Rad, Schwimmen und Gehen ---------- */
+SPO.laufLauf = SPO.laufen;
 { const alt = SPO.laufen;
-  SPO.laufen = () => {
+  SPO.laufArt = selArg => {
     const arten = ['lauf', 'rad', 'schwimmen', 'gehen'].filter(a => a === 'lauf' || S.workouts.some(w => lwArt(w) === a && (w.dist || w.route)));
-    const sel = arten.includes(UI.lfArt) ? UI.lfArt : 'lauf';
-    const chips = arten.length > 1 ? `<div class="lw-arten">${arten.map(a => `<button class="${a === sel ? 'on' : ''}" data-act="lfArt" data-v="${a}">${LW_ART[a][2]} ${a === 'lauf' ? 'Laufen' : a === 'rad' ? 'Rad' : a === 'schwimmen' ? 'Schwimmen' : 'Gehen'}</button>`).join('')}</div>` : '';
+    const sel = selArg || 'lauf';
+    const chips = '' && arten.length > 1 ? `<div class="lw-arten">${arten.map(a => `<button class="${a === sel ? 'on' : ''}" data-act="lfArt" data-v="${a}">${LW_ART[a][2]} ${a === 'lauf' ? 'Laufen' : a === 'rad' ? 'Rad' : a === 'schwimmen' ? 'Schwimmen' : 'Gehen'}</button>`).join('')}</div>` : '';
     if (sel === 'lauf') return chips + alt();
     const L = S.workouts.filter(w => lwArt(w) === sel).sort((a, b) => (b.date + (b.zeit || '')) < (a.date + (a.zeit || '')) ? -1 : 1), t = today();
     const km = sum(L.filter(w => w.date.slice(0, 4) === t.slice(0, 4)), w => w.dist || 0);
@@ -15480,7 +15500,7 @@ const SA_HK = { Running: 'laufen', Walking: 'gehen', Hiking: 'wandern', Cycling:
   Softball: 'softball', Cricket: 'cricket', Squash: 'squash', Racquetball: 'racquetball', Pickleball: 'pickleball', Archery: 'bogenschiessen', Bowling: 'bowling', Curling: 'curling',
   EquestrianSports: 'reiten', Fencing: 'fechten', Fishing: 'angeln', Gymnastics: 'turnen', TrackAndField: 'leichtathletik', Wrestling: 'ringen', TaiChi: 'taichi', MindAndBody: 'yoga',
   PreparationAndRecovery: 'mobility', Play: 'sonst', DiscSports: 'ultimate', FitnessGaming: 'fitnessgaming', HandCycling: 'handbike', WheelchairWalkPace: 'rollstuhl', WheelchairRunPace: 'rollstuhl',
-  SwimBikeRun: 'triathlon', Hunting: 'wandern', Other: 'sonst' };
+  SwimBikeRun: 'triathlon', Transition: 'triathlon', Hunting: 'wandern', Other: 'sonst' };
 /* Die Health-Namen auf Deutsch kommen jetzt aus dem Katalog */
 for (const hk in SA_HK) HK_WO[hk] = SA[SA_HK[hk]].n;
 HK_WO.Running = 'Laufen';
@@ -15570,7 +15590,7 @@ function woRow(w) {
     : w.kind === 'lauf' ? `${dec(w.dist || 0, 2)} km · ${secToStr(w.dur)}${pace(w) ? ' · ' + secToStr(pace(w)) + ' /km' : ''}${w.hr ? ' · ⌀ ' + w.hr + ' bpm' : ''}`
     : `${w.dur ? secToStr(w.dur) : ''}${w.dist ? ' · ' + (lwArt(w) === 'schwimmen' ? dec(w.dist * 1000, 0) + ' m' : dec(w.dist, 2) + ' km') : ''}${kc}${w.note && !w.dist ? ' · ' + esc(w.note.slice(0, 30)) : ''}`;
   const det2 = w.kind === 'sonst' || !kc ? det : det + kc;
-  const act = w.kind === 'lauf' || (w.kind === 'sonst' && (w.route || s.ort || lwArt(w) === 'schwimmen')) ? 'laufDetail' : 'woEdit';
+  const act = w.kind === 'lauf' || (w.kind === 'sonst' && (w.route || s.ort || s.str || lwArt(w) === 'schwimmen')) ? 'laufDetail' : 'woEdit';
   return `<div class="it click" data-act="${act}" data-id="${w.id}">${sportIcon(w)}<div class="grow"><div class="t">${esc(w.name || s.n)}${w.pr ? ' <span class="tag" style="color:var(--warn)">🏆 Rekord</span>' : ''}</div><div class="s">${fmtD(w.date)} · ${det2.replace(/^ · /, '')}</div></div></div>`;
 }
 
@@ -16523,6 +16543,46 @@ function pkSpaeter(el, fn) {
   const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { io.disconnect(); fn(); } }, { threshold: 0.1 });
   io.observe(el);
 }
+
+/* ---------- Verlauf: alle Sportarten des Jahres als Chips, Auswahl filtert die Liste ----------
+   Nichts gewählt = alle Trainings. Nur Laufen = Lauf-Seite mit Diagramm, nur Rad/Schwimmen/Gehen = deren Seite. */
+const VL_EIGEN = { laufen: 'lauf', rad: 'rad', schwimmen: 'schwimmen', gehen: 'gehen' };
+function vlZeitSort(a, b) { return (b.date + (b.zeit || '')) < (a.date + (a.zeit || '')) ? -1 : 1; }
+SPO.laufen = () => {
+  const t = today(), jahr = t.slice(0, 4), alle = S.workouts.filter(w => w.date), zahl = {}, imJahr = {};
+  for (const w of alle) { const k = sportArt(w).k; zahl[k] = (zahl[k] || 0) + 1; if (w.date.slice(0, 4) === jahr) imJahr[k] = (imJahr[k] || 0) + 1; }
+  const sel = (UI.vlSel || []).filter(k => zahl[k]); UI.vlSel = sel;
+  const keys = Object.keys(zahl).sort((a, b) => (imJahr[b] || 0) - (imJahr[a] || 0) || zahl[b] - zahl[a]);
+  const q = UI.vlQ || '';
+  const chip = k => { const s = SA[k] || SA.sonst, on = sel.includes(k), weg = !on && !imJahr[k] && !(q && saNorm(s.n).includes(saNorm(q)));
+    return `<button type="button" class="${on ? 'on' : ''}${weg ? ' vl-alt' : ''}" data-act="vlSel" data-v="${k}" data-n="${esc(saNorm(s.n))}"${weg ? ' hidden' : ''}>${s.ic} ${esc(s.n)} <small>${imJahr[k] || zahl[k]}</small></button>`; };
+  let h = `<div class="vl-kopf"><input type="search" class="in vl-q" placeholder="🔍 Sportart suchen …" value="${esc(q)}" autocomplete="off">${sel.length ? `<button type="button" class="vl-reset" data-act="vlSel" data-v="">Alle</button>` : ''}</div>`;
+  h += `<div class="lw-arten vl-arten">${keys.map(chip).join('')}<span class="sub vl-leer" hidden>Keine Sportart gefunden</span></div>`;
+  if (sel.length === 1 && sel[0] === 'laufen') return h + SPO.laufLauf();
+  if (sel.length === 1 && VL_EIGEN[sel[0]]) return h + SPO.laufArt(VL_EIGEN[sel[0]]);
+  const L = alle.filter(w => !sel.length || sel.includes(sportArt(w).k)).sort(vlZeitSort), wk = mondayOf(t);
+  const LJ = L.filter(w => w.date.slice(0, 4) === jahr), km = sum(LJ, w => w.dist || 0);
+  h += `<div class="grid3" style="margin-bottom:12px"><div class="stat"><div class="l">Diese Woche</div><div class="v">${L.filter(w => w.date >= wk).length} <small>Trainings</small></div></div><div class="stat"><div class="l">${jahr}</div><div class="v">${LJ.length} <small>Trainings</small></div></div><div class="stat"><div class="l">${km >= 1 ? 'Strecke ' + jahr : 'Zeit ' + jahr}</div><div class="v">${km >= 1 ? dec(km, 0) + ' <small>km</small>' : dec(sum(LJ, w => w.dur || 0) / 3600, 0) + ' <small>h</small>'}</div></div></div>`;
+  const l = L[0];
+  if (l) { const sa = sportArt(l), k = kcalVon(l), act = /data-act="(\w+)"/.exec(woRow(l))[1];
+    const st = [l.dist && [lwArt(l) === 'schwimmen' ? dec(l.dist * 1000, 0) : dec(l.dist, 2), lwArt(l) === 'schwimmen' ? 'm' : 'km'], l.dur && [secToStr(l.dur), 'Zeit'], l.kind === 'lauf' && pace(l) && [secToStr(pace(l)), '/km'], l.kind === 'kraft' && [dec(woVolume(l), 0), 'kg bewegt'], l.hr && [l.hr, '⌀ bpm'], k && k.v && [(k.g ? '≈ ' : '') + k.v, 'kcal']].filter(Boolean).slice(0, 4);
+    h += `<div class="card lf-hero" data-act="${act}" data-id="${l.id}"><div class="row sb"><span class="kw-l" style="--c:${SA_FARBE[sa.g] || '#5fb3ff'}">Letzte Einheit · ${fmtDs(l.date)}${l.zeit ? ', ' + l.zeit : ''}</span><span class="sub">ansehen ›</span></div>
+      <div class="lf-hr"><div class="lf-pk">${sportIcon(l, true)}</div><div class="lf-hs">${st.map(([v, t]) => `<div><b>${v}</b><span>${t}</span></div>`).join('')}</div></div></div>`; }
+  const mon = {}; L.forEach(w => (mon[w.date.slice(0, 7)] = mon[w.date.slice(0, 7)] || []).push(w));
+  const mk = Object.keys(mon), zeigen = UI.lfAlle ? mk : mk.slice(0, 3);
+  h += zeigen.map(k => `<div class="row sb lf-mon"><h3 style="margin:0">${MON[+k.slice(5) - 1]} ${k.slice(0, 4)}</h3><span class="sub">${mon[k].length} ${mon[k].length === 1 ? 'Training' : 'Trainings'} · ${secToStr(sum(mon[k], w => w.dur || 0))}</span></div><div class="card tight list">${mon[k].map(woRow).join('')}</div>`).join('')
+    || '<div class="card sub">Noch keine Trainings. Tippe auf + zum Eintragen oder lies unter Körperwerte deine Health-Daten ein.</div>';
+  if (!UI.lfAlle && mk.length > 3) h += `<button class="btn sec full" data-act="lfAlle">Alle ${L.length} Trainings zeigen</button>`;
+  return h;
+};
+ACT.vlSel = d => { const s = UI.vlSel || []; UI.vlSel = !d.v ? [] : s.includes(d.v) ? s.filter(k => k !== d.v) : s.concat(d.v); UI.lfAlle = false; render(); };
+/* Suche filtert die Chips ohne neu zu zeichnen (Tastatur bleibt offen) */
+document.addEventListener('input', e => {
+  if (!e.target.matches || !e.target.matches('.vl-q')) return; const q = saNorm(e.target.value || ''); UI.vlQ = e.target.value;
+  const box = e.target.closest('.vl-kopf').nextElementSibling; let n = 0;
+  for (const b of box.querySelectorAll('button')) { const zeig = b.classList.contains('on') || (q ? b.dataset.n.includes(q) : !b.classList.contains('vl-alt')); b.hidden = !zeig; if (zeig) n++; }
+  const l = box.querySelector('.vl-leer'); if (l) l.hidden = n > 0;
+});
 
 /* ---------- Reisen ---------- */
 const _cn = (() => { try { return new Intl.DisplayNames(['de'], { type: 'region' }); } catch (e) { return null; } })();
@@ -20278,7 +20338,7 @@ function kursAnz(fertig) {
 }
 /* Abschnitt für die Einstellungen */
 /* ---------- App-Updates nur auf Knopfdruck ---------- */
-const APP_V = 152;
+const APP_V = 153;
 function updFreigabe(v) { return new Promise(res => { try { const r = indexedDB.open('alltagsplaner-update', 1); r.onupgradeneeded = () => r.result.createObjectStore('kv'); r.onsuccess = () => { const t = r.result.transaction('kv', 'readwrite'); if (v) t.objectStore('kv').put(v, 'ok'); else t.objectStore('kv').delete('ok'); t.oncomplete = () => res(true); t.onerror = () => res(false); }; r.onerror = () => res(false); } catch (e) { res(false); } }); }
 ACT.appUpdate = async (d, el) => {
   const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
